@@ -1,0 +1,8 @@
+#!/bin/sh
+# systemd-sleep hook: after resume, bring the T1 back if it was reset or
+# unbound while the machine slept. pomona start does nothing when all is up.
+# Run in the background: system-sleep hooks block the resume until they exit.
+case "$1" in
+	post) @PREFIX@/bin/pomona start >/dev/null 2>&1 & ;;
+esac
+exit 0

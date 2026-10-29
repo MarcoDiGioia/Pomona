@@ -1,0 +1,280 @@
+#!/usr/bin/python3 -I
+"""pomona-touchbard - Touch Bar mode daemon.
+
+Decides which key set the T1 draws on the Touch Bar and keeps the driver's
+options in line with /etc/pomona/config.json:
+
+- the default mode (Esc only, F1-F12, special keys);
+- a mode per application in the foreground (reported by the Pomona GNOME
+  Shell extension in $XDG_RUNTIME_DIR/pomona-focus);
+- Fn held: F1-F12 <-> special keys. The mainline hid-appletb-kbd driver only
+  follows Fn on T2 keyboards; on T1 Macs the keyboard is on SPI (applespi),
+  so the daemon reads Fn from it;
+- automatic dimming and its timeouts (driver module parameters).
+
+SPDX-License-Identifier: GPL-3.0-or-later
+"""
+import glob
+import json
+import os
+import select
+import struct
+import sys
+import time
+
+KEY_FN = 464
+EV_KEY = 1
+EVENT_FMT = "llHHi"
+EVENT_SIZE = struct.calcsize(EVENT_FMT)
+
+MODE_ESC, MODE_FKEYS, MODE_SPECIAL = 0, 1, 2
+MODES = (MODE_ESC, MODE_FKEYS, MODE_SPECIAL)
+
+KEYBOARD_NAMES = ("Apple SPI Keyboard",)
+SYS = os.environ.get("POMONA_SYS", "/sys")
+PROC = os.environ.get("POMONA_PROC", "/proc")
+RUN_USER = os.environ.get("POMONA_RUN_USER", "/run/user")
+CONFIG = os.environ.get("POMONA_CONFIG", "/etc/pomona/config.json")
+FOCUS_FILE = "pomona-focus"
+POLL = 0.5
+
+DEFAULTS = {
+    "default_mode": MODE_SPECIAL,
+    "fn_swaps": True,
+    "autodim": True,
+    "dim_timeout": 60,
+    "idle_timeout": 15,
+    "app_profiles": {},
+}
+
+
+# ------------------------------------------------------------------ config
+
+def _mode(value, fallback):
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        return fallback
+    return value if value in MODES else fallback
+
+
+def _seconds(value, fallback, low=1, high=3600):
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        return fallback
+    return min(max(value, low), high)
+
+
+def normalize_app(app_id):
+    """'org.gnome.Terminal.desktop' and 'org.gnome.Terminal' are the same app."""
+    app_id = app_id.strip()
+    if app_id.endswith(".desktop"):
+        app_id = app_id[: -len(".desktop")]
+    return app_id.lower()
+
+
+def parse_config(text):
+    """Validated config from JSON text; anything wrong falls back to the default."""
+    cfg = dict(DEFAULTS)
+    cfg["app_profiles"] = {}
+    try:
+        raw = json.loads(text) if text else {}
+    except ValueError:
+        raw = {}
+    if not isinstance(raw, dict):
+        raw = {}
+    cfg["default_mode"] = _mode(raw.get("default_mode"), DEFAULTS["default_mode"])
+    cfg["fn_swaps"] = bool(raw.get("fn_swaps", DEFAULTS["fn_swaps"]))
+    cfg["autodim"] = bool(raw.get("autodim", DEFAULTS["autodim"]))
+    cfg["dim_timeout"] = _seconds(raw.get("dim_timeout"), DEFAULTS["dim_timeout"])
+    cfg["idle_timeout"] = _seconds(raw.get("idle_timeout"), DEFAULTS["idle_timeout"])
+    profiles = raw.get("app_profiles", {})
+    if isinstance(profiles, dict):
+        for app, mode in profiles.items():
+            if isinstance(app, str) and app.strip() and _mode(mode, None) is not None:
+                cfg["app_profiles"][normalize_app(app)] = int(mode)
+    return cfg
+
+
+# ------------------------------------------------------------------ decisions
+
+def base_mode(cfg, focus_app):
+    if focus_app:
+        mode = cfg["app_profiles"].get(normalize_app(focus_app))
+        if mode is not None:
+            return mode
+    return cfg["default_mode"]
+
+
+def resolve_mode(cfg, focus_app, fn_held):
+    """Mode the Touch Bar should show right now."""
+    mode = base_mode(cfg, focus_app)
+    if fn_held and cfg["fn_swaps"]:
+        return MODE_SPECIAL if mode == MODE_FKEYS else MODE_FKEYS
+    return mode
+
+
+def fn_state(value, held):
+    """New Fn state for an EV_KEY value (1 press, 0 release, 2 repeat)."""
+    if value == 1:
+        return True
+    if value == 0:
+        return False
+    return held
+
+
+# ------------------------------------------------------------------ inputs
+
+def find_keyboard(devices_text, names=KEYBOARD_NAMES):
+    """/dev/input/eventN of the first matching keyboard in /proc/bus/input/devices."""
+    name = None
+    for line in devices_text.splitlines():
+        if line.startswith("N: Name="):
+            name = line.split("=", 1)[1].strip().strip('"')
+        elif line.startswith("H: Handlers=") and name in names:
+            for handler in line.split("=", 1)[1].split():
+                if handler.startswith("event"):
+                    return "/dev/input/" + handler
+        elif not line.strip():
+            name = None
+    return None
+
+
+def parse_event(data):
+    _, _, etype, code, value = struct.unpack(EVENT_FMT, data)
+    return etype, code, value
+
+
+def read_focus(run_user=None):
+    """Focused app id from the most recently updated session, or None."""
+    best, best_mtime = None, -1.0
+    for path in glob.glob(os.path.join(run_user or RUN_USER, "*", FOCUS_FILE)):
+        try:
+            mtime = os.stat(path).st_mtime
+            if mtime > best_mtime:
+                with open(path) as f:
+                    best, best_mtime = f.read().strip() or None, mtime
+        except OSError:
+            continue
+    return best
+
+
+def read_text(path):
+    try:
+        with open(path) as f:
+            return f.read()
+    except OSError:
+        return ""
+
+
+# ------------------------------------------------------------------ outputs
+
+def mode_files(sys_root=None):
+    return glob.glob(os.path.join(sys_root or SYS, "bus/hid/drivers/hid-appletb-kbd/*/mode"))
+
+
+def write_quiet(path, value):
+    try:
+        with open(path, "w") as f:
+            f.write(str(value))
+        return True
+    except OSError:
+        return False
+
+
+def apply_mode(mode, sys_root=None):
+    return [p for p in mode_files(sys_root) if write_quiet(p, mode)]
+
+
+def apply_driver_options(cfg, sys_root=None):
+    base = os.path.join(sys_root or SYS, "module/hid_appletb_kbd/parameters")
+    # fntoggle is the driver's own Fn handling, which never fires on T1 Macs;
+    # keep it off so it cannot fight with this daemon.
+    wanted = {
+        "autodim": "Y" if cfg["autodim"] else "N",
+        "dim_timeout": cfg["dim_timeout"],
+        "idle_timeout": cfg["idle_timeout"],
+        "fntoggle": "N",
+    }
+    for name, value in wanted.items():
+        write_quiet(os.path.join(base, name), value)
+
+
+# ------------------------------------------------------------------ main loop
+
+class State:
+    def __init__(self):
+        self.cfg = parse_config("")
+        self.cfg_mtime = None
+        self.focus = None
+        self.fn_held = False
+        self.shown = None
+
+    def reload_config(self):
+        try:
+            mtime = os.stat(CONFIG).st_mtime
+        except OSError:
+            mtime = 0
+        if mtime != self.cfg_mtime:
+            self.cfg_mtime = mtime
+            self.cfg = parse_config(read_text(CONFIG))
+            apply_driver_options(self.cfg)
+            self.shown = None
+
+    def refresh(self):
+        files = tuple(sorted(mode_files()))
+        if files != getattr(self, "files", None):
+            # the Touch Bar was (re)bound: it starts in the driver's default mode
+            self.files, self.shown = files, None
+        mode = resolve_mode(self.cfg, self.focus, self.fn_held)
+        if mode != self.shown and apply_mode(mode):
+            self.shown = mode
+
+
+def open_keyboard():
+    dev = find_keyboard(read_text(os.path.join(PROC, "bus/input/devices")))
+    if not dev:
+        return None
+    try:
+        return open(dev, "rb", buffering=0)
+    except OSError:
+        return None
+
+
+def main():
+    st = State()
+    kbd = None
+    while True:
+        st.reload_config()
+        st.focus = read_focus()
+        if kbd is None:
+            kbd = open_keyboard()
+        st.refresh()
+        if kbd is None:
+            time.sleep(POLL * 4)
+            continue
+        try:
+            ready, _, _ = select.select([kbd], [], [], POLL)
+            if ready:
+                data = kbd.read(EVENT_SIZE)
+                if not data or len(data) < EVENT_SIZE:
+                    raise OSError("keyboard closed")
+                etype, code, value = parse_event(data)
+                if etype == EV_KEY and code == KEY_FN:
+                    st.fn_held = fn_state(value, st.fn_held)
+                    st.refresh()
+        except OSError as e:
+            print("pomona-touchbard: %s, reopening" % e, file=sys.stderr)
+            try:
+                kbd.close()
+            except OSError:
+                pass
+            kbd = None
+            st.fn_held = False
+            # the Touch Bar device may have been rebound in the meantime
+            st.shown = None
+
+
+if __name__ == "__main__":
+    main()

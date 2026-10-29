@@ -1,0 +1,5 @@
+# pomona: never runtime-suspend the Apple T1 iBridge.
+# hid-appletb-kbd's suspend callback sends a HID request to the device it is
+# suspending, which deadlocks USB runtime PM on the T1 (kworker and every later
+# access to the device hang in D state). t1bridge disables autosuspend too.
+ACTION=="add|change", SUBSYSTEM=="usb", ATTR{idVendor}=="05ac", ATTR{idProduct}=="8600", TEST=="power/control", ATTR{power/control}="on"

@@ -1,0 +1,59 @@
+#!/bin/bash
+# pomona-admin - the only things the GUI does as root, run through pkexec.
+#
+#   pomona-admin start                 boot the T1 and bind its devices
+#   pomona-admin set-config FILE       validate FILE and install it as /etc/pomona/config.json
+#   pomona-admin enable | disable      the boot and Touch Bar services
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+set -uo pipefail
+LIBEXEC=${POMONA_LIBEXEC:-$(cd -- "$(dirname -- "$(readlink -f -- "$0")")" && pwd -P)}
+CONFIG_DIR=${POMONA_CONFIG_DIR:-/etc/pomona}
+UNITS="pomona.service pomona-touchbard.service"
+
+[ "$(id -u)" = 0 ] || { echo "pomona-admin: must run as root (pkexec)" >&2; exit 4; }
+
+case "${1:-}" in
+	start)
+		exec "$LIBEXEC/../../bin/pomona" start
+		;;
+	set-config)
+		src=${2:-}
+		[ -r "$src" ] || { echo "pomona-admin: cannot read $src" >&2; exit 2; }
+		[ "$(stat -c %s "$src")" -le 65536 ] || { echo "pomona-admin: config too large" >&2; exit 2; }
+		install -d -m 755 "$CONFIG_DIR"
+		tmp=$(mktemp "$CONFIG_DIR/.config.XXXXXX")
+		# re-serialise through the daemon's own validator: whatever the GUI sent,
+		# only known keys with sane values reach /etc
+		if ! python3 -I -B - "$src" "$tmp" "$LIBEXEC/pomona-touchbard" <<'EOF'
+import importlib.machinery, importlib.util, json, sys
+src, dst, mod = sys.argv[1:4]
+loader = importlib.machinery.SourceFileLoader("tbd", mod)
+spec = importlib.util.spec_from_loader("tbd", loader)
+tbd = importlib.util.module_from_spec(spec)
+loader.exec_module(tbd)
+cfg = tbd.parse_config(open(src).read())
+with open(dst, "w") as f:
+    json.dump(cfg, f, indent=2, sort_keys=True)
+    f.write("\n")
+EOF
+		then
+			rm -f "$tmp"
+			echo "pomona-admin: invalid config" >&2
+			exit 2
+		fi
+		chmod 644 "$tmp"
+		mv -f "$tmp" "$CONFIG_DIR/config.json"
+		echo "saved $CONFIG_DIR/config.json"
+		;;
+	enable)
+		systemctl enable --now $UNITS
+		;;
+	disable)
+		systemctl disable --now $UNITS
+		;;
+	*)
+		sed -n '2,7p' "$0" | sed 's/^# \{0,1\}//'
+		exit 2
+		;;
+esac

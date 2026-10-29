@@ -1,0 +1,243 @@
+# Pomona - Dutch translation
+# SPDX-License-Identifier: GPL-3.0-or-later
+msgid ""
+msgstr ""
+"Project-Id-Version: Pomona\n"
+"Language: nl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Setup"
+msgstr "Instellen"
+
+msgid "Touch Bar"
+msgstr "Touch Bar"
+
+msgid "Report"
+msgstr "Rapport"
+
+msgid "Refresh"
+msgstr "Vernieuwen"
+
+msgid "Checking this Mac…"
+msgstr "Deze Mac wordt gecontroleerd…"
+
+msgid "This Mac"
+msgstr "Deze Mac"
+
+msgid "Model"
+msgstr "Model"
+
+msgid "T1 Touch Bar MacBook Pro"
+msgstr "MacBook Pro met Touch Bar en T1-chip"
+
+msgid "Not a T1 Mac: Pomona cannot help here"
+msgstr "Geen Mac met T1-chip: Pomona kan hier niet helpen"
+
+msgid "Steps"
+msgstr "Stappen"
+
+msgid "Every step is listed; the ones not done yet have a button."
+msgstr "Alle stappen worden getoond; stappen die nog open staan hebben een knop."
+
+msgid "Waits for the T1 chip"
+msgstr "Wacht op de T1-chip"
+
+msgid "Customize"
+msgstr "Aanpassen"
+
+msgid "T1 firmware on the EFI partition"
+msgstr "T1-firmware op de EFI-partitie"
+
+msgid "Missing: boot macOS once, or see the troubleshooting guide"
+msgstr "Ontbreekt: start macOS één keer of lees de probleemoplossing"
+
+msgid "Pomona installed"
+msgstr "Pomona geïnstalleerd"
+
+msgid "Install"
+msgstr "Installeren"
+
+msgid "Not installed yet"
+msgstr "Nog niet geïnstalleerd"
+
+msgid "T1 chip running"
+msgstr "T1-chip actief"
+
+msgid "Running (05ac:8600)"
+msgstr "Actief (05ac:8600)"
+
+msgid "Stuck in recovery mode (05ac:1281)"
+msgstr "Vast in herstelmodus (05ac:1281)"
+
+msgid "Not found on USB"
+msgstr "Niet gevonden op USB"
+
+msgid "Start the T1"
+msgstr "T1 starten"
+
+msgid "Camera, Touch Bar and light sensor visible"
+msgstr "Camera, Touch Bar en lichtsensor zichtbaar"
+
+msgid "USB configuration"
+msgstr "USB-configuratie"
+
+msgid "Fix"
+msgstr "Herstellen"
+
+msgid "Touch Bar driver"
+msgstr "Touch Bar-stuurprogramma"
+
+msgid "Bound to hid-appletb-kbd"
+msgstr "Gekoppeld aan hid-appletb-kbd"
+
+msgid "Not bound"
+msgstr "Niet gekoppeld"
+
+msgid "Kernel too old: hid-appletb-kbd missing (needs 6.15+)"
+msgstr "Kernel te oud: hid-appletb-kbd ontbreekt (6.15 of nieuwer nodig)"
+
+msgid "FaceTime camera"
+msgstr "FaceTime-camera"
+
+msgid "Ambient light sensor"
+msgstr "Omgevingslichtsensor"
+
+msgid "Found"
+msgstr "Gevonden"
+
+msgid "Not found"
+msgstr "Niet gevonden"
+
+msgid "Start automatically at every power-on"
+msgstr "Automatisch starten bij elke keer aanzetten"
+
+msgid "Enable"
+msgstr "Inschakelen"
+
+msgid "Enabled"
+msgstr "Ingeschakeld"
+
+msgid "Disabled"
+msgstr "Uitgeschakeld"
+
+msgid "Everything works"
+msgstr "Alles werkt"
+
+msgid "Touch Bar, camera and light sensor are up."
+msgstr "Touch Bar, camera en lichtsensor werken."
+
+msgid "Keys"
+msgstr "Toetsen"
+
+msgid "What the Touch Bar shows"
+msgstr "Wat de Touch Bar toont"
+
+msgid "Default key set"
+msgstr "Standaardtoetsen"
+
+msgid "Esc only"
+msgstr "Alleen Esc"
+
+msgid "F1–F12"
+msgstr "F1–F12"
+
+msgid "Special keys"
+msgstr "Speciale toetsen"
+
+msgid "Fn switches key set"
+msgstr "Fn wisselt de toetsen"
+
+msgid "While Fn is held, F1–F12 and special keys swap"
+msgstr "Zolang Fn ingedrukt is, wisselen F1–F12 en de speciale toetsen"
+
+msgid "Dimming"
+msgstr "Dimmen"
+
+msgid "Dim when idle"
+msgstr "Dimmen bij inactiviteit"
+
+msgid "Seconds before dimming"
+msgstr "Seconden tot dimmen"
+
+msgid "Seconds before turning off"
+msgstr "Seconden tot uitschakelen"
+
+msgid "Applications"
+msgstr "Toepassingen"
+
+msgid "A key set for the application in the foreground"
+msgstr "Eigen toetsen voor de toepassing op de voorgrond"
+
+msgid "Add application"
+msgstr "Toepassing toevoegen"
+
+msgid "Remove"
+msgstr "Verwijderen"
+
+msgid "GNOME Shell extension"
+msgstr "GNOME Shell-extensie"
+
+msgid "Needed to know which application is in the foreground"
+msgstr "Nodig om te weten welke toepassing op de voorgrond staat"
+
+msgid "Active"
+msgstr "Actief"
+
+msgid "Installed, not active"
+msgstr "Geïnstalleerd, niet actief"
+
+msgid "Not installed (install Pomona first)"
+msgstr "Niet geïnstalleerd (installeer eerst Pomona)"
+
+msgid "Log out and back in, then press Refresh"
+msgstr "Meld je af en weer aan, en druk dan op Vernieuwen"
+
+msgid "Apply"
+msgstr "Toepassen"
+
+msgid "Settings applied"
+msgstr "Instellingen toegepast"
+
+msgid "Could not apply the settings"
+msgstr "Instellingen konden niet worden toegepast"
+
+msgid "Choose an application"
+msgstr "Kies een toepassing"
+
+msgid "Cancel"
+msgstr "Annuleren"
+
+msgid "Compatibility certificate"
+msgstr "Compatibiliteitscertificaat"
+
+msgid "Runs every check and writes a report you can share to grow the compatibility table. No serial numbers are included."
+msgstr "Voert alle controles uit en maakt een rapport dat je kunt delen om de compatibiliteitstabel aan te vullen. Er staan geen serienummers in."
+
+msgid "Create certificate"
+msgstr "Certificaat maken"
+
+msgid "Open folder"
+msgstr "Map openen"
+
+msgid "For a meaningful result, run it after a full shutdown and power-on."
+msgstr "Voor een betrouwbaar resultaat: uitvoeren na volledig afsluiten en opnieuw aanzetten."
+
+msgid "Done"
+msgstr "Klaar"
+
+msgid "Failed"
+msgstr "Mislukt"
+
+msgid "Working…"
+msgstr "Bezig…"
+
+msgid "About Pomona"
+msgstr "Over Pomona"
+
+msgid "Touch Bar, camera and light sensor for 2016–2017 MacBook Pro"
+msgstr "Touch Bar, camera en lichtsensor voor MacBook Pro 2016–2017"
+
+msgid "Provided as is, without any warranty: use at your own risk. Not affiliated with Apple Inc.; Apple, MacBook and Touch Bar are trademarks of Apple Inc."
+msgstr "Geleverd zoals het is, zonder enige garantie: gebruik op eigen risico. Niet verbonden aan Apple Inc.; Apple, MacBook en Touch Bar zijn handelsmerken van Apple Inc."

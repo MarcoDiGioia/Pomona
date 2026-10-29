@@ -1,0 +1,168 @@
+#!/bin/bash
+# Pomona - bring the Apple T1 (Touch Bar, FaceTime camera, ambient light sensor)
+# back to life on 2016-2017 MacBook Pro running Linux.
+#
+#   pomona start      boot the T1 and bind its devices (what the service runs at boot)
+#   pomona stop       release the T1 before power-off (what the service runs at shutdown)
+#   pomona status     one screen with the state of every piece (--json for the GUI)
+#   pomona certify    run the checks and write a compatibility certificate
+#   pomona version
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+set -uo pipefail
+
+_self=$(readlink -f -- "${BASH_SOURCE[0]}")
+for _lib in "${POMONA_LIB:-}" "$(dirname "$_self")/../lib/pomona/pomona.sh" "$(dirname "$_self")/../lib/pomona.sh" /usr/lib/pomona/pomona.sh /usr/local/lib/pomona/pomona.sh; do
+	[ -n "$_lib" ] && [ -r "$_lib" ] && { . "$_lib"; break; }
+done
+declare -F et1_start >/dev/null || { echo "pomona: cannot find lib/pomona.sh" >&2; exit 1; }
+
+yesno() { if "$@"; then echo yes; else echo no; fi; }
+svc() { local s; s=$(systemctl is-active "$1" 2>/dev/null); echo "${s:-unknown}"; }
+svc_enabled() { local s; s=$(systemctl is-enabled "$1" 2>/dev/null); echo "${s:-not-installed}"; }
+
+jbool() { if "$@"; then echo true; else echo false; fi; }
+
+cmd_status_json() {
+	local model fw
+	model=$(et1_model)
+	fw=$(et1_find_firmware || true)
+	cat <<EOF
+{
+  "version": $(json_str "$POMONA_VERSION"),
+  "model": $(json_str "$model"),
+  "model_class": $(json_str "$(et1_model_class "$model")"),
+  "compat": $(json_str "$(et1_compat_status "$model")"),
+  "t1_state": $(json_str "$(et1_t1_state)"),
+  "usb_config": $(json_str "$(et1_usb_config || true)"),
+  "firmware": $(json_str "$fw"),
+  "firmware_version": $(json_str "$([ -n "$fw" ] && et1_firmware_version "$fw")"),
+  "firmware_images": $([ -n "$fw" ] && et1_count_img4 "$fw" || echo 0),
+  "touchbar_bound": $(jbool et1_tb_bound),
+  "touchbar_driver_available": $(jbool et1_tb_driver_available),
+  "camera": $(jbool et1_camera_present),
+  "light_sensor": $(jbool et1_als_present),
+  "boot_service": $(json_str "$(svc_enabled pomona.service)"),
+  "touchbar_service": $(json_str "$(svc pomona-touchbard.service)"),
+  "installed": $(jbool et1_installed)
+}
+EOF
+}
+
+cmd_status() {
+	[ "${1:-}" = --json ] && { cmd_status_json; return; }
+	local model fw
+	model=$(et1_model)
+	fw=$(et1_find_firmware || true)
+	cat <<EOF
+Pomona $POMONA_VERSION
+model            ${model:-unknown} ($(et1_model_class "$model"), $(et1_compat_status "$model"))
+T1               $(et1_t1_state)  (USB configuration: $(et1_usb_config || true))
+firmware on ESP  ${fw:-missing}${fw:+  (version $(et1_firmware_version "$fw"))}
+Touch Bar driver $(yesno et1_tb_bound)
+camera           $(yesno et1_camera_present)
+light sensor     $(yesno et1_als_present)
+services         pomona: $(svc_enabled pomona.service), touchbar: $(svc pomona-touchbard.service)
+EOF
+}
+
+# ------------------------------------------------------------------ certify
+
+# json_str S -> S as a JSON string literal
+json_str() { printf '"%s"' "$(printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g')"; }
+
+cmd_certify() {
+	local out_dir=${1:-$PWD} model class compat stamp base fw fwver nimg t1 cfg tb cam als fnsvc bootsvc
+	local verdict checks=() pass=0 total=0 name ok
+	model=$(et1_model); class=$(et1_model_class "$model"); compat=$(et1_compat_status "$model")
+	stamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+	fw=$(et1_find_firmware || true)
+	fwver=""; nimg=0
+	if [ -n "$fw" ]; then fwver=$(et1_firmware_version "$fw"); nimg=$(et1_count_img4 "$fw"); fi
+	t1=$(et1_t1_state); cfg=$(et1_usb_config || true)
+	tb=$(yesno et1_tb_bound); cam=$(yesno et1_camera_present); als=$(yesno et1_als_present)
+	bootsvc=$(svc_enabled pomona.service)
+	fnsvc=$(svc pomona-touchbard.service)
+
+	check() { total=$((total + 1)); if [ "$2" = yes ]; then pass=$((pass + 1)); fi; checks+=("$1|$2"); }
+	check "T1 MacBook Pro model" "$([ "$class" = t1 ] && echo yes || echo no)"
+	check "EmbeddedOS firmware on the EFI partition" "$([ -n "$fw" ] && echo yes || echo no)"
+	check "Firmware holds 4 signed images" "$([ "$nimg" -ge 4 ] 2>/dev/null && echo yes || echo no)"
+	check "T1 running (05ac:8600)" "$([ "$t1" = booted ] && echo yes || echo no)"
+	check "USB configuration 1 selected" "$([ "$cfg" = 1 ] && echo yes || echo no)"
+	check "Touch Bar bound to hid-appletb-kbd" "$tb"
+	check "FaceTime camera present" "$cam"
+	check "Ambient light sensor present" "$als"
+	check "Boot service enabled" "$([ "$bootsvc" = enabled ] && echo yes || echo no)"
+	check "Touch Bar daemon running" "$([ "$fnsvc" = active ] && echo yes || echo no)"
+
+	if [ "$pass" = "$total" ]; then verdict=WORKING
+	elif [ "$t1" = booted ]; then verdict=PARTIAL
+	else verdict=NOT-WORKING; fi
+
+	base="$out_dir/pomona-certificate-${model:-unknown}-$(date -u +%Y%m%d-%H%M%S)"
+	base=${base//,/_}
+	{
+		echo "# Pomona compatibility certificate"
+		echo
+		echo "**Result: $verdict** ($pass/$total checks passed)"
+		echo
+		echo "| Field | Value |"
+		echo "| --- | --- |"
+		echo "| Date (UTC) | $stamp |"
+		echo "| Pomona | $POMONA_VERSION |"
+		echo "| Model | ${model:-unknown} |"
+		echo "| Board | $(et1_dmi board_name) |"
+		echo "| Mac firmware | $(et1_dmi bios_version) ($(et1_dmi bios_date)) |"
+		echo "| T1 EmbeddedOS on ESP | ${fwver:-n/a} |"
+		echo "| Distribution | $(et1_os_field PRETTY_NAME) |"
+		echo "| Kernel | $(uname -r) |"
+		echo "| Desktop | ${XDG_CURRENT_DESKTOP:-n/a} (${XDG_SESSION_TYPE:-n/a}) |"
+		echo
+		echo "| Check | Result |"
+		echo "| --- | --- |"
+		for c in "${checks[@]}"; do name=${c%|*}; ok=${c##*|}; echo "| $name | $([ "$ok" = yes ] && echo PASS || echo FAIL) |"; done
+		echo
+		echo "Pomona is provided as is, without warranty, and is not affiliated with Apple Inc."
+		echo
+		echo "No serial numbers, ECID or UUIDs are included. Please attach this file to a"
+		echo "\"Compatibility report\" issue so the table in docs/compatibility.md can grow."
+	} > "$base.md"
+	{
+		echo "{"
+		echo "  \"schema\": 1,"
+		echo "  \"date\": $(json_str "$stamp"),"
+		echo "  \"pomona\": $(json_str "$POMONA_VERSION"),"
+		echo "  \"result\": $(json_str "$verdict"),"
+		echo "  \"model\": $(json_str "$model"),"
+		echo "  \"board\": $(json_str "$(et1_dmi board_name)"),"
+		echo "  \"mac_firmware\": $(json_str "$(et1_dmi bios_version)"),"
+		echo "  \"embeddedos\": $(json_str "$fwver"),"
+		echo "  \"distribution\": $(json_str "$(et1_os_field PRETTY_NAME)"),"
+		echo "  \"kernel\": $(json_str "$(uname -r)"),"
+		echo "  \"desktop\": $(json_str "${XDG_CURRENT_DESKTOP:-}"),"
+		echo "  \"checks\": {"
+		local i=0
+		for c in "${checks[@]}"; do
+			i=$((i + 1)); name=${c%|*}; ok=${c##*|}
+			printf '    %s: %s%s\n' "$(json_str "$name")" "$([ "$ok" = yes ] && echo true || echo false)" "$([ "$i" -lt "${#checks[@]}" ] && echo ,)"
+		done
+		echo "  }"
+		echo "}"
+	} > "$base.json"
+	cat "$base.md"
+	echo
+	echo "written: $base.md"
+	echo "         $base.json"
+	[ "$verdict" = WORKING ]
+}
+
+case "${1:-status}" in
+	start) et1_start;;
+	stop) et1_stop;;
+	status) shift; cmd_status "$@";;
+	certify) shift; cmd_certify "$@";;
+	version|--version|-V) echo "Pomona $POMONA_VERSION";;
+	help|-h|--help) sed -n '2,9p' "$_self" | sed 's/^# \{0,1\}//';;
+	*) echo "pomona: unknown command $1 (try: pomona help)" >&2; exit 2;;
+esac

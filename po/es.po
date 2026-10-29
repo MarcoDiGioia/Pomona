@@ -1,0 +1,243 @@
+# Pomona - Spanish translation
+# SPDX-License-Identifier: GPL-3.0-or-later
+msgid ""
+msgstr ""
+"Project-Id-Version: Pomona\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Setup"
+msgstr "Configuración"
+
+msgid "Touch Bar"
+msgstr "Touch Bar"
+
+msgid "Report"
+msgstr "Informe"
+
+msgid "Refresh"
+msgstr "Actualizar"
+
+msgid "Checking this Mac…"
+msgstr "Comprobando este Mac…"
+
+msgid "This Mac"
+msgstr "Este Mac"
+
+msgid "Model"
+msgstr "Modelo"
+
+msgid "T1 Touch Bar MacBook Pro"
+msgstr "MacBook Pro con Touch Bar y chip T1"
+
+msgid "Not a T1 Mac: Pomona cannot help here"
+msgstr "No es un Mac con chip T1: Pomona no puede ayudar aquí"
+
+msgid "Steps"
+msgstr "Pasos"
+
+msgid "Every step is listed; the ones not done yet have a button."
+msgstr "Se muestran todos los pasos; los pendientes tienen un botón."
+
+msgid "Waits for the T1 chip"
+msgstr "Esperando al chip T1"
+
+msgid "Customize"
+msgstr "Personalización"
+
+msgid "T1 firmware on the EFI partition"
+msgstr "Firmware del T1 en la partición EFI"
+
+msgid "Missing: boot macOS once, or see the troubleshooting guide"
+msgstr "Falta: arranca macOS una vez o consulta la guía de solución de problemas"
+
+msgid "Pomona installed"
+msgstr "Pomona instalado"
+
+msgid "Install"
+msgstr "Instalar"
+
+msgid "Not installed yet"
+msgstr "Aún no instalado"
+
+msgid "T1 chip running"
+msgstr "Chip T1 en marcha"
+
+msgid "Running (05ac:8600)"
+msgstr "En marcha (05ac:8600)"
+
+msgid "Stuck in recovery mode (05ac:1281)"
+msgstr "Bloqueado en modo de recuperación (05ac:1281)"
+
+msgid "Not found on USB"
+msgstr "No encontrado en el USB"
+
+msgid "Start the T1"
+msgstr "Iniciar el T1"
+
+msgid "Camera, Touch Bar and light sensor visible"
+msgstr "Cámara, Touch Bar y sensor de luz visibles"
+
+msgid "USB configuration"
+msgstr "Configuración USB"
+
+msgid "Fix"
+msgstr "Arreglar"
+
+msgid "Touch Bar driver"
+msgstr "Controlador de la Touch Bar"
+
+msgid "Bound to hid-appletb-kbd"
+msgstr "Vinculado a hid-appletb-kbd"
+
+msgid "Not bound"
+msgstr "No vinculado"
+
+msgid "Kernel too old: hid-appletb-kbd missing (needs 6.15+)"
+msgstr "Núcleo demasiado antiguo: falta hid-appletb-kbd (requiere 6.15 o posterior)"
+
+msgid "FaceTime camera"
+msgstr "Cámara FaceTime"
+
+msgid "Ambient light sensor"
+msgstr "Sensor de luz ambiental"
+
+msgid "Found"
+msgstr "Encontrado"
+
+msgid "Not found"
+msgstr "No encontrado"
+
+msgid "Start automatically at every power-on"
+msgstr "Iniciar automáticamente en cada encendido"
+
+msgid "Enable"
+msgstr "Activar"
+
+msgid "Enabled"
+msgstr "Activado"
+
+msgid "Disabled"
+msgstr "Desactivado"
+
+msgid "Everything works"
+msgstr "Todo funciona"
+
+msgid "Touch Bar, camera and light sensor are up."
+msgstr "La Touch Bar, la cámara y el sensor de luz están activos."
+
+msgid "Keys"
+msgstr "Teclas"
+
+msgid "What the Touch Bar shows"
+msgstr "Qué muestra la Touch Bar"
+
+msgid "Default key set"
+msgstr "Teclas predeterminadas"
+
+msgid "Esc only"
+msgstr "Solo Esc"
+
+msgid "F1–F12"
+msgstr "F1–F12"
+
+msgid "Special keys"
+msgstr "Teclas especiales"
+
+msgid "Fn switches key set"
+msgstr "Fn cambia las teclas"
+
+msgid "While Fn is held, F1–F12 and special keys swap"
+msgstr "Mientras se mantiene pulsada Fn, F1–F12 y las teclas especiales se intercambian"
+
+msgid "Dimming"
+msgstr "Atenuación"
+
+msgid "Dim when idle"
+msgstr "Atenuar cuando está inactiva"
+
+msgid "Seconds before dimming"
+msgstr "Segundos antes de atenuar"
+
+msgid "Seconds before turning off"
+msgstr "Segundos antes de apagar"
+
+msgid "Applications"
+msgstr "Aplicaciones"
+
+msgid "A key set for the application in the foreground"
+msgstr "Teclas propias para la aplicación en primer plano"
+
+msgid "Add application"
+msgstr "Añadir aplicación"
+
+msgid "Remove"
+msgstr "Quitar"
+
+msgid "GNOME Shell extension"
+msgstr "Extensión de GNOME Shell"
+
+msgid "Needed to know which application is in the foreground"
+msgstr "Necesaria para saber qué aplicación está en primer plano"
+
+msgid "Active"
+msgstr "Activa"
+
+msgid "Installed, not active"
+msgstr "Instalada, no activa"
+
+msgid "Not installed (install Pomona first)"
+msgstr "No instalada (instala primero Pomona)"
+
+msgid "Log out and back in, then press Refresh"
+msgstr "Cierra la sesión y vuelve a entrar; luego pulsa Actualizar"
+
+msgid "Apply"
+msgstr "Aplicar"
+
+msgid "Settings applied"
+msgstr "Ajustes aplicados"
+
+msgid "Could not apply the settings"
+msgstr "No se pudieron aplicar los ajustes"
+
+msgid "Choose an application"
+msgstr "Elige una aplicación"
+
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgid "Compatibility certificate"
+msgstr "Certificado de compatibilidad"
+
+msgid "Runs every check and writes a report you can share to grow the compatibility table. No serial numbers are included."
+msgstr "Ejecuta todas las comprobaciones y genera un informe que puedes compartir para ampliar la tabla de compatibilidad. No incluye números de serie."
+
+msgid "Create certificate"
+msgstr "Crear certificado"
+
+msgid "Open folder"
+msgstr "Abrir carpeta"
+
+msgid "For a meaningful result, run it after a full shutdown and power-on."
+msgstr "Para un resultado fiable, ejecútalo tras un apagado completo y un nuevo encendido."
+
+msgid "Done"
+msgstr "Hecho"
+
+msgid "Failed"
+msgstr "Error"
+
+msgid "Working…"
+msgstr "En curso…"
+
+msgid "About Pomona"
+msgstr "Acerca de Pomona"
+
+msgid "Touch Bar, camera and light sensor for 2016–2017 MacBook Pro"
+msgstr "Touch Bar, cámara y sensor de luz para MacBook Pro 2016–2017"
+
+msgid "Provided as is, without any warranty: use at your own risk. Not affiliated with Apple Inc.; Apple, MacBook and Touch Bar are trademarks of Apple Inc."
+msgstr "Se proporciona tal cual, sin ninguna garantía: úsalo bajo tu responsabilidad. No está afiliado a Apple Inc.; Apple, MacBook y Touch Bar son marcas de Apple Inc."

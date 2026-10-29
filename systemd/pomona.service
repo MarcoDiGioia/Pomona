@@ -1,0 +1,15 @@
+[Unit]
+Description=pomona: boot the Apple T1 (Touch Bar, FaceTime camera, light sensor)
+RequiresMountsFor=/boot /boot/efi
+After=systemd-udevd.service
+
+[Service]
+Type=oneshot
+ExecStart=@PREFIX@/bin/pomona start
+# with the T1 running, power-off freezes unless Linux lets go of it first
+ExecStop=@PREFIX@/bin/pomona stop
+RemainAfterExit=yes
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

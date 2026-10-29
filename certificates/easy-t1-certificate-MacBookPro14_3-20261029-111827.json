@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "date": "2026-10-29T11:18:27Z",
+  "easy_t1": "0.3.0",
+  "result": "WORKING",
+  "model": "MacBookPro14,3",
+  "board": "Mac-551B86E5744E2388",
+  "mac_firmware": "529.140.2.0.0",
+  "embeddedos": "910",
+  "distribution": "Ubuntu 26.04.1 LTS",
+  "kernel": "7.0.0-42-generic",
+  "desktop": "ubuntu:GNOME",
+  "checks": {
+    "T1 MacBook Pro model": true,
+    "EmbeddedOS firmware on the EFI partition": true,
+    "Firmware holds 4 signed images": true,
+    "T1 running (05ac:8600)": true,
+    "USB configuration 1 selected": true,
+    "Touch Bar bound to hid-appletb-kbd": true,
+    "FaceTime camera present": true,
+    "Ambient light sensor present": true,
+    "Boot service enabled": true,
+    "Touch Bar daemon running": true
+  }
+}

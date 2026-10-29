@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>Pomona</vendor>
+  <action id="io.github.MarcoDiGioia.Pomona.admin">
+    <description>Configure the Apple T1 (Touch Bar, camera)</description>
+    <description xml:lang="it">Configurare il chip Apple T1 (Touch Bar, webcam)</description>
+    <description xml:lang="de">Den Apple-T1-Chip konfigurieren (Touch Bar, Kamera)</description>
+    <description xml:lang="es">Configurar el chip Apple T1 (Touch Bar, cámara)</description>
+    <description xml:lang="fr">Configurer la puce Apple T1 (Touch Bar, caméra)</description>
+    <description xml:lang="nl">De Apple T1-chip configureren (Touch Bar, camera)</description>
+    <description xml:lang="pl">Konfiguracja układu Apple T1 (Touch Bar, kamera)</description>
+    <description xml:lang="pt">Configurar o chip Apple T1 (Touch Bar, câmara)</description>
+    <message>Authentication is required to start the T1 or change the Touch Bar settings</message>
+    <message xml:lang="it">Serve la password per avviare il T1 o cambiare le impostazioni della Touch Bar</message>
+    <message xml:lang="de">Zum Starten des T1 oder Ändern der Touch-Bar-Einstellungen ist eine Authentifizierung erforderlich</message>
+    <message xml:lang="es">Se necesita autenticación para iniciar el T1 o cambiar los ajustes de la Touch Bar</message>
+    <message xml:lang="fr">Une authentification est nécessaire pour démarrer le T1 ou modifier les réglages de la Touch Bar</message>
+    <message xml:lang="nl">Authenticatie is nodig om de T1 te starten of de Touch Bar-instellingen te wijzigen</message>
+    <message xml:lang="pl">Do uruchomienia T1 lub zmiany ustawień Touch Bara wymagane jest uwierzytelnienie</message>
+    <message xml:lang="pt">É necessária autenticação para iniciar o T1 ou alterar as definições da Touch Bar</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">@PREFIX@/lib/pomona/pomona-admin</annotate>
+  </action>
+</policyconfig>

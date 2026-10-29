@@ -1,0 +1,13 @@
+{
+  "uuid": "pomona@MarcoDiGioia.github.io",
+  "name": "Pomona Touch Bar profiles",
+  "description": "Tells Pomona which application is in the foreground, so the Touch Bar can switch to that application's key set.",
+  "shell-version": [
+    "45",
+    "46",
+    "47",
+    "48",
+    "49",
+    "50"
+  ]
+}

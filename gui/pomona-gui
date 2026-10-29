@@ -1,0 +1,608 @@
+#!/usr/bin/python3 -I
+"""Pomona - graphical assistant for the Apple T1 on Linux.
+
+Three things in one window:
+  Setup      every step of the fix, each marked done or with a button
+  Customize  after installation: default key set, Fn, dimming, per-application key sets
+  Report     writes the compatibility certificate
+
+Everything that needs root goes through pkexec and pomona-admin.
+SPDX-License-Identifier: GPL-3.0-or-later
+"""
+import gettext
+import json
+import locale
+import os
+import shutil
+import sys
+import tempfile
+
+import gi
+
+gi.require_version("Gtk", "4.0")
+gi.require_version("Adw", "1")
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
+
+APP_ID = "io.github.MarcoDiGioia.Pomona"
+HERE = os.path.dirname(os.path.realpath(__file__))
+REPO = os.path.dirname(HERE)
+EXT_UUID = "pomona@MarcoDiGioia.github.io"
+CONFIG = os.environ.get("POMONA_CONFIG", "/etc/pomona/config.json")
+INSTALLED_ADMINS = ("/usr/lib/pomona/pomona-admin", "/usr/local/lib/pomona/pomona-admin")
+
+
+def installed_admin():
+    for path in INSTALLED_ADMINS:
+        if os.path.exists(path):
+            return path
+    return None
+
+MODE_NAMES = ["Esc only", "F1–F12", "Special keys"]
+DISCLAIMER = ("Provided as is, without any warranty: use at your own risk. "
+              "Not affiliated with Apple Inc.; Apple, MacBook and Touch Bar are trademarks of Apple Inc.")
+
+
+def mascot_texture():
+    """The Pomona mascot, from the source checkout or <prefix>/share/pomona."""
+    for path in (os.path.join(REPO, "assets", "pomona-mascot-256.png"),
+                 os.path.join(REPO, "share", "pomona", "pomona-mascot-256.png")):
+        if os.path.exists(path):
+            try:
+                return Gdk.Texture.new_from_filename(path)
+            except GLib.Error:
+                return None
+    return None
+
+
+def app_version():
+    lib = os.path.join(REPO, "lib", "pomona.sh")
+    if not os.path.exists(lib):
+        lib = os.path.join(REPO, "lib", "pomona", "pomona.sh")
+    try:
+        with open(lib) as f:
+            for line in f:
+                if line.startswith("POMONA_VERSION="):
+                    return line.split("=", 1)[1].strip()
+    except OSError:
+        pass
+    return ""
+
+# ------------------------------------------------------------------ i18n
+# Translations are standard gettext catalogs (po/*.po), compiled to
+# <prefix>/share/locale/<lang>/LC_MESSAGES/pomona.mo. Running from a source
+# checkout, `make mo` puts them in ./locale.
+
+DOMAIN = "pomona"
+
+
+def locale_dirs():
+    env = os.environ.get("POMONA_LOCALEDIR")
+    if env:
+        return [env]
+    return [os.path.join(REPO, "locale"), os.path.join(REPO, "share", "locale")]
+
+
+def load_translation():
+    for d in locale_dirs():
+        if os.path.isdir(d):
+            t = gettext.translation(DOMAIN, d, fallback=True)
+            if type(t) is not gettext.NullTranslations:
+                return t
+    return gettext.NullTranslations()
+
+
+_translation = load_translation()
+
+
+def _(text):
+    return _translation.gettext(text)
+
+
+# ------------------------------------------------------------------ helpers
+
+def pomona_cmd():
+    local = os.path.join(REPO, "bin", "pomona")
+    if os.path.exists(local):
+        return [local]
+    return [shutil.which("pomona") or "/usr/bin/pomona"]
+
+
+def run_async(argv, done):
+    """Run argv, call done(ok, output) on the main loop."""
+    try:
+        proc = Gio.Subprocess.new(argv, Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_MERGE)
+    except GLib.Error as e:
+        done(False, e.message)
+        return
+
+    def finish(p, res):
+        try:
+            _ok, out, _err = p.communicate_utf8_finish(res)
+        except GLib.Error as e:
+            done(False, e.message)
+            return
+        done(p.get_successful(), out or "")
+
+    proc.communicate_utf8_async(None, None, finish)
+
+
+def read_config():
+    try:
+        with open(CONFIG) as f:
+            raw = json.load(f)
+    except (OSError, ValueError):
+        raw = {}
+    cfg = {"default_mode": 2, "fn_swaps": True, "autodim": True, "dim_timeout": 60,
+           "idle_timeout": 15, "app_profiles": {}}
+    cfg.update({k: v for k, v in raw.items() if k in cfg})
+    return cfg
+
+
+def parse_extension_info(text):
+    """'active' | 'pending' | 'installed' | 'missing' from `LC_ALL=C gnome-extensions info`."""
+    if not text.strip():
+        return "missing"
+    fields = {}
+    for line in text.splitlines():
+        key, sep, value = line.strip().partition(":")
+        if sep:
+            fields[key.strip().lower()] = value.strip().upper()
+    if fields.get("enabled") != "YES":
+        return "installed"
+    # enabled, but GNOME on Wayland loads a newly installed extension only at the next login
+    return "active" if fields.get("state") in ("ACTIVE", "ENABLED") else "pending"
+
+
+def extension_state():
+    exe = shutil.which("gnome-extensions")
+    if not exe:
+        return "missing"
+    try:
+        import subprocess
+        env = dict(os.environ, LC_ALL="C", LANGUAGE="")
+        out = subprocess.run([exe, "info", EXT_UUID], capture_output=True, text=True, timeout=5, env=env).stdout
+    except Exception:
+        return "missing"
+    return parse_extension_info(out)
+
+
+def app_info(app_id):
+    for candidate in (app_id, app_id + ".desktop"):
+        try:
+            info = Gio.DesktopAppInfo.new(candidate)
+        except TypeError:
+            info = None
+        if info:
+            return info
+    return None
+
+
+# ------------------------------------------------------------------ libadwaita compatibility
+# Ubuntu 22.04 and its derivatives ship libadwaita 1.1; ToolbarView, SwitchRow and
+# SpinRow arrived in 1.4 and Dialog in 1.5. These helpers use them when present
+# and build the same thing from older widgets otherwise.
+# POMONA_OLD_ADW=1 forces the fallbacks, to test them on a newer system.
+
+def has_adw(name):
+    return hasattr(Adw, name) and not os.environ.get("POMONA_OLD_ADW")
+
+
+def toolbar(header, content):
+    if has_adw("ToolbarView"):
+        view = Adw.ToolbarView()
+        view.add_top_bar(header)
+        view.set_content(content)
+        return view
+    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    content.set_vexpand(True)
+    box.append(header)
+    box.append(content)
+    return box
+
+
+def switch_row(title, subtitle=None):
+    if has_adw("SwitchRow"):
+        row = Adw.SwitchRow(title=title)
+        if subtitle:
+            row.set_subtitle(subtitle)
+        return row, row
+    row = Adw.ActionRow(title=title)
+    if subtitle:
+        row.set_subtitle(subtitle)
+    sw = Gtk.Switch(valign=Gtk.Align.CENTER)
+    row.add_suffix(sw)
+    row.set_activatable_widget(sw)
+    return row, sw
+
+
+def spin_row(title, low, high):
+    if has_adw("SpinRow"):
+        row = Adw.SpinRow.new_with_range(low, high, 1)
+        row.set_title(title)
+        return row, row
+    row = Adw.ActionRow(title=title)
+    spin = Gtk.SpinButton.new_with_range(low, high, 1)
+    spin.set_valign(Gtk.Align.CENTER)
+    row.add_suffix(spin)
+    return row, spin
+
+
+def present_dialog(parent, title, content):
+    """Shows content in a modal dialog; returns a function that closes it."""
+    header = Adw.HeaderBar()
+    if has_adw("Dialog"):
+        dialog = Adw.Dialog(title=title, content_width=420, content_height=560)
+        dialog.set_child(toolbar(header, content))
+        dialog.present(parent)
+        return dialog.close
+    win = Adw.Window(title=title, modal=True, transient_for=parent, default_width=420, default_height=560)
+    win.set_content(toolbar(header, content))
+    win.present()
+    return win.close
+
+
+# ------------------------------------------------------------------ window
+
+class Window(Adw.ApplicationWindow):
+    def __init__(self, app):
+        super().__init__(application=app, title="Pomona", default_width=720, default_height=760)
+        self.status = {}
+        self.cfg = read_config()
+
+        self.toasts = Adw.ToastOverlay()
+        header = Adw.HeaderBar()
+        self.stack = Adw.ViewStack()
+        switcher = Adw.ViewSwitcher(stack=self.stack, policy=Adw.ViewSwitcherPolicy.WIDE)
+        header.set_title_widget(switcher)
+        refresh = Gtk.Button(icon_name="view-refresh-symbolic", tooltip_text=_("Refresh"))
+        refresh.connect("clicked", lambda *_a: self.refresh())
+        header.pack_end(refresh)
+        about = Gtk.Button(icon_name="help-about-symbolic", tooltip_text=_("About Pomona"))
+        about.connect("clicked", lambda *_a: self.show_about())
+        header.pack_start(about)
+        self.toasts.set_child(toolbar(header, self.stack))
+        self.set_content(self.toasts)
+
+        self.setup_page = Adw.PreferencesPage()
+        self.stack.add_titled_with_icon(self.setup_page, "setup", _("Setup"), "emblem-system-symbolic")
+        self.touchbar_page = Adw.PreferencesPage()
+        self.stack.add_titled_with_icon(self.touchbar_page, "customize", _("Customize"), "input-keyboard-symbolic")
+        self.report_page = Adw.PreferencesPage()
+        self.stack.add_titled_with_icon(self.report_page, "report", _("Report"), "emblem-documents-symbolic")
+
+        self.build_touchbar_page()
+        self.build_report_page()
+        self.refresh()
+
+    # -------------------------------------------------------------- common
+
+    def toast(self, text):
+        self.toasts.add_toast(Adw.Toast(title=text, timeout=3))
+
+    def clear(self, page):
+        # PreferencesPage wraps groups in internal containers: remove what we added
+        for g in getattr(page, "_groups", []):
+            page.remove(g)
+        page._groups = []
+
+    def add_group(self, page, group):
+        page.add(group)
+        page._groups = getattr(page, "_groups", []) + [group]
+
+    def admin(self, args, label, then=None):
+        admin = installed_admin() or os.path.join(REPO, "libexec", "pomona-admin")
+        self.toast(_("Working…"))
+
+        def done(ok, out):
+            self.toast(_("Done") if ok else "%s: %s" % (_("Failed"), (out.strip().splitlines() or [""])[-1]))
+            if then:
+                then(ok, out)
+            self.refresh()
+
+        run_async(["pkexec", admin] + args, done)
+
+    def refresh(self):
+        def done(ok, out):
+            try:
+                self.status = json.loads(out) if ok else {}
+            except ValueError:
+                self.status = {}
+            self.build_setup_page()
+            self.update_extension_row()
+
+        run_async(pomona_cmd() + ["status", "--json"], done)
+
+    def show_about(self):
+        dialog = Gtk.AboutDialog(
+            transient_for=self, modal=True,
+            program_name="Pomona", logo_icon_name="io.github.MarcoDiGioia.Pomona", version=app_version(),
+            comments=_("Touch Bar, camera and light sensor for 2016–2017 MacBook Pro") + "\n\n" + _(DISCLAIMER),
+            license_type=Gtk.License.GPL_3_0, authors=["Marco Di Gioia"],
+            copyright="© 2026 Marco Di Gioia")
+        dialog.present()
+
+    # -------------------------------------------------------------- setup
+
+    def step(self, group, title, ok, subtitle, button=None, action=None):
+        row = Adw.ActionRow(title=title, subtitle=subtitle)
+        icon = Gtk.Image.new_from_icon_name("emblem-ok-symbolic" if ok else "dialog-warning-symbolic")
+        icon.add_css_class("success" if ok else "warning")
+        row.add_prefix(icon)
+        if button and not ok and action:
+            b = Gtk.Button(label=button, valign=Gtk.Align.CENTER)
+            b.add_css_class("suggested-action")
+            b.connect("clicked", lambda *_a: action())
+            row.add_suffix(b)
+        group.add(row)
+        return ok
+
+    def build_setup_page(self):
+        s = self.status
+        page = self.setup_page
+        self.clear(page)
+
+        mac = Adw.PreferencesGroup(title=_("This Mac"))
+        model = s.get("model") or "?"
+        is_t1 = s.get("model_class") == "t1"
+        mac.add(Adw.ActionRow(title=_("Model"), subtitle="%s · %s" % (
+            model, _("T1 Touch Bar MacBook Pro") if is_t1 else _("Not a T1 Mac: Pomona cannot help here"))))
+        self.add_group(page, mac)
+
+        steps = Adw.PreferencesGroup(title=_("Steps"), description=_("Every step is listed; the ones not done yet have a button."))
+        self.add_group(page, steps)
+        installed = bool(s.get("installed"))
+        fw_ok = bool(s.get("firmware"))
+        t1 = s.get("t1_state")
+        oks = []
+        oks.append(self.step(steps, _("T1 firmware on the EFI partition"), fw_ok,
+                             "%s (%s)" % (s.get("firmware"), s.get("firmware_version")) if fw_ok else
+                             _("Missing: boot macOS once, or see the troubleshooting guide")))
+        oks.append(self.step(steps, _("Pomona installed"), installed,
+                             os.path.dirname(installed_admin() or "") if installed else _("Not installed yet"),
+                             _("Install"), self.install))
+        oks.append(self.step(steps, _("T1 chip running"), t1 == "booted",
+                             {"booted": _("Running (05ac:8600)"), "recovery": _("Stuck in recovery mode (05ac:1281)")}
+                             .get(t1, _("Not found on USB")),
+                             _("Start the T1"), (lambda: self.admin(["start"], "start")) if installed else None))
+        # every step is always listed; the ones after "T1 chip running" can only
+        # be fixed once the chip runs, so until then they wait without a button
+        booted = t1 == "booted"
+        start = (lambda: self.admin(["start"], "start")) if installed and booted else None
+        waiting = _("Waits for the T1 chip")
+        cfg_ok = s.get("usb_config") == "1"
+        oks.append(self.step(steps, _("Camera, Touch Bar and light sensor visible"), cfg_ok,
+                             "%s: %s" % (_("USB configuration"), s.get("usb_config") or "-") if booted else waiting,
+                             _("Fix"), start))
+        drv = s.get("touchbar_driver_available")
+        bound = bool(s.get("touchbar_bound"))
+        oks.append(self.step(steps, _("Touch Bar driver"), bound,
+                             _("Bound to hid-appletb-kbd") if bound else
+                             (_("Kernel too old: hid-appletb-kbd missing (needs 6.15+)") if not drv else
+                              (_("Not bound") if booted else waiting)),
+                             _("Fix"), start if drv else None))
+        oks.append(self.step(steps, _("FaceTime camera"), bool(s.get("camera")),
+                             _("Found") if s.get("camera") else (_("Not found") if booted else waiting)))
+        oks.append(self.step(steps, _("Ambient light sensor"), bool(s.get("light_sensor")),
+                             _("Found") if s.get("light_sensor") else (_("Not found") if booted else waiting)))
+        enabled = s.get("boot_service") == "enabled" and s.get("touchbar_service") == "active"
+        oks.append(self.step(steps, _("Start automatically at every power-on"), enabled,
+                             _("Enabled") if enabled else _("Disabled"),
+                             _("Enable"), (lambda: self.admin(["enable"], "enable")) if installed else None))
+
+        if is_t1 and all(oks):
+            done = Adw.PreferencesGroup()
+            status = Adw.StatusPage(icon_name="emblem-ok-symbolic", title=_("Everything works"),
+                                    description=_("Touch Bar, camera and light sensor are up."))
+            mascot = mascot_texture()
+            if mascot:
+                status.set_paintable(mascot)
+            done.add(status)
+            self.add_group(page, done)
+
+    def install(self):
+        script = os.path.join(REPO, "install.sh")
+        if not os.path.exists(script):
+            self.toast(_("Failed"))
+            return
+        self.toast(_("Working…"))
+        run_async(["pkexec", "bash", script], lambda ok, out: (self.toast(_("Done") if ok else _("Failed")), self.refresh()))
+
+    # -------------------------------------------------------------- touch bar
+
+    def build_touchbar_page(self):
+        page = self.touchbar_page
+        cfg = self.cfg
+        modes = Gtk.StringList.new([_(m) for m in MODE_NAMES])
+
+        keys = Adw.PreferencesGroup(title=_("Keys"), description=_("What the Touch Bar shows"))
+        self.mode_row = Adw.ComboRow(title=_("Default key set"), model=modes)
+        self.mode_row.set_selected(int(cfg["default_mode"]))
+        keys.add(self.mode_row)
+        row, self.fn_row = switch_row(_("Fn switches key set"), _("While Fn is held, F1–F12 and special keys swap"))
+        self.fn_row.set_active(bool(cfg["fn_swaps"]))
+        keys.add(row)
+        page.add(keys)
+
+        dim = Adw.PreferencesGroup(title=_("Dimming"))
+        row, self.dim_row = switch_row(_("Dim when idle"))
+        self.dim_row.set_active(bool(cfg["autodim"]))
+        dim.add(row)
+        dim_row, self.dim_timeout = spin_row(_("Seconds before dimming"), 1, 3600)
+        self.dim_timeout.set_value(cfg["dim_timeout"])
+        dim.add(dim_row)
+        idle_row, self.idle_timeout = spin_row(_("Seconds before turning off"), 1, 3600)
+        self.idle_timeout.set_value(cfg["idle_timeout"])
+        dim.add(idle_row)
+        self.dim_row.bind_property("active", dim_row, "sensitive", 2)
+        self.dim_row.bind_property("active", idle_row, "sensitive", 2)
+        page.add(dim)
+
+        self.apps_group = Adw.PreferencesGroup(title=_("Applications"),
+                                               description=_("A key set for the application in the foreground"))
+        add = Gtk.Button(icon_name="list-add-symbolic", tooltip_text=_("Add application"), valign=Gtk.Align.CENTER)
+        add.add_css_class("flat")
+        add.connect("clicked", lambda *_a: self.pick_app())
+        self.apps_group.set_header_suffix(add)
+        self.ext_row = Adw.ActionRow(title=_("GNOME Shell extension"),
+                                     subtitle=_("Needed to know which application is in the foreground"))
+        self.apps_group.add(self.ext_row)
+        self.profile_rows = {}
+        for app_id, mode in sorted(cfg["app_profiles"].items()):
+            self.add_profile_row(app_id, mode)
+        page.add(self.apps_group)
+
+        apply_group = Adw.PreferencesGroup()
+        apply = Gtk.Button(label=_("Apply"), halign=Gtk.Align.END)
+        apply.add_css_class("suggested-action")
+        apply.add_css_class("pill")
+        apply.connect("clicked", lambda *_a: self.apply_settings())
+        apply_group.add(apply)
+        page.add(apply_group)
+
+    def update_extension_row(self):
+        if not hasattr(self, "ext_row"):
+            return
+        for w in getattr(self, "_ext_suffix", []):
+            self.ext_row.remove(w)
+        self._ext_suffix = []
+        state = extension_state()
+        label = {"active": _("Active"), "installed": _("Installed, not active"),
+                 "pending": _("Log out and back in, then press Refresh"),
+                 "missing": _("Not installed (install Pomona first)")}[state]
+        lbl = Gtk.Label(label=label, valign=Gtk.Align.CENTER)
+        lbl.add_css_class("dim-label")
+        self.ext_row.add_suffix(lbl)
+        self._ext_suffix.append(lbl)
+        if state == "installed":
+            b = Gtk.Button(label=_("Enable"), valign=Gtk.Align.CENTER)
+            b.connect("clicked", lambda *_a: run_async(
+                ["gnome-extensions", "enable", EXT_UUID],
+                lambda ok, out: (self.toast(_("Done") if ok else _("Log out and back in, then press Refresh")),
+                                 self.update_extension_row())))
+            self.ext_row.add_suffix(b)
+            self._ext_suffix.append(b)
+
+    def add_profile_row(self, app_id, mode):
+        info = app_info(app_id)
+        row = Adw.ComboRow(title=info.get_display_name() if info else app_id, subtitle=app_id,
+                           model=Gtk.StringList.new([_(m) for m in MODE_NAMES]))
+        row.set_selected(int(mode))
+        if info and info.get_icon():
+            row.add_prefix(Gtk.Image.new_from_gicon(info.get_icon()))
+        rm = Gtk.Button(icon_name="user-trash-symbolic", tooltip_text=_("Remove"), valign=Gtk.Align.CENTER)
+        rm.add_css_class("flat")
+        rm.connect("clicked", lambda *_a: self.remove_profile(app_id))
+        row.add_suffix(rm)
+        self.apps_group.add(row)
+        self.profile_rows[app_id] = row
+
+    def remove_profile(self, app_id):
+        row = self.profile_rows.pop(app_id, None)
+        if row:
+            self.apps_group.remove(row)
+
+    def pick_app(self):
+        close = [None]
+        box = Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
+        box.add_css_class("boxed-list")
+        apps = [a for a in Gio.AppInfo.get_all() if a.should_show() and a.get_id()]
+        apps.sort(key=lambda a: a.get_display_name().lower())
+        for a in apps:
+            app_id = a.get_id()[:-len(".desktop")] if a.get_id().endswith(".desktop") else a.get_id()
+            if app_id.lower() in self.profile_rows:
+                continue
+            row = Adw.ActionRow(title=a.get_display_name(), subtitle=app_id, activatable=True)
+            if a.get_icon():
+                row.add_prefix(Gtk.Image.new_from_gicon(a.get_icon()))
+            row.connect("activated", lambda _r, i=app_id: (self.add_profile_row(i.lower(), 1), close[0]()))
+            box.append(row)
+        scroll = Gtk.ScrolledWindow(vexpand=True)
+        clamp = Adw.Clamp(margin_top=12, margin_bottom=12, margin_start=12, margin_end=12)
+        clamp.set_child(box)
+        scroll.set_child(clamp)
+        close[0] = present_dialog(self, _("Choose an application"), scroll)
+
+    def collect_config(self):
+        return {
+            "default_mode": int(self.mode_row.get_selected()),
+            "fn_swaps": self.fn_row.get_active(),
+            "autodim": self.dim_row.get_active(),
+            "dim_timeout": int(self.dim_timeout.get_value()),
+            "idle_timeout": int(self.idle_timeout.get_value()),
+            "app_profiles": {a: int(r.get_selected()) for a, r in self.profile_rows.items()},
+        }
+
+    def apply_settings(self):
+        cfg = self.collect_config()
+        fd, path = tempfile.mkstemp(prefix="pomona-", suffix=".json")
+        with os.fdopen(fd, "w") as f:
+            json.dump(cfg, f)
+        os.chmod(path, 0o644)
+
+        def then(ok, _out):
+            try:
+                os.unlink(path)
+            except OSError:
+                pass
+            self.toast(_("Settings applied") if ok else _("Could not apply the settings"))
+
+        self.admin(["set-config", path], "set-config", then)
+
+    # -------------------------------------------------------------- report
+
+    def build_report_page(self):
+        page = self.report_page
+        group = Adw.PreferencesGroup(title=_("Compatibility certificate"),
+                                     description=_("Runs every check and writes a report you can share to grow the compatibility table. No serial numbers are included."))
+        row = Adw.ActionRow(title=_("For a meaningful result, run it after a full shutdown and power-on."))
+        btn = Gtk.Button(label=_("Create certificate"), valign=Gtk.Align.CENTER)
+        btn.add_css_class("suggested-action")
+        btn.connect("clicked", lambda *_a: self.certify())
+        row.add_suffix(btn)
+        group.add(row)
+        page.add(group)
+
+        out_group = Adw.PreferencesGroup()
+        self.report_view = Gtk.TextView(editable=False, monospace=True, wrap_mode=Gtk.WrapMode.WORD_CHAR,
+                                        top_margin=12, bottom_margin=12, left_margin=12, right_margin=12)
+        frame = Gtk.Frame()
+        frame.set_child(self.report_view)
+        out_group.add(frame)
+        self.open_btn = Gtk.Button(label=_("Open folder"), halign=Gtk.Align.END, sensitive=False, margin_top=12)
+        self.open_btn.connect("clicked", lambda *_a: Gio.AppInfo.launch_default_for_uri(
+            GLib.filename_to_uri(self.cert_dir(), None), None))
+        out_group.add(self.open_btn)
+        page.add(out_group)
+
+    def cert_dir(self):
+        d = os.path.join(GLib.get_user_data_dir(), "pomona", "certificates")
+        os.makedirs(d, exist_ok=True)
+        return d
+
+    def certify(self):
+        def done(_ok, out):
+            self.report_view.get_buffer().set_text(out)
+            self.open_btn.set_sensitive(True)
+
+        run_async(pomona_cmd() + ["certify", self.cert_dir()], done)
+
+
+class App(Adw.Application):
+    def __init__(self):
+        super().__init__(application_id=APP_ID, flags=Gio.ApplicationFlags.DEFAULT_FLAGS)
+
+    def do_activate(self):
+        win = self.get_active_window() or Window(self)
+        win.present()
+
+
+def main():
+    try:
+        locale.setlocale(locale.LC_ALL, "")
+    except locale.Error:
+        pass
+    return App().run(sys.argv)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

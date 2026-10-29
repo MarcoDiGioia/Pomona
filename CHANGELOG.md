@@ -1,0 +1,73 @@
+# Changelog
+
+## 0.7.1 - 2026-10-29
+
+- New logo: a crowned pomegranate in a laurel wreath, redrawn as a vector icon so it stays sharp at every size.
+- The Pomona mascot (a penguin dressed as the Roman goddess of orchards) appears in the README and on the app's "Everything works" page.
+- App Center branding colours; artwork credited under CC BY-SA 4.0.
+
+## 0.7.0 - 2026-10-29
+
+- **easy-t1 is now Pomona**: a general project for Linux on Mac hardware, with the T1 (Touch Bar, camera, light sensor) as its first module. New name for the package (`pomona`), commands (`pomona`, `pomona-gui`), services (`pomona.service`, `pomona-touchbard.service`), settings (`/etc/pomona/config.json`), app ID (`io.github.MarcoDiGioia.Pomona`) and GNOME extension (`pomona@MarcoDiGioia.github.io`).
+- New logo: a pomegranate, the fruit of Pomona, Roman goddess of orchards.
+- The `pomona` package replaces `easy-t1` and migrates its settings; App Center links the old app ID to the new one.
+- Homepage, bug tracker and translation links: https://github.com/MarcoDiGioia/Pomona
+
+## 0.6.0 - 2026-10-29
+
+- Licence changed from MIT to GPL-3.0-or-later: anyone who distributes Pomona, modified or not, must share its source under the same licence.
+
+## 0.5.1 - 2026-10-29
+
+- Legal notes: `LEGAL.md` (no warranty, trademarks, no Apple software distributed, interoperability, privacy), `THIRD_PARTY_NOTICES.md`, a Legal section in the README, an About dialog in the app with the disclaimer in every language, and a disclaimer line in compatibility certificates.
+
+## 0.5.0 - 2026-10-29
+
+- The app is translated into Italian, German, French, Spanish, Portuguese, Dutch and Polish, with standard gettext catalogs in `po/` (one `.po` per language, `pomona.pot` as template). `tools/msgfmt.py` compiles them without needing GNU gettext; `make mo` builds them into `locale/`.
+- App Center listing, menu entry and password dialog translated into the same languages.
+- Tests check that every language translates every string of the app.
+
+## 0.4.4 - 2026-10-29
+
+- AppStream metainfo (`io.github.MarcoDiGioia.Pomona.metainfo.xml`) with English and Italian summary, description and release notes, so App Center and GNOME Software show the description in the system language.
+
+## 0.4.3 - 2026-10-29
+
+- Fix: USB runtime autosuspend of the iBridge deadlocked `hid-appletb-kbd` (its suspend callback sends a mode request to the device being suspended); afterwards every access to the T1 hung in D state, including shutdown. Pomona now keeps the T1 out of runtime suspend with a udev rule and at every start, as t1bridge does.
+- `pomona stop` gives up after 10 s instead of holding shutdown forever if the T1 is not answering; the unit's stop timeout is 20 s.
+- `uninstall.sh` refuses to run when the package is installed, so it cannot remove packaged files.
+
+## 0.4.2 - 2026-10-29
+
+- After resume from suspend, a systemd-sleep hook runs `pomona start`, which brings the T1, the camera and the Touch Bar back if anything was reset.
+- Removing Pomona (package or `uninstall.sh`) now stops the boot service too, so the next power-off still releases the T1.
+- The app read the GNOME extension state from translated `gnome-extensions` output and could show "Active" for an inactive extension in Italian; it now parses the untranslated output and also reports "log out and back in" when the extension is enabled but not loaded yet.
+- `uninstall.sh` also removes the bytecode cache left by earlier versions.
+
+## 0.4.1 - 2026-10-29
+
+- Fix: with the T1 running, the Mac froze at the very end of power-off (Ubuntu logo, Touch Bar still lit). `pomona.service` now releases the iBridge from the USB bus at shutdown (`pomona stop`); verified on MacBookPro14,3.
+
+## 0.4.0 - 2026-10-29
+
+- `.deb` package (`make deb`): installs under `/usr`, enables and starts the services in `postinst`, refuses to install over a source install, `apt remove` disables everything and `apt purge` also removes the settings.
+- Paths are no longer hard-coded: units, desktop entry and polkit policy are templates, and the tools find each other relative to where they are installed.
+- Verified on MacBookPro14,3: the libusb boot helper brings the T1 up on its own at a cold boot in about 10 s.
+
+## 0.3.0 - 2026-10-29
+
+- `pomona-t1-boot` rewritten on plain libusb-1.0: no libirecovery, same protocol, works with every distribution's libusb.
+- The app runs on libadwaita 1.1 (Ubuntu 22.04 and derivatives) with fallback widgets.
+- The installer builds in a temporary directory, never in the source tree, and installs GTK 4 / libadwaita bindings on apt, dnf, pacman and zypper.
+- `tools/touchbar-probe` to map the Touch Bar keys for a fallback on kernels older than 6.15.
+
+## 0.2.0 - 2026-10-29
+
+- GTK 4 / libadwaita app with three pages: guided setup, Touch Bar settings, compatibility report.
+- Touch Bar daemon replaces the Fn daemon: default key set, per-application key sets (GNOME Shell extension), Fn swap, dimming, all from `/etc/pomona/config.json`.
+- `pomona status --json`, `pomona-admin` through polkit, desktop entry and icon.
+
+## 0.1.0 - 2026-10-29
+
+- First release: boots the T1 from the macOS-written EmbeddedOS image, selects USB configuration 1, binds the Touch Bar to `hid-appletb-kbd`, Fn daemon, `status` and `certify` commands, installer for apt, dnf, pacman and zypper.
+- Verified on MacBookPro14,3 with Ubuntu 26.04.

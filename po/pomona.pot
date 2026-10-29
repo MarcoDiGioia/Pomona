@@ -1,0 +1,243 @@
+# Pomona - translation template
+# SPDX-License-Identifier: GPL-3.0-or-later
+msgid ""
+msgstr ""
+"Project-Id-Version: Pomona\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Setup"
+msgstr ""
+
+msgid "Touch Bar"
+msgstr ""
+
+msgid "Report"
+msgstr ""
+
+msgid "Refresh"
+msgstr ""
+
+msgid "Checking this Mac…"
+msgstr ""
+
+msgid "This Mac"
+msgstr ""
+
+msgid "Model"
+msgstr ""
+
+msgid "T1 Touch Bar MacBook Pro"
+msgstr ""
+
+msgid "Not a T1 Mac: Pomona cannot help here"
+msgstr ""
+
+msgid "Steps"
+msgstr ""
+
+msgid "Every step is listed; the ones not done yet have a button."
+msgstr ""
+
+msgid "Waits for the T1 chip"
+msgstr ""
+
+msgid "Customize"
+msgstr ""
+
+msgid "T1 firmware on the EFI partition"
+msgstr ""
+
+msgid "Missing: boot macOS once, or see the troubleshooting guide"
+msgstr ""
+
+msgid "Pomona installed"
+msgstr ""
+
+msgid "Install"
+msgstr ""
+
+msgid "Not installed yet"
+msgstr ""
+
+msgid "T1 chip running"
+msgstr ""
+
+msgid "Running (05ac:8600)"
+msgstr ""
+
+msgid "Stuck in recovery mode (05ac:1281)"
+msgstr ""
+
+msgid "Not found on USB"
+msgstr ""
+
+msgid "Start the T1"
+msgstr ""
+
+msgid "Camera, Touch Bar and light sensor visible"
+msgstr ""
+
+msgid "USB configuration"
+msgstr ""
+
+msgid "Fix"
+msgstr ""
+
+msgid "Touch Bar driver"
+msgstr ""
+
+msgid "Bound to hid-appletb-kbd"
+msgstr ""
+
+msgid "Not bound"
+msgstr ""
+
+msgid "Kernel too old: hid-appletb-kbd missing (needs 6.15+)"
+msgstr ""
+
+msgid "FaceTime camera"
+msgstr ""
+
+msgid "Ambient light sensor"
+msgstr ""
+
+msgid "Found"
+msgstr ""
+
+msgid "Not found"
+msgstr ""
+
+msgid "Start automatically at every power-on"
+msgstr ""
+
+msgid "Enable"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Everything works"
+msgstr ""
+
+msgid "Touch Bar, camera and light sensor are up."
+msgstr ""
+
+msgid "Keys"
+msgstr ""
+
+msgid "What the Touch Bar shows"
+msgstr ""
+
+msgid "Default key set"
+msgstr ""
+
+msgid "Esc only"
+msgstr ""
+
+msgid "F1–F12"
+msgstr ""
+
+msgid "Special keys"
+msgstr ""
+
+msgid "Fn switches key set"
+msgstr ""
+
+msgid "While Fn is held, F1–F12 and special keys swap"
+msgstr ""
+
+msgid "Dimming"
+msgstr ""
+
+msgid "Dim when idle"
+msgstr ""
+
+msgid "Seconds before dimming"
+msgstr ""
+
+msgid "Seconds before turning off"
+msgstr ""
+
+msgid "Applications"
+msgstr ""
+
+msgid "A key set for the application in the foreground"
+msgstr ""
+
+msgid "Add application"
+msgstr ""
+
+msgid "Remove"
+msgstr ""
+
+msgid "GNOME Shell extension"
+msgstr ""
+
+msgid "Needed to know which application is in the foreground"
+msgstr ""
+
+msgid "Active"
+msgstr ""
+
+msgid "Installed, not active"
+msgstr ""
+
+msgid "Not installed (install Pomona first)"
+msgstr ""
+
+msgid "Log out and back in, then press Refresh"
+msgstr ""
+
+msgid "Apply"
+msgstr ""
+
+msgid "Settings applied"
+msgstr ""
+
+msgid "Could not apply the settings"
+msgstr ""
+
+msgid "Choose an application"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Compatibility certificate"
+msgstr ""
+
+msgid "Runs every check and writes a report you can share to grow the compatibility table. No serial numbers are included."
+msgstr ""
+
+msgid "Create certificate"
+msgstr ""
+
+msgid "Open folder"
+msgstr ""
+
+msgid "For a meaningful result, run it after a full shutdown and power-on."
+msgstr ""
+
+msgid "Done"
+msgstr ""
+
+msgid "Failed"
+msgstr ""
+
+msgid "Working…"
+msgstr ""
+
+msgid "About Pomona"
+msgstr ""
+
+msgid "Touch Bar, camera and light sensor for 2016–2017 MacBook Pro"
+msgstr ""
+
+msgid "Provided as is, without any warranty: use at your own risk. Not affiliated with Apple Inc.; Apple, MacBook and Touch Bar are trademarks of Apple Inc."
+msgstr ""

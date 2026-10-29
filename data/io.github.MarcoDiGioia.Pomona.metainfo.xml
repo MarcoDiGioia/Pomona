@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AppStream metadata: what App Center / GNOME Software show for Pomona -->
+<component type="desktop-application">
+  <id>io.github.MarcoDiGioia.Pomona</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Pomona</name>
+
+  <summary>Touch Bar, camera and light sensor for 2016–2017 MacBook Pro</summary>
+  <summary xml:lang="it">Touch Bar, webcam e sensore di luce per MacBook Pro 2016–2017</summary>
+  <summary xml:lang="de">Touch Bar, Kamera und Lichtsensor für MacBook Pro 2016–2017</summary>
+  <summary xml:lang="es">Touch Bar, cámara y sensor de luz para MacBook Pro 2016–2017</summary>
+  <summary xml:lang="fr">Touch Bar, caméra et capteur de lumière pour MacBook Pro 2016–2017</summary>
+  <summary xml:lang="nl">Touch Bar, camera en lichtsensor voor MacBook Pro 2016–2017</summary>
+  <summary xml:lang="pl">Touch Bar, kamera i czujnik światła dla MacBooka Pro 2016–2017</summary>
+  <summary xml:lang="pt">Touch Bar, câmara e sensor de luz para MacBook Pro 2016–2017</summary>
+
+  <description>
+    <p>
+      On the 2016–2017 MacBook Pro with Touch Bar, the Touch Bar, the FaceTime camera and the
+      ambient light sensor are run by the Apple T1 chip, which Linux often finds stuck in recovery
+      mode. pomona starts the T1 at every power-on, from the firmware macOS already keeps on the
+      EFI partition, and connects its devices to the kernel drivers.
+    </p>
+    <p xml:lang="it">
+      Sui MacBook Pro 2016–2017 con Touch Bar, la Touch Bar, la webcam FaceTime e il sensore di
+      luce ambientale dipendono dal chip Apple T1, che su Linux resta spesso bloccato in modalità
+      di ripristino. Pomona avvia il T1 a ogni accensione, usando il firmware che macOS ha già
+      salvato sulla partizione EFI, e collega i suoi dispositivi ai driver del kernel.
+    </p>
+    <p xml:lang="de">Beim MacBook Pro 2016–2017 mit Touch Bar werden Touch Bar, FaceTime-Kamera und Umgebungslichtsensor vom Apple-T1-Chip gesteuert, den Linux oft im Wiederherstellungsmodus vorfindet. pomona startet den T1 bei jedem Einschalten mit der Firmware, die macOS bereits auf der EFI-Partition ablegt, und verbindet seine Geräte mit den Kernel-Treibern.</p>
+    <p xml:lang="es">En los MacBook Pro 2016–2017 con Touch Bar, la Touch Bar, la cámara FaceTime y el sensor de luz ambiental dependen del chip Apple T1, que Linux suele encontrar bloqueado en modo de recuperación. Pomona inicia el T1 en cada encendido, con el firmware que macOS ya guarda en la partición EFI, y conecta sus dispositivos a los controladores del núcleo.</p>
+    <p xml:lang="fr">Sur les MacBook Pro 2016–2017 avec Touch Bar, la Touch Bar, la caméra FaceTime et le capteur de lumière ambiante dépendent de la puce Apple T1, que Linux trouve souvent bloquée en mode récupération. Pomona démarre le T1 à chaque allumage, avec le firmware que macOS conserve déjà sur la partition EFI, et relie ses périphériques aux pilotes du noyau.</p>
+    <p xml:lang="nl">Op de MacBook Pro 2016–2017 met Touch Bar worden de Touch Bar, de FaceTime-camera en de omgevingslichtsensor aangestuurd door de Apple T1-chip, die Linux vaak vast in de herstelmodus aantreft. pomona start de T1 bij elke keer aanzetten met de firmware die macOS al op de EFI-partitie bewaart, en koppelt zijn apparaten aan de stuurprogramma's van de kernel.</p>
+    <p xml:lang="pl">W MacBookach Pro 2016–2017 z Touch Barem Touch Bar, kamerą FaceTime i czujnikiem światła otoczenia steruje układ Apple T1, który Linux często zastaje zablokowany w trybie odzyskiwania. Pomona uruchamia T1 przy każdym włączeniu, korzystając z oprogramowania, które macOS przechowuje już na partycji EFI, i łączy jego urządzenia ze sterownikami jądra.</p>
+    <p xml:lang="pt">Nos MacBook Pro 2016–2017 com Touch Bar, a Touch Bar, a câmara FaceTime e o sensor de luz ambiente dependem do chip Apple T1, que o Linux encontra muitas vezes preso no modo de recuperação. O Pomona inicia o T1 sempre que liga o computador, com o firmware que o macOS já guarda na partição EFI, e liga os seus dispositivos aos controladores do kernel.</p>
+    <p>The app guides you through it and lets you:</p>
+    <p xml:lang="it">L'app ti guida passo passo e ti permette di:</p>
+    <p xml:lang="de">Die App führt dich durch alles und ermöglicht dir:</p>
+    <p xml:lang="es">La aplicación te guía paso a paso y te permite:</p>
+    <p xml:lang="fr">L’application vous guide pas à pas et vous permet de :</p>
+    <p xml:lang="nl">De app leidt je stap voor stap en laat je:</p>
+    <p xml:lang="pl">Aplikacja prowadzi cię krok po kroku i pozwala:</p>
+    <p xml:lang="pt">A aplicação guia-o passo a passo e permite-lhe:</p>
+    <ul>
+      <li>check every step of the fix and repair what is missing with one click</li>
+      <li xml:lang="it">controllare ogni passaggio e sistemare con un clic quello che manca</li>
+      <li xml:lang="de">jeden Schritt zu prüfen und Fehlendes mit einem Klick zu beheben</li>
+      <li xml:lang="es">comprobar cada paso y arreglar lo que falte con un clic</li>
+      <li xml:lang="fr">vérifier chaque étape et corriger ce qui manque en un clic</li>
+      <li xml:lang="nl">elke stap controleren en wat ontbreekt met één klik herstellen</li>
+      <li xml:lang="pl">sprawdzić każdy krok i jednym kliknięciem naprawić to, czego brakuje</li>
+      <li xml:lang="pt">verificar cada passo e corrigir o que falta com um clique</li>
+      <li>choose the Touch Bar keys: Esc only, F1–F12 or special keys, with Fn to swap them</li>
+      <li xml:lang="it">scegliere i tasti della Touch Bar: solo Esc, F1–F12 o tasti speciali, con Fn per scambiarli</li>
+      <li xml:lang="de">die Tasten der Touch Bar zu wählen: nur Esc, F1–F12 oder Sondertasten, mit Fn zum Wechseln</li>
+      <li xml:lang="es">elegir las teclas de la Touch Bar: solo Esc, F1–F12 o teclas especiales, con Fn para alternarlas</li>
+      <li xml:lang="fr">choisir les touches de la Touch Bar : Échap uniquement, F1–F12 ou touches spéciales, avec Fn pour basculer</li>
+      <li xml:lang="nl">de toetsen van de Touch Bar kiezen: alleen Esc, F1–F12 of speciale toetsen, met Fn om te wisselen</li>
+      <li xml:lang="pl">wybrać klawisze Touch Bara: tylko Esc, F1–F12 lub klawisze specjalne, z Fn do przełączania</li>
+      <li xml:lang="pt">escolher as teclas da Touch Bar: só Esc, F1–F12 ou teclas especiais, com Fn para alternar</li>
+      <li>set a different key set for each application</li>
+      <li xml:lang="it">impostare tasti diversi per ogni applicazione</li>
+      <li xml:lang="de">für jede Anwendung eigene Tasten festzulegen</li>
+      <li xml:lang="es">definir teclas distintas para cada aplicación</li>
+      <li xml:lang="fr">définir des touches différentes pour chaque application</li>
+      <li xml:lang="nl">per toepassing andere toetsen instellen</li>
+      <li xml:lang="pl">ustawić inne klawisze dla każdej aplikacji</li>
+      <li xml:lang="pt">definir teclas diferentes para cada aplicação</li>
+      <li>adjust automatic dimming</li>
+      <li xml:lang="it">regolare lo spegnimento automatico</li>
+      <li xml:lang="de">das automatische Abdunkeln einzustellen</li>
+      <li xml:lang="es">ajustar la atenuación automática</li>
+      <li xml:lang="fr">régler l’atténuation automatique</li>
+      <li xml:lang="nl">het automatisch dimmen afstellen</li>
+      <li xml:lang="pl">dostosować automatyczne przyciemnianie</li>
+      <li xml:lang="pt">ajustar o escurecimento automático</li>
+      <li>create a compatibility certificate to share with the community</li>
+      <li xml:lang="it">creare un certificato di compatibilità da condividere con la community</li>
+      <li xml:lang="de">ein Kompatibilitätszertifikat zu erstellen und mit der Community zu teilen</li>
+      <li xml:lang="es">crear un certificado de compatibilidad para compartir con la comunidad</li>
+      <li xml:lang="fr">créer un certificat de compatibilité à partager avec la communauté</li>
+      <li xml:lang="nl">een compatibiliteitscertificaat maken om met de community te delen</li>
+      <li xml:lang="pl">utworzyć certyfikat zgodności i udostępnić go społeczności</li>
+      <li xml:lang="pt">criar um certificado de compatibilidade para partilhar com a comunidade</li>
+    </ul>
+    <p>Nothing is written to the T1 chip, the EFI partition or macOS.</p>
+    <p xml:lang="it">Non viene scritto niente nel chip T1, sulla partizione EFI o in macOS.</p>
+    <p xml:lang="de">Weder auf den T1-Chip noch auf die EFI-Partition oder macOS wird etwas geschrieben.</p>
+    <p xml:lang="es">No se escribe nada en el chip T1, en la partición EFI ni en macOS.</p>
+    <p xml:lang="fr">Rien n’est écrit sur la puce T1, la partition EFI ou macOS.</p>
+    <p xml:lang="nl">Er wordt niets geschreven op de T1-chip, de EFI-partitie of in macOS.</p>
+    <p xml:lang="pl">Nic nie jest zapisywane w układzie T1, na partycji EFI ani w macOS.</p>
+    <p xml:lang="pt">Nada é escrito no chip T1, na partição EFI ou no macOS.</p>
+  </description>
+
+  <url type="homepage">https://github.com/MarcoDiGioia/Pomona</url>
+  <url type="bugtracker">https://github.com/MarcoDiGioia/Pomona/issues</url>
+  <url type="translate">https://github.com/MarcoDiGioia/Pomona/blob/main/CONTRIBUTING.md#translations</url>
+  <launchable type="desktop-id">io.github.MarcoDiGioia.Pomona.desktop</launchable>
+  <!-- Pomona was called easy-t1 before 0.7.0 -->
+  <replaces>
+    <id>io.github.easy_t1</id>
+  </replaces>
+  <developer>
+    <name>Marco Di Gioia</name>
+  </developer>
+  <update_contact>marco.digioia.dev@gmail.com</update_contact>
+
+  <categories>
+    <category>Settings</category>
+    <category>HardwareSettings</category>
+  </categories>
+  <keywords>
+    <keyword>touchbar</keyword>
+    <keyword>Touch Bar</keyword>
+    <keyword>T1</keyword>
+    <keyword>MacBook</keyword>
+    <keyword>webcam</keyword>
+    <keyword xml:lang="it">fotocamera</keyword>
+  </keywords>
+
+  <supports>
+    <!-- the T1 in recovery mode and running -->
+    <modalias>usb:v05ACp1281*</modalias>
+    <modalias>usb:v05ACp8600*</modalias>
+  </supports>
+
+  <branding>
+    <color type="primary" scheme_preference="light">#f4dcbb</color>
+    <color type="primary" scheme_preference="dark">#7d1529</color>
+  </branding>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="0.7.1" date="2026-10-29">
+      <description>
+        <p>New logo and the Pomona mascot.</p>
+        <p xml:lang="it">Nuovo logo e la mascotte di Pomona.</p>
+        <p xml:lang="de">Neues Logo und das Pomona-Maskottchen.</p>
+        <p xml:lang="fr">Nouveau logo et la mascotte de Pomona.</p>
+        <p xml:lang="es">Nuevo logotipo y la mascota de Pomona.</p>
+        <p xml:lang="pt">Novo logótipo e a mascote do Pomona.</p>
+        <p xml:lang="nl">Nieuw logo en de mascotte van Pomona.</p>
+        <p xml:lang="pl">Nowe logo i maskotka Pomony.</p>
+      </description>
+    </release>
+    <release version="0.7.0" date="2026-10-29">
+      <description>
+        <p>The app formerly called easy-t1 is now Pomona, with a new logo. Your settings are kept.</p>
+        <p xml:lang="it">L’app che si chiamava easy-t1 ora è Pomona e ha un nuovo logo. Le tue impostazioni restano.</p>
+        <p xml:lang="de">Die App, die bisher easy-t1 hieß, heißt jetzt Pomona und hat ein neues Logo. Deine Einstellungen bleiben erhalten.</p>
+        <p xml:lang="fr">L’application appelée auparavant easy-t1 s’appelle désormais Pomona et a un nouveau logo. Vos réglages sont conservés.</p>
+        <p xml:lang="es">La aplicación antes llamada easy-t1 ahora se llama Pomona y tiene un logotipo nuevo. Tus ajustes se conservan.</p>
+        <p xml:lang="pt">O easy-t1 chama-se agora Pomona e tem um novo logótipo. As suas definições são mantidas.</p>
+        <p xml:lang="nl">De app die eerder easy-t1 heette, heet nu Pomona en heeft een nieuw logo. Je instellingen blijven behouden.</p>
+        <p xml:lang="pl">Aplikacja wcześniej nazywana easy-t1 nazywa się teraz Pomona i ma nowe logo. Twoje ustawienia zostają zachowane.</p>
+      </description>
+    </release>
+    <release version="0.5.0" date="2026-10-29">
+      <description>
+        <p>The app is now available in Italian, German, French, Spanish, Portuguese, Dutch and Polish.</p>
+        <p xml:lang="it">L'app ora è disponibile in italiano, tedesco, francese, spagnolo, portoghese, olandese e polacco.</p>
+        <p xml:lang="de">Die App ist jetzt auf Italienisch, Deutsch, Französisch, Spanisch, Portugiesisch, Niederländisch und Polnisch verfügbar.</p>
+        <p xml:lang="fr">L’application est désormais disponible en italien, allemand, français, espagnol, portugais, néerlandais et polonais.</p>
+        <p xml:lang="es">La aplicación ya está disponible en italiano, alemán, francés, español, portugués, neerlandés y polaco.</p>
+        <p xml:lang="pt">A aplicação está agora disponível em italiano, alemão, francês, espanhol, português, neerlandês e polaco.</p>
+        <p xml:lang="nl">De app is nu beschikbaar in het Italiaans, Duits, Frans, Spaans, Portugees, Nederlands en Pools.</p>
+        <p xml:lang="pl">Aplikacja jest teraz dostępna po włosku, niemiecku, francusku, hiszpańsku, portugalsku, niderlandzku i polsku.</p>
+      </description>
+    </release>
+    <release version="0.4.4" date="2026-10-29">
+      <description>
+        <p>The description in App Center is now translated.</p>
+        <p xml:lang="it">La descrizione in App Center ora è tradotta.</p>
+        <p xml:lang="de">Die Beschreibung im App Center ist jetzt übersetzt.</p>
+        <p xml:lang="es">La descripción en el Centro de aplicaciones ahora está traducida.</p>
+        <p xml:lang="fr">La description dans le Centre d’applications est désormais traduite.</p>
+        <p xml:lang="nl">De beschrijving in het App Center is nu vertaald.</p>
+        <p xml:lang="pl">Opis w Centrum aplikacji jest teraz przetłumaczony.</p>
+        <p xml:lang="pt">A descrição no Centro de Aplicações está agora traduzida.</p>
+      </description>
+    </release>
+    <release version="0.4.3" date="2026-10-29">
+      <description>
+        <p>Fixes a freeze of the T1 caused by USB power saving, and shutdowns that could hang.</p>
+        <p xml:lang="it">Corregge un blocco del T1 causato dal risparmio energetico USB e gli spegnimenti che potevano restare appesi.</p>
+        <p xml:lang="de">Behebt ein Einfrieren des T1 durch USB-Energiesparen und hängende Abschaltungen.</p>
+        <p xml:lang="es">Corrige un bloqueo del T1 causado por el ahorro de energía USB y apagados que podían quedarse colgados.</p>
+        <p xml:lang="fr">Corrige un blocage du T1 dû à l’économie d’énergie USB et des arrêts qui pouvaient se figer.</p>
+        <p xml:lang="nl">Verhelpt een vastloper van de T1 door USB-energiebesparing en afsluitingen die konden blijven hangen.</p>
+        <p xml:lang="pl">Naprawia zawieszanie się T1 spowodowane oszczędzaniem energii USB oraz wyłączanie, które mogło się zawiesić.</p>
+        <p xml:lang="pt">Corrige um bloqueio do T1 causado pela poupança de energia USB e encerramentos que podiam ficar parados.</p>
+      </description>
+    </release>
+    <release version="0.4.0" date="2026-10-29">
+      <description>
+        <p>First package for Ubuntu and derivatives.</p>
+        <p xml:lang="it">Primo pacchetto per Ubuntu e derivate.</p>
+        <p xml:lang="de">Erstes Paket für Ubuntu und Derivate.</p>
+        <p xml:lang="es">Primer paquete para Ubuntu y derivadas.</p>
+        <p xml:lang="fr">Premier paquet pour Ubuntu et ses dérivées.</p>
+        <p xml:lang="nl">Eerste pakket voor Ubuntu en afgeleiden.</p>
+        <p xml:lang="pl">Pierwszy pakiet dla Ubuntu i dystrybucji pochodnych.</p>
+        <p xml:lang="pt">Primeiro pacote para Ubuntu e derivadas.</p>
+      </description>
+    </release>
+  </releases>
+</component>

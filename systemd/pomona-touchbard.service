@@ -1,0 +1,12 @@
+[Unit]
+Description=pomona: Touch Bar modes (default, per application, Fn key)
+After=pomona.service
+Wants=pomona.service
+
+[Service]
+ExecStart=@PREFIX@/lib/pomona/pomona-touchbard
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

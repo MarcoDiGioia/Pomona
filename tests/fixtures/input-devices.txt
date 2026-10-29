@@ -1,0 +1,17 @@
+I: Bus=0019 Vendor=0000 Product=0001 Version=0000
+N: Name="Power Button"
+P: Phys=LNXPWRBN/button/input0
+H: Handlers=kbd event0
+B: EV=3
+
+I: Bus=001c Vendor=05ac Product=0277 Version=0001
+N: Name="Apple SPI Keyboard"
+P: Phys=
+H: Handlers=sysrq kbd leds event3
+B: EV=120013
+
+I: Bus=0003 Vendor=05ac Product=8600 Version=0101
+N: Name="Apple Inc. iBridge"
+P: Phys=usb-0000:00:14.0-3/input2
+H: Handlers=sysrq kbd leds event14
+B: EV=120013

@@ -1,0 +1,25 @@
+[Desktop Entry]
+Type=Application
+Name=Pomona
+GenericName=Touch Bar and T1
+GenericName[it]=Touch Bar e T1
+GenericName[de]=Touch Bar und T1
+GenericName[es]=Touch Bar y T1
+GenericName[fr]=Touch Bar et T1
+GenericName[nl]=Touch Bar en T1
+GenericName[pl]=Touch Bar i T1
+GenericName[pt]=Touch Bar e T1
+Comment=Set up the Touch Bar, camera and light sensor of 2016-2017 MacBook Pro
+Comment[it]=Configura Touch Bar, webcam e sensore di luce dei MacBook Pro 2016-2017
+Comment[de]=Touch Bar, Kamera und Lichtsensor von MacBook Pro 2016–2017 einrichten
+Comment[es]=Configura la Touch Bar, la cámara y el sensor de luz de los MacBook Pro 2016–2017
+Comment[fr]=Configurer la Touch Bar, la caméra et le capteur de lumière des MacBook Pro 2016–2017
+Comment[nl]=Touch Bar, camera en lichtsensor van MacBook Pro 2016–2017 instellen
+Comment[pl]=Konfiguracja Touch Bara, kamery i czujnika światła w MacBookach Pro 2016–2017
+Comment[pt]=Configurar a Touch Bar, a câmara e o sensor de luz dos MacBook Pro 2016–2017
+Exec=@PREFIX@/bin/pomona-gui
+Icon=io.github.MarcoDiGioia.Pomona
+Terminal=false
+Categories=Settings;HardwareSettings;
+Keywords=touchbar;touch bar;T1;webcam;camera;macbook;
+StartupNotify=true

@@ -1,0 +1,93 @@
+#!/usr/bin/python3 -I
+"""touchbar-probe - find out how the T1 Touch Bar behaves without hid-appletb-kbd.
+
+Used to build the fallback for kernels older than 6.15. Run as root on a Mac
+where `pomona start` has already booted the T1. For a few seconds per mode it:
+  1. moves the Touch Bar keyboard interface to hid-generic,
+  2. sets the mode by writing HID output report 2 to /dev/hidrawN,
+  3. prints the key codes the Touch Bar sends while you tap it.
+At the end the interface goes back to hid-appletb-kbd. Nothing is saved.
+
+SPDX-License-Identifier: GPL-3.0-or-later
+"""
+import glob
+import os
+import select
+import struct
+import sys
+import time
+
+SYS = "/sys"
+FMT = "llHHi"
+SIZE = struct.calcsize(FMT)
+EV_KEY = 1
+SECONDS = int(os.environ.get("PROBE_SECONDS", "8"))
+MODES = {0: "Esc only", 1: "F1-F12", 2: "special keys"}
+
+
+def hid_id():
+    for h in glob.glob(SYS + "/bus/usb/devices/*/*:1.2/0003:05AC:8600.*"):
+        return os.path.basename(h)
+    return None
+
+
+def write(path, value):
+    with open(path, "w") as f:
+        f.write(value)
+
+
+def move(hid, to):
+    for drv in ("hid-appletb-kbd", "hid-generic"):
+        if os.path.exists("%s/bus/hid/drivers/%s/%s" % (SYS, drv, hid)):
+            if drv == to:
+                return
+            write("%s/bus/hid/drivers/%s/unbind" % (SYS, drv), hid)
+    write("%s/bus/hid/drivers/%s/bind" % (SYS, to), hid)
+    time.sleep(1)
+
+
+def hidraw_node(hid):
+    found = glob.glob("%s/bus/hid/devices/%s/hidraw/hidraw*" % (SYS, hid))
+    return "/dev/" + os.path.basename(found[0]) if found else None
+
+
+def event_node(hid):
+    found = glob.glob("%s/bus/hid/devices/%s/input/input*/event*" % (SYS, hid))
+    return "/dev/input/" + os.path.basename(found[0]) if found else None
+
+
+def main():
+    if os.geteuid() != 0:
+        sys.exit("run as root: sudo %s" % sys.argv[0])
+    hid = hid_id()
+    if not hid:
+        sys.exit("no Touch Bar interface found: run `sudo pomona start` first")
+    print("Touch Bar HID device:", hid)
+    try:
+        move(hid, "hid-generic")
+        raw = hidraw_node(hid)
+        ev = event_node(hid)
+        print("hidraw:", raw, " event:", ev)
+        if not raw or not ev:
+            sys.exit("hidraw or event device not found")
+        for mode, name in MODES.items():
+            with open(raw, "wb", buffering=0) as r:
+                r.write(bytes([0x02, mode]))
+            print("\n== mode %d (%s): tap every key on the Touch Bar for %d s" % (mode, name, SECONDS))
+            seen = []
+            with open(ev, "rb", buffering=0) as f:
+                end = time.time() + SECONDS
+                while time.time() < end:
+                    if select.select([f], [], [], 0.2)[0]:
+                        _, _, t, code, value = struct.unpack(FMT, f.read(SIZE))
+                        if t == EV_KEY and value == 1:
+                            seen.append(code)
+                            print("   key", code)
+            print("   codes in mode %d: %s" % (mode, sorted(set(seen))))
+    finally:
+        move(hid, "hid-appletb-kbd")
+        print("\nTouch Bar back on hid-appletb-kbd")
+
+
+if __name__ == "__main__":
+    main()
