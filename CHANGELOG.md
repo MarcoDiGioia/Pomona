@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.3 - 2026-10-29
+
+- Fix: right after installing Pomona, the Customize page said the GNOME Shell extension was "not installed" even though its files were in place. GNOME only discovers a new extension at the next login, so the page now says to log out and back in.
+
 ## 0.7.2 - 2026-10-29
 
 - The app icon is now the original logo artwork (PNG at every hicolor size, 16–512 px) instead of a redrawn vector.

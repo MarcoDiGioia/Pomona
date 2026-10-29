@@ -27,7 +27,15 @@ Pomona is named after the Roman goddess of orchards and fruit trees.
 
 ### Ubuntu, Linux Mint, Pop!_OS, Zorin OS, elementary OS, Debian
 
-Build the package and install it:
+Download `pomona_<version>_amd64.deb` from the [latest release](https://github.com/MarcoDiGioia/Pomona/releases/latest) and install it, from the folder where you saved it:
+
+```bash
+sudo apt install ./pomona_*_amd64.deb
+```
+
+The Touch Bar, camera and light sensor turn on right away, and from now on at every start.
+
+Prefer to build the package yourself?
 
 ```bash
 sudo apt install git make gcc pkg-config libusb-1.0-0-dev
@@ -35,8 +43,6 @@ git clone https://github.com/MarcoDiGioia/Pomona && cd Pomona
 make deb
 sudo apt install ./dist/pomona_*_amd64.deb
 ```
-
-The Touch Bar, camera and light sensor turn on right away, and from now on at every start.
 
 ### Fedora, Arch, openSUSE and other distributions
 

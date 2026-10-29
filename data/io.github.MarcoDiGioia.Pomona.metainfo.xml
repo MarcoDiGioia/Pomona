@@ -134,6 +134,18 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="0.7.3" date="2026-10-29">
+      <description>
+        <p>Fixes a misleading message about the GNOME Shell extension right after installing.</p>
+        <p xml:lang="it">Corregge un messaggio fuorviante sull'estensione di GNOME Shell subito dopo l'installazione.</p>
+        <p xml:lang="de">Behebt eine irreführende Meldung zur GNOME-Shell-Erweiterung direkt nach der Installation.</p>
+        <p xml:lang="fr">Corrige un message trompeur sur l’extension GNOME Shell juste après l’installation.</p>
+        <p xml:lang="es">Corrige un mensaje engañoso sobre la extensión de GNOME Shell justo después de instalar.</p>
+        <p xml:lang="pt">Corrige uma mensagem enganadora sobre a extensão do GNOME Shell logo após a instalação.</p>
+        <p xml:lang="nl">Verhelpt een misleidende melding over de GNOME Shell-extensie direct na de installatie.</p>
+        <p xml:lang="pl">Naprawia mylący komunikat o rozszerzeniu GNOME Shell tuż po instalacji.</p>
+      </description>
+    </release>
     <release version="0.7.1" date="2026-10-29">
       <description>
         <p>New logo and the Pomona mascot.</p>

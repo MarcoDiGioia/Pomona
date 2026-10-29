@@ -153,17 +153,36 @@ def parse_extension_info(text):
     return "active" if fields.get("state") in ("ACTIVE", "ENABLED") else "pending"
 
 
+def extension_dirs():
+    return [os.path.join(GLib.get_user_data_dir(), "gnome-shell", "extensions"),
+            "/usr/local/share/gnome-shell/extensions", "/usr/share/gnome-shell/extensions"]
+
+
+def extension_on_disk(dirs=None):
+    """True when the extension's files are installed, whether or not GNOME has loaded them."""
+    return any(os.path.exists(os.path.join(d, EXT_UUID, "metadata.json")) for d in (dirs or extension_dirs()))
+
+
 def extension_state():
+    """'active' | 'pending' | 'installed' | 'missing'
+
+    GNOME Shell on Wayland only discovers a newly installed extension at the next login,
+    so "gnome-extensions info" knows nothing of it right after installing Pomona. When the
+    files are on disk, that is not "missing": the session just has to be restarted.
+    """
+    state = "missing"
     exe = shutil.which("gnome-extensions")
-    if not exe:
-        return "missing"
-    try:
-        import subprocess
-        env = dict(os.environ, LC_ALL="C", LANGUAGE="")
-        out = subprocess.run([exe, "info", EXT_UUID], capture_output=True, text=True, timeout=5, env=env).stdout
-    except Exception:
-        return "missing"
-    return parse_extension_info(out)
+    if exe:
+        try:
+            import subprocess
+            env = dict(os.environ, LC_ALL="C", LANGUAGE="")
+            out = subprocess.run([exe, "info", EXT_UUID], capture_output=True, text=True, timeout=5, env=env).stdout
+            state = parse_extension_info(out)
+        except Exception:
+            state = "missing"
+    if state == "missing" and extension_on_disk():
+        return "pending"
+    return state
 
 
 def app_info(app_id):

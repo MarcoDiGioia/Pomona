@@ -146,6 +146,14 @@ class Gui(unittest.TestCase):
         self.assertEqual(p("x\n  Enabled: Yes\n  State: ACTIVE\n"), "active")
         self.assertEqual(p("x\n  Enabled: Yes\n  State: ERROR\n"), "pending")
 
+    def test_extension_on_disk_is_not_missing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertFalse(self.gui.extension_on_disk([tmp]))
+            d = os.path.join(tmp, self.gui.EXT_UUID)
+            os.makedirs(d)
+            open(os.path.join(d, "metadata.json"), "w").write("{}")
+            self.assertTrue(self.gui.extension_on_disk([tmp]))
+
     def test_pomona_cmd_prefers_repo_copy(self):
         self.assertTrue(self.gui.pomona_cmd()[0].endswith(os.path.join("bin", "pomona")))
 
