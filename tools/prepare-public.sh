@@ -13,8 +13,8 @@ say "rulesets"
 for f in "$ROOT"/.github/rulesets/*.json; do
 	name=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["name"])' "$f")
 	id=$(gh api "repos/$REPO/rulesets" --jq ".[] | select(.name == \"$name\") | .id")
-	if [ -n "$id" ]; then gh api -X PUT "repos/$REPO/rulesets/$id" --input "$f" --silent && echo "updated: $name"
-	else gh api -X POST "repos/$REPO/rulesets" --input "$f" --silent && echo "created: $name"; fi
+	if [ -n "$id" ]; then gh api -X PUT "repos/$REPO/rulesets/$id" --input "$f" --silent; echo "updated: $name"
+	else gh api -X POST "repos/$REPO/rulesets" --input "$f" --silent; echo "created: $name"; fi
 done
 
 say "workflows from forks need the owner's approval, whoever the contributor is"

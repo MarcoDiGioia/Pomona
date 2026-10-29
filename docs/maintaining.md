@@ -11,7 +11,7 @@ Both are protected by the ruleset [`protect-main-develop`](../.github/rulesets/p
 
 ## Who can create branches
 
-Nobody but the owner. The ruleset [`only-the-maintainer-creates-branches`](../.github/rulesets/only-the-maintainer-creates-branches.json) forbids creating any branch; the only exceptions are the owner, the GitHub Actions app (the certificate robot opens `certificate-submit/issue-N` branches) and Dependabot. Everyone else contributes from a **fork**: fork the repository, make a branch in your fork and open a pull request against `develop`.
+Nobody but the owner. The ruleset [`only-the-maintainer-creates-branches`](../.github/rulesets/only-the-maintainer-creates-branches.json) forbids creating any branch, except the two kinds that automation makes: `certificate-submit/*` (the certificate robot) and `dependabot/*`. GitHub does not allow the Actions app as a bypass actor on a personal repository, which is why those two are excluded by name instead. Everyone else contributes from a **fork**: fork the repository, make a branch in your fork and open a pull request against `develop`.
 
 ## Other settings
 
