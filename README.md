@@ -4,6 +4,8 @@
 
 **Linux grows well on your Mac.**
 
+*I wrote Pomona to get my own MacBook Pro working on Linux. I'm sharing it in case it helps you too.*
+
 On a 2016–2017 MacBook Pro with Touch Bar, Linux usually leaves the **Touch Bar dark**, finds **no FaceTime camera** and ignores the **ambient light sensor**. Pomona turns all three on, at every start, without touching macOS or the Mac's firmware.
 
 With Pomona you get:
