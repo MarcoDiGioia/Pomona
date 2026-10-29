@@ -291,7 +291,6 @@ class Window(Adw.ApplicationWindow):
         self.wifi = {}
         self.wifi_page = Adw.PreferencesPage()
         self.wifi_tab = self.stack.add_titled_with_icon(self.wifi_page, "wifi", _("Wi-Fi"), "network-wireless-symbolic")
-        self.wifi_tab.set_visible(False)  # only on Macs that have the card
         self.report_page = Adw.PreferencesPage()
         self.stack.add_titled_with_icon(self.report_page, "report", _("Report"), "emblem-documents-symbolic")
 
@@ -451,15 +450,29 @@ class Window(Adw.ApplicationWindow):
         page = self.wifi_page
         self.clear(page)
         present = bool(w.get("present"))
-        self.wifi_tab.set_visible(present)
+
+        # the status comes first, whatever the card
+        iface = w.get("any_interface") or ""
+        status = Adw.PreferencesGroup(title=_("Wi-Fi status"))
+        if not iface:
+            status.add(Adw.ActionRow(title=_("No Wi-Fi card found")))
+        else:
+            up = w.get("any_operstate") == "up"
+            self.step(status, _("Connected to a network"), up, _("Connected") if up else _("Not connected"))
+            status.add(Adw.ActionRow(title=_("Wi-Fi card"), subtitle="%s · %s · %s" % (
+                w.get("any_pci") or "?", w.get("any_driver") or "?", iface)))
+        self.add_group(page, status)
         if not present:
+            if iface:
+                note = Adw.PreferencesGroup()
+                note.add(Adw.ActionRow(title=_("Nothing to fix"),
+                                       subtitle=_("Pomona has no fix for this card: it is not needed or not supported yet")))
+                self.add_group(page, note)
             return
 
         card = Adw.PreferencesGroup(
-            title=_("Wi-Fi card"),
+            title="Broadcom BCM43602",
             description=_("This Mac’s Broadcom card sees networks but rejects every connection until its board file is installed."))
-        card.add(Adw.ActionRow(title="Broadcom BCM43602", subtitle="14e4:43ba · %s · %s" % (
-            w.get("subsystem") or "?", w.get("interface") or "?")))
         self.add_group(page, card)
 
         steps = Adw.PreferencesGroup(title=_("Steps"), description=_("Every step is listed; the ones not done yet have a button."))
@@ -488,8 +501,7 @@ class Window(Adw.ApplicationWindow):
                              _("This Mac has its own address") if own else
                              _("Every copy of the board file shares one address: give this Mac its own"),
                              _("Fix"), fix))
-        up = w.get("operstate") == "up"
-        oks.append(self.step(steps, _("Connected to a network"), up, _("Connected") if up else _("Not connected")))
+        oks.append(w.get("any_operstate") == "up")
         pending = bool(w.get("restart_pending"))
         if pending:
             oks.append(self.step(steps, _("Restart needed"), False,

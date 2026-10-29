@@ -346,3 +346,15 @@ msgstr ""
 
 msgid "Runs the Wi-Fi checks and writes a report you can share"
 msgstr ""
+
+msgid "Wi-Fi status"
+msgstr ""
+
+msgid "No Wi-Fi card found"
+msgstr ""
+
+msgid "Nothing to fix"
+msgstr ""
+
+msgid "Pomona has no fix for this card: it is not needed or not supported yet"
+msgstr ""

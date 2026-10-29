@@ -71,7 +71,7 @@ Open **Pomona** from the applications menu.
 | --- | --- |
 | **Setup** | See every step, from the Mac model to the start at boot. Steps already done are marked as done; anything missing has a button that fixes it. |
 | **Customize** | Choose what the Touch Bar shows (Esc only, F1–F12 or special keys), whether holding Fn swaps them, when it dims, and a different set for each application. |
-| **Wi-Fi** | Only on Macs with the Broadcom card. See what is missing, fix it with one button, undo it, create a Wi-Fi certificate. |
+| **Wi-Fi** | The state of your Wi-Fi first; on Macs with the Broadcom card, also what is missing, a button to fix it, undo and a Wi-Fi certificate. |
 | **Report** | Create a compatibility certificate for your Mac and share it. |
 
 Per-application key sets work on GNOME: after installing, log out and back in once, then enable the extension from the **Customize** page.

@@ -346,3 +346,15 @@ msgstr "Ongedaan maken"
 
 msgid "Runs the Wi-Fi checks and writes a report you can share"
 msgstr "Voert de wifi-controles uit en schrijft een rapport dat je kunt delen"
+
+msgid "Wi-Fi status"
+msgstr "Wifi-status"
+
+msgid "No Wi-Fi card found"
+msgstr "Geen wifikaart gevonden"
+
+msgid "Nothing to fix"
+msgstr "Niets te repareren"
+
+msgid "Pomona has no fix for this card: it is not needed or not supported yet"
+msgstr "Pomona heeft geen reparatie voor deze kaart: die is niet nodig of nog niet ondersteund"

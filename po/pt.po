@@ -346,3 +346,15 @@ msgstr "Anular"
 
 msgid "Runs the Wi-Fi checks and writes a report you can share"
 msgstr "Executa as verificações do Wi-Fi e escreve um relatório para partilhar"
+
+msgid "Wi-Fi status"
+msgstr "Estado do Wi-Fi"
+
+msgid "No Wi-Fi card found"
+msgstr "Nenhuma placa Wi-Fi encontrada"
+
+msgid "Nothing to fix"
+msgstr "Nada a reparar"
+
+msgid "Pomona has no fix for this card: it is not needed or not supported yet"
+msgstr "O Pomona não tem correção para esta placa: não é necessária ou ainda não é suportada"

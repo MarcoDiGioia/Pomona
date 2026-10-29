@@ -87,6 +87,31 @@ wf_operstate() { wf_attr operstate; }
 wf_mac() { wf_attr address; }
 wf_connected() { [ "$(wf_operstate)" = up ]; }
 
+# ------------------------------------------------------------------ any Wi-Fi card
+
+# wf_any_iface -> name of the first wireless network interface, whatever the card
+wf_any_iface() {
+	local d
+	for d in "$POMONA_SYS"/class/net/*; do
+		if [ -d "$d/wireless" ] || [ -d "$d/phy80211" ]; then basename "$d"; return 0; fi
+	done
+	return 0
+}
+
+# wf_any_attr NAME -> one value of that interface: driver, pci (vendor:device), operstate
+wf_any_attr() {
+	local i d
+	i=$(wf_any_iface)
+	[ -n "$i" ] || return 0
+	d="$POMONA_SYS/class/net/$i"
+	case "$1" in
+		driver) [ -L "$d/device/driver" ] && basename "$(readlink "$d/device/driver")";;
+		pci) [ -r "$d/device/vendor" ] && printf '%s:%s\n' "$(sed 's/^0x//' "$d/device/vendor")" "$(sed 's/^0x//' "$d/device/device" 2>/dev/null)";;
+		operstate) tr -d '\n' < "$d/operstate" 2>/dev/null;;
+	esac
+	return 0
+}
+
 # ------------------------------------------------------------------ the board file
 
 wf_nvram_file() { printf '%s/%s\n' "$POMONA_FIRMWARE_DIR" "$WF_NVRAM_NAME"; }

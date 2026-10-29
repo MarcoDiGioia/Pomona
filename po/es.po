@@ -346,3 +346,15 @@ msgstr "Deshacer"
 
 msgid "Runs the Wi-Fi checks and writes a report you can share"
 msgstr "Ejecuta las comprobaciones del Wi-Fi y escribe un informe que puedes compartir"
+
+msgid "Wi-Fi status"
+msgstr "Estado del Wi-Fi"
+
+msgid "No Wi-Fi card found"
+msgstr "No se encontró ninguna tarjeta Wi-Fi"
+
+msgid "Nothing to fix"
+msgstr "Nada que arreglar"
+
+msgid "Pomona has no fix for this card: it is not needed or not supported yet"
+msgstr "Pomona no tiene corrección para esta tarjeta: no hace falta o aún no es compatible"

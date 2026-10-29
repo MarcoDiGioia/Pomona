@@ -346,3 +346,15 @@ msgstr "Annulla"
 
 msgid "Runs the Wi-Fi checks and writes a report you can share"
 msgstr "Esegue i controlli sul Wi-Fi e scrive un rapporto da condividere"
+
+msgid "Wi-Fi status"
+msgstr "Stato del Wi-Fi"
+
+msgid "No Wi-Fi card found"
+msgstr "Nessuna scheda Wi-Fi trovata"
+
+msgid "Nothing to fix"
+msgstr "Niente da sistemare"
+
+msgid "Pomona has no fix for this card: it is not needed or not supported yet"
+msgstr "Pomona non ha correzioni per questa scheda: non servono o non sono ancora supportate"

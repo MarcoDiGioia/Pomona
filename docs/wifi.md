@@ -91,4 +91,4 @@ The certificate has no MAC address, network name or machine id. It joins the com
 
 ## How the app runs it
 
-The **Wi-Fi** page appears only on Macs that have the card. *Fix* and *Undo* run `pomona-admin wifi-fix` and `wifi-undo` through `pkexec`; the helper accepts only `--keep-mac` and `--mac` with a well-formed address, and calls `pomona wifi fix` or `undo`. No network connection is made.
+The **Wi-Fi** page is always there and starts with the state of the Wi-Fi (connection, card, driver). For other cards it says there is nothing to fix; with the BCM43602 it adds the steps, *Fix*, *Undo* and the certificate. *Fix* and *Undo* run `pomona-admin wifi-fix` and `wifi-undo` through `pkexec`; the helper accepts only `--keep-mac` and `--mac` with a well-formed address, and calls `pomona wifi fix` or `undo`. No network connection is made.

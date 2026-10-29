@@ -346,3 +346,15 @@ msgstr "Cofnij"
 
 msgid "Runs the Wi-Fi checks and writes a report you can share"
 msgstr "Wykonuje testy Wi-Fi i zapisuje raport do udostępnienia"
+
+msgid "Wi-Fi status"
+msgstr "Stan Wi-Fi"
+
+msgid "No Wi-Fi card found"
+msgstr "Nie znaleziono karty Wi-Fi"
+
+msgid "Nothing to fix"
+msgstr "Nic do naprawy"
+
+msgid "Pomona has no fix for this card: it is not needed or not supported yet"
+msgstr "Pomona nie ma poprawki dla tej karty: nie jest potrzebna lub nie jest jeszcze obsługiwana"

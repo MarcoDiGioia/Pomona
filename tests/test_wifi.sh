@@ -63,6 +63,19 @@ fake_machine
 echo 0x43bb > "$TMP/sys/bus/pci/devices/0000:03:00.0/device"
 false_ "another Broadcom card is not ours" wf_present
 
+echo "-- any Wi-Fi card"
+fake_machine nocard
+eq "no interface" "$(wf_any_iface)" ""
+d="$TMP/sys/class/net/wlan9"
+mkdir -p "$d/wireless" "$d/device" "$TMP/sys/bus/pci/drivers/iwlwifi"
+echo 0x8086 > "$d/device/vendor"; echo 0x24fd > "$d/device/device"; echo up > "$d/operstate"
+ln -s "$TMP/sys/bus/pci/drivers/iwlwifi" "$d/device/driver"
+eq "other card: interface" "$(wf_any_iface)" "wlan9"
+eq "other card: driver" "$(wf_any_attr driver)" "iwlwifi"
+eq "other card: ids" "$(wf_any_attr pci)" "8086:24fd"
+eq "other card: state" "$(wf_any_attr operstate)" "up"
+eq "other card: json" "$(pomona wifi status --json | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["present"], d["any_pci"])')" "False 8086:24fd"
+
 echo "-- the shipped board file"
 fake_machine
 ref=$(wf_data_file)

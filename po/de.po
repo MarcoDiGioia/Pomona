@@ -346,3 +346,15 @@ msgstr "Rückgängig"
 
 msgid "Runs the Wi-Fi checks and writes a report you can share"
 msgstr "Führt die WLAN-Prüfungen aus und erstellt einen Bericht zum Teilen"
+
+msgid "Wi-Fi status"
+msgstr "WLAN-Status"
+
+msgid "No Wi-Fi card found"
+msgstr "Keine WLAN-Karte gefunden"
+
+msgid "Nothing to fix"
+msgstr "Nichts zu reparieren"
+
+msgid "Pomona has no fix for this card: it is not needed or not supported yet"
+msgstr "Pomona hat für diese Karte keine Korrektur: sie ist nicht nötig oder noch nicht unterstützt"
