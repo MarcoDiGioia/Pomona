@@ -74,6 +74,8 @@ Open **Pomona** from the applications menu.
 | **Wi-Fi** | The state of your Wi-Fi first; on Macs with the Broadcom card, also what is missing, a button to fix it, undo and a Wi-Fi certificate. |
 | **Report** | Create a compatibility certificate for your Mac and share it. |
 
+Every page ends with a **Hardware** group that lists the components it is about (model, firmware, chip, driver, kernel).
+
 Per-application key sets work on GNOME: after installing, log out and back in once, then enable the extension from the **Customize** page.
 
 From the terminal:

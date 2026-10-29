@@ -262,6 +262,17 @@ def present_dialog(parent, title, content):
     return win.close
 
 
+def hardware_group(rows):
+    """A 'Hardware' group: (title, value) rows, the empty values left out."""
+    group = Adw.PreferencesGroup(title=_("Hardware"))
+    for title, value in rows:
+        if value:
+            row = Adw.ActionRow(title=title, subtitle=GLib.markup_escape_text(str(value)), subtitle_selectable=True)
+            row.add_css_class("property")
+            group.add(row)
+    return group
+
+
 # ------------------------------------------------------------------ window
 
 class Window(Adw.ApplicationWindow):
@@ -309,6 +320,14 @@ class Window(Adw.ApplicationWindow):
             page.remove(g)
         page._groups = []
 
+    def set_hardware(self, page, rows):
+        """Put (or replace) the Hardware group at the end of a page."""
+        old = getattr(page, "_hardware", None)
+        if old is not None:
+            page.remove(old)
+        page._hardware = hardware_group(rows)
+        page.add(page._hardware)
+
     def add_group(self, page, group):
         page.add(group)
         page._groups = getattr(page, "_groups", []) + [group]
@@ -333,6 +352,7 @@ class Window(Adw.ApplicationWindow):
                 self.status = {}
             self.build_setup_page()
             self.update_extension_row()
+            self.build_hardware_pages()
 
         run_async(pomona_cmd() + ["status", "--json"], done)
 
@@ -344,6 +364,20 @@ class Window(Adw.ApplicationWindow):
             self.build_wifi_page()
 
         run_async(pomona_cmd() + ["wifi", "status", "--json"], wifi_done)
+
+    def build_hardware_pages(self):
+        s = self.status
+        bound = bool(s.get("touchbar_bound"))
+        self.set_hardware(self.touchbar_page, [
+            (_("Touch Bar"), _("Bound to hid-appletb-kbd") if bound else _("Not bound")),
+            (_("T1 chip"), s.get("t1_product")),
+            (_("Kernel"), s.get("kernel")),
+        ])
+        self.set_hardware(self.report_page, [
+            (_("Model"), s.get("model")), (_("Mac firmware"), s.get("mac_firmware")),
+            (_("Kernel"), s.get("kernel")), (_("Distribution"), s.get("distribution")),
+            (_("Desktop"), os.environ.get("XDG_CURRENT_DESKTOP", "")),
+        ])
 
     def show_about(self):
         dialog = Gtk.AboutDialog(
@@ -432,6 +466,20 @@ class Window(Adw.ApplicationWindow):
             done.add(status)
             self.add_group(page, done)
 
+        t1_line = " · ".join(x for x in (s.get("t1_product"), "05ac:8600" if t1 == "booted" else
+                                         ("05ac:1281" if t1 == "recovery" else ""),
+                                         "%s %s" % (_("USB configuration"), s.get("usb_config")) if s.get("usb_config") else "") if x)
+        mac_line = " · ".join(x for x in (s.get("model"), s.get("board")) if x)
+        self.set_hardware(page, [
+            (_("Model"), mac_line),
+            (_("Mac firmware"), s.get("mac_firmware")),
+            (_("T1 chip"), t1_line),
+            (_("FaceTime camera"), s.get("camera_name")),
+            (_("Ambient light sensor"), "als" if s.get("light_sensor") else ""),
+            (_("Kernel"), s.get("kernel")),
+            (_("Distribution"), s.get("distribution")),
+        ])
+
     def install(self):
         script = os.path.join(REPO, "install.sh")
         if not os.path.exists(script):
@@ -459,15 +507,21 @@ class Window(Adw.ApplicationWindow):
         else:
             up = w.get("any_operstate") == "up"
             self.step(status, _("Connected to a network"), up, _("Connected") if up else _("Not connected"))
-            status.add(Adw.ActionRow(title=_("Wi-Fi card"), subtitle="%s · %s · %s" % (
-                w.get("any_pci") or "?", w.get("any_driver") or "?", iface)))
         self.add_group(page, status)
+        if present:
+            chip = "Broadcom BCM43602 (14e4:43ba)"
+        else:
+            chip = w.get("any_pci") or ""
+        hardware = [(_("Chip"), chip), (_("Subsystem"), w.get("subsystem") if present else ""),
+                    (_("Driver"), w.get("any_driver")), (_("Network interface"), iface),
+                    (_("MAC address"), w.get("any_mac")), (_("Kernel"), w.get("kernel"))]
         if not present:
             if iface:
                 note = Adw.PreferencesGroup()
                 note.add(Adw.ActionRow(title=_("Nothing to fix"),
                                        subtitle=_("Pomona has no fix for this card: it is not needed or not supported yet")))
                 self.add_group(page, note)
+            self.set_hardware(page, hardware)
             return
 
         card = Adw.PreferencesGroup(
@@ -528,6 +582,7 @@ class Window(Adw.ApplicationWindow):
         cert_row.add_suffix(cert)
         tools.add(cert_row)
         self.add_group(page, tools)
+        self.set_hardware(page, hardware)
 
     # -------------------------------------------------------------- touch bar
 

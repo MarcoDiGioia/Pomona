@@ -358,3 +358,33 @@ msgstr ""
 
 msgid "Pomona has no fix for this card: it is not needed or not supported yet"
 msgstr ""
+
+msgid "Hardware"
+msgstr ""
+
+msgid "Mac firmware"
+msgstr ""
+
+msgid "T1 chip"
+msgstr ""
+
+msgid "Kernel"
+msgstr ""
+
+msgid "Distribution"
+msgstr ""
+
+msgid "Desktop"
+msgstr ""
+
+msgid "Chip"
+msgstr ""
+
+msgid "Subsystem"
+msgstr ""
+
+msgid "Network interface"
+msgstr ""
+
+msgid "MAC address"
+msgstr ""

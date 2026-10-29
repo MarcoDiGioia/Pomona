@@ -212,6 +212,24 @@ et1_camera_present() {
 	return 1
 }
 
+# et1_camera_name -> name of the T1 camera as the kernel reports it
+et1_camera_name() {
+	local v
+	for v in "$POMONA_SYS"/class/video4linux/video*; do
+		[ -e "$v/name" ] || continue
+		if grep -qi 'facetime\|ibridge\|apple' "$v/name"; then tr -d '\n' < "$v/name"; return 0; fi
+	done
+	return 0
+}
+
+# et1_t1_attr NAME -> a USB attribute of the T1 (product, manufacturer)
+et1_t1_attr() {
+	local d
+	d=$(et1_t1_sysfs) || return 0
+	tr -d '\n' < "$d/$1" 2>/dev/null
+	return 0
+}
+
 et1_als_present() {
 	local d
 	for d in "$POMONA_SYS"/bus/iio/devices/iio:device*; do

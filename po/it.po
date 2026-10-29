@@ -358,3 +358,33 @@ msgstr "Niente da sistemare"
 
 msgid "Pomona has no fix for this card: it is not needed or not supported yet"
 msgstr "Pomona non ha correzioni per questa scheda: non servono o non sono ancora supportate"
+
+msgid "Hardware"
+msgstr "Hardware"
+
+msgid "Mac firmware"
+msgstr "Firmware del Mac"
+
+msgid "T1 chip"
+msgstr "Chip T1"
+
+msgid "Kernel"
+msgstr "Kernel"
+
+msgid "Distribution"
+msgstr "Distribuzione"
+
+msgid "Desktop"
+msgstr "Desktop"
+
+msgid "Chip"
+msgstr "Chip"
+
+msgid "Subsystem"
+msgstr "Sottosistema"
+
+msgid "Network interface"
+msgstr "Interfaccia di rete"
+
+msgid "MAC address"
+msgstr "Indirizzo MAC"

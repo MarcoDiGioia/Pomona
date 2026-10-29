@@ -108,6 +108,7 @@ wf_any_attr() {
 		driver) [ -L "$d/device/driver" ] && basename "$(readlink "$d/device/driver")";;
 		pci) [ -r "$d/device/vendor" ] && printf '%s:%s\n' "$(sed 's/^0x//' "$d/device/vendor")" "$(sed 's/^0x//' "$d/device/device" 2>/dev/null)";;
 		operstate) tr -d '\n' < "$d/operstate" 2>/dev/null;;
+		mac) tr -d '\n' < "$d/address" 2>/dev/null;;
 	esac
 	return 0
 }

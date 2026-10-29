@@ -358,3 +358,33 @@ msgstr "Nic do naprawy"
 
 msgid "Pomona has no fix for this card: it is not needed or not supported yet"
 msgstr "Pomona nie ma poprawki dla tej karty: nie jest potrzebna lub nie jest jeszcze obsługiwana"
+
+msgid "Hardware"
+msgstr "Sprzęt"
+
+msgid "Mac firmware"
+msgstr "Oprogramowanie sprzętowe Maca"
+
+msgid "T1 chip"
+msgstr "Układ T1"
+
+msgid "Kernel"
+msgstr "Jądro"
+
+msgid "Distribution"
+msgstr "Dystrybucja"
+
+msgid "Desktop"
+msgstr "Pulpit"
+
+msgid "Chip"
+msgstr "Układ"
+
+msgid "Subsystem"
+msgstr "Podsystem"
+
+msgid "Network interface"
+msgstr "Interfejs sieciowy"
+
+msgid "MAC address"
+msgstr "Adres MAC"
