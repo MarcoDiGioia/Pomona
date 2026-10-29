@@ -8,7 +8,8 @@
 #   POMONA_OS_RELEASE                   (default /etc/os-release)
 # shellcheck shell=bash
 
-POMONA_VERSION=0.7.3
+POMONA_VERSION=0.8.0
+POMONA_REPO_URL=https://github.com/MarcoDiGioia/Pomona
 
 : "${POMONA_SYS:=/sys}"
 : "${POMONA_PROC:=/proc}"
@@ -270,4 +271,37 @@ et1_start() {
 	sleep 1
 	if et1_tb_bind; then et1_log "Touch Bar bound to $ET1_TB_DRIVER"; else et1_err "Touch Bar not bound (driver missing or refused)"; fi
 	return 0
+}
+
+# ------------------------------------------------------------------ sharing certificates
+
+# et1_latest_certificate: newest pomona-certificate-*.json in the current directory or in the
+# folder the app saves them to
+et1_latest_certificate() {
+	local d f best=""
+	for d in "$PWD" "${XDG_DATA_HOME:-$HOME/.local/share}/pomona/certificates"; do
+		f=$(ls -1t "$d"/pomona-certificate-*.json 2>/dev/null | head -n1)
+		[ -n "$f" ] && { best=$f; break; }
+	done
+	[ -n "$best" ] && printf '%s\n' "$best"
+}
+
+# et1_share_url FILE: GitHub "new issue" URL with the certificate already filled in. Nothing is
+# sent anywhere: the user checks the page in the browser and presses "Submit".
+et1_share_url() {
+	python3 -I - "$1" "$POMONA_REPO_URL" <<'PYEOF'
+import json, sys, urllib.parse
+path, repo = sys.argv[1], sys.argv[2]
+with open(path, encoding="utf-8") as f:
+    cert = json.load(f)
+if not isinstance(cert, dict) or "model" not in cert:
+    sys.exit("not a Pomona certificate")
+title = "Compatibility: %s on %s" % (cert.get("model", "?"), cert.get("distribution", "?"))
+query = urllib.parse.urlencode({
+    "template": "compatibility-report.yml",
+    "title": title,
+    "certificate": json.dumps(cert, indent=2),
+}, quote_via=urllib.parse.quote)
+print("%s/issues/new?%s" % (repo, query))
+PYEOF
 }

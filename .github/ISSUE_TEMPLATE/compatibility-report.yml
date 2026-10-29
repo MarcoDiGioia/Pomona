@@ -1,0 +1,39 @@
+name: Compatibility report
+description: Tell us how Pomona runs on your Mac
+title: "Compatibility: "
+labels: ["compatibility"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for testing Pomona!
+
+        If you came here from the app or from `pomona share`, the certificate below is already filled in: check it and press **Submit new issue**. A robot will check it and open a pull request that adds your Mac to the compatibility table.
+
+        The certificate contains only the Mac model, firmware versions, distribution, kernel, desktop and the result of each check. It has **no serial numbers or personal data**.
+
+        To create one by hand: `pomona certify`, then paste the content of the `.json` file below.
+  - type: textarea
+    id: certificate
+    attributes:
+      label: Certificate (JSON)
+      description: The content of the `pomona-certificate-*.json` file.
+      render: json
+    validations:
+      required: true
+  - type: dropdown
+    id: cold_boot
+    attributes:
+      label: Did you create the certificate after a full shutdown and power-on?
+      description: A restart does not reset the T1 chip, so a full shutdown gives the most useful result.
+      options:
+        - "Yes"
+        - "No"
+        - "I don't know"
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else? (optional)
+      description: Suspend, external displays, how you installed Linux, whether macOS is still installed.

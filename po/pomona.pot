@@ -241,3 +241,15 @@ msgstr ""
 
 msgid "Provided as is, without any warranty: use at your own risk. Not affiliated with Apple Inc.; Apple, MacBook and Touch Bar are trademarks of Apple Inc."
 msgstr ""
+
+msgid "Share with the community"
+msgstr ""
+
+msgid "Opens a GitHub page with your certificate already filled in. Nothing is sent until you press “Submit new issue” there. A GitHub account is needed."
+msgstr ""
+
+msgid "Add your Mac to the compatibility table"
+msgstr ""
+
+msgid "Could not open the browser"
+msgstr ""

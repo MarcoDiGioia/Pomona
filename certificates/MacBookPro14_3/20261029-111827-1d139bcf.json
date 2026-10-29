@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "date": "2026-10-29T11:18:27Z",
-  "easy_t1": "0.3.0",
+  "pomona": "0.3.0",
   "result": "WORKING",
   "model": "MacBookPro14,3",
   "board": "Mac-551B86E5744E2388",

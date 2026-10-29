@@ -4,15 +4,9 @@ By contributing you agree that your contribution is licensed under the [GPL-3.0-
 
 ## Compatibility reports
 
-The most useful contribution is a certificate from your Mac:
+The most useful contribution is a certificate from your Mac. Install Pomona, shut down and power on, then in the app go to **Report**, press **Create certificate** and **Share with the community** (or run `pomona certify` and `pomona share`). Your browser opens a pre-filled GitHub issue: press *Submit new issue*. A robot checks the certificate and opens a pull request that adds it. See [docs/certificates.md](docs/certificates.md).
 
-```bash
-sudo ./install.sh
-# shut down, power on into Linux
-pomona certify
-```
-
-Open a *Compatibility report* issue with the two files, or send a pull request that adds them to `certificates/` and a row to `docs/compatibility.md`. Certificates contain no serial numbers, ECID or UUIDs; please don't add them by hand.
+Certificates contain no serial numbers, ECID or UUIDs. Please don't add certificates by hand or edit the tables in `docs/compatibility.md`: they are generated from `certificates/` by `tools/certificates.py`.
 
 ## Code
 

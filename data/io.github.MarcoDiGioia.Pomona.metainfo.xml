@@ -134,6 +134,18 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="0.8.0" date="2026-10-29">
+      <description>
+        <p>New: share your compatibility certificate with the community from the Report page.</p>
+        <p xml:lang="it">Novità: condividi il certificato di compatibilità con la community dalla pagina Certificato.</p>
+        <p xml:lang="de">Neu: Teile dein Kompatibilitätszertifikat auf der Seite Bericht mit der Community.</p>
+        <p xml:lang="fr">Nouveau : partagez votre certificat de compatibilité avec la communauté depuis la page Rapport.</p>
+        <p xml:lang="es">Novedad: comparte tu certificado de compatibilidad con la comunidad desde la página Informe.</p>
+        <p xml:lang="pt">Novo: partilhe o seu certificado de compatibilidade com a comunidade na página Relatório.</p>
+        <p xml:lang="nl">Nieuw: deel je compatibiliteitscertificaat met de community vanaf de pagina Rapport.</p>
+        <p xml:lang="pl">Nowość: udostępnij społeczności certyfikat zgodności ze strony Raport.</p>
+      </description>
+    </release>
     <release version="0.7.3" date="2026-10-29">
       <description>
         <p>Fixes a misleading message about the GNOME Shell extension right after installing.</p>

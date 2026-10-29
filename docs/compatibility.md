@@ -4,14 +4,18 @@
 
 ## Models
 
-| Model | Machine | Status | Touch Bar | Camera | Light sensor | Fn | Reports |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| MacBookPro14,3 | 15", 2017 | ✅ Verified | ✅ | ✅ | ✅ | ✅ | 1 |
-| MacBookPro14,2 | 13", 2017, four Thunderbolt ports | 🟡 Probable | | | | | 0 |
-| MacBookPro13,3 | 15", 2016 | 🟡 Probable | | | | | 0 |
-| MacBookPro13,2 | 13", 2016, four Thunderbolt ports | 🟡 Probable | | | | | 0 |
-| MacBookPro13,1, MacBookPro14,1 | 13", two ports, no Touch Bar | ⛔ Not applicable | | | | | |
-| MacBookPro15,x and later, MacBookAir8,x and later | T2 chip | ⛔ Not applicable | | | | | |
+**Tested** means at least one certificate with every check passing is in [`certificates/`](../certificates). **Should work** means the model has the same T1 chip (`iBridge1,1`, CPID `0x8002`) and the same start-up path as a tested one, but nobody has sent a certificate for it yet. The table is generated from the certificates.
+
+<!-- models:start -->
+| Model | Machine | Status | Reports | Working |
+| --- | --- | --- | --- | --- |
+| MacBookPro13,2 | 13", 2016, four Thunderbolt ports | 🟡 Should work | 0 | 0 |
+| MacBookPro13,3 | 15", 2016 | 🟡 Should work | 0 | 0 |
+| MacBookPro14,2 | 13", 2017, four Thunderbolt ports | 🟡 Should work | 0 | 0 |
+| MacBookPro14,3 | 15", 2017 | ✅ Tested | 1 | 1 |
+<!-- models:end -->
+
+Macs without a Touch Bar (MacBookPro13,1 and 14,1) have no T1, and 2018 and later Macs have a T2 chip instead: Pomona is not for them. For the T2 see [t2linux](https://wiki.t2linux.org).
 
 ## Distributions
 
@@ -29,16 +33,22 @@
 
 Camera and light sensor need nothing beyond the T1 boot, so they are expected to work on every line above.
 
-## Environments seen working
+## Certificates received
 
-| Model | Distribution | Kernel | Mac firmware | EmbeddedOS | Desktop | Date |
-| --- | --- | --- | --- | --- | --- | --- |
-| MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | 529.140.2.0.0 | 910 | GNOME (Wayland) | 2026-10-29 |
+Generated from [`certificates/`](../certificates), newest first.
+
+<!-- reports:start -->
+| Date | Model | Distribution | Kernel | Desktop | Mac firmware | EmbeddedOS | Pomona | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 910 | 0.3.0 | ✅ Working |
+<!-- reports:end -->
 
 ## Adding your Mac
 
-1. Install Pomona and **shut down** (a restart does not reset the T1).
-2. Power on into Linux and run `pomona certify`.
-3. Open a *Compatibility report* issue with the `.md` and `.json` files, or a pull request that adds them under `certificates/` and a row above.
+1. Install Pomona and **shut down** (a restart does not reset the T1), then power on into Linux.
+2. Open Pomona, go to the **Report** page, press **Create certificate**, then **Share with the community**.
+3. Your browser opens a GitHub issue with the certificate already filled in. Check it and press **Submit new issue** (you need a GitHub account).
 
-A certificate that fails is just as useful: it says which step breaks on which machine.
+A robot checks the certificate and opens a pull request that adds it to the table; once it is merged, your Mac appears here. From a terminal: `pomona certify`, then `pomona share`.
+
+A certificate that fails is just as useful: it says which step breaks on which machine. Certificates contain only the Mac model, firmware versions, distribution, kernel, desktop and the result of each check, never serial numbers.

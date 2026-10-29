@@ -241,3 +241,15 @@ msgstr "Touch Bar, kamera i czujnik światła dla MacBooka Pro 2016–2017"
 
 msgid "Provided as is, without any warranty: use at your own risk. Not affiliated with Apple Inc.; Apple, MacBook and Touch Bar are trademarks of Apple Inc."
 msgstr "Dostarczane w obecnej postaci, bez żadnej gwarancji: używasz na własne ryzyko. Niezwiązane z Apple Inc.; Apple, MacBook i Touch Bar są znakami towarowymi Apple Inc."
+
+msgid "Share with the community"
+msgstr "Udostępnij społeczności"
+
+msgid "Opens a GitHub page with your certificate already filled in. Nothing is sent until you press “Submit new issue” there. A GitHub account is needed."
+msgstr "Otwiera stronę GitHub z już wypełnionym certyfikatem. Nic nie jest wysyłane, dopóki tam nie naciśniesz „Submit new issue”. Wymagane jest konto GitHub."
+
+msgid "Add your Mac to the compatibility table"
+msgstr "Dodaj swojego Maca do tabeli zgodności"
+
+msgid "Could not open the browser"
+msgstr "Nie udało się otworzyć przeglądarki"

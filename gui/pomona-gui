@@ -10,6 +10,7 @@ Everything that needs root goes through pkexec and pomona-admin.
 SPDX-License-Identifier: GPL-3.0-or-later
 """
 import gettext
+import glob
 import json
 import locale
 import os
@@ -581,6 +582,17 @@ class Window(Adw.ApplicationWindow):
         group.add(row)
         page.add(group)
 
+        share_group = Adw.PreferencesGroup(
+            title=_("Share with the community"),
+            description=_("Opens a GitHub page with your certificate already filled in. Nothing is sent until you press “Submit new issue” there. A GitHub account is needed."))
+        share_row = Adw.ActionRow(title=_("Add your Mac to the compatibility table"))
+        self.share_btn = Gtk.Button(label=_("Share with the community"), valign=Gtk.Align.CENTER,
+                                    sensitive=bool(self.latest_certificate()))
+        self.share_btn.connect("clicked", lambda *_a: self.share())
+        share_row.add_suffix(self.share_btn)
+        share_group.add(share_row)
+        page.add(share_group)
+
         out_group = Adw.PreferencesGroup()
         self.report_view = Gtk.TextView(editable=False, monospace=True, wrap_mode=Gtk.WrapMode.WORD_CHAR,
                                         top_margin=12, bottom_margin=12, left_margin=12, right_margin=12)
@@ -598,10 +610,31 @@ class Window(Adw.ApplicationWindow):
         os.makedirs(d, exist_ok=True)
         return d
 
+    def latest_certificate(self):
+        files = glob.glob(os.path.join(self.cert_dir(), "pomona-certificate-*.json"))
+        return max(files, key=os.path.getmtime) if files else None
+
+    def share(self):
+        path = self.latest_certificate()
+        if not path:
+            return
+
+        def done(ok, out):
+            url = out.strip()
+            try:
+                if not ok or not url.startswith("https://"):
+                    raise GLib.Error("no url")
+                Gio.AppInfo.launch_default_for_uri(url, None)
+            except GLib.Error:
+                self.toast(_("Could not open the browser"))
+
+        run_async(pomona_cmd() + ["share", "--url", path], done)
+
     def certify(self):
         def done(_ok, out):
             self.report_view.get_buffer().set_text(out)
             self.open_btn.set_sensitive(True)
+            self.share_btn.set_sensitive(bool(self.latest_certificate()))
 
         run_async(pomona_cmd() + ["certify", self.cert_dir()], done)
 

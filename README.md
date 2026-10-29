@@ -76,6 +76,7 @@ From the terminal:
 | --- | --- |
 | `pomona status` | shows whether the Touch Bar, camera and light sensor are working |
 | `pomona certify` | creates the compatibility certificate |
+| `pomona share` | opens your certificate as a pre-filled GitHub report, to add your Mac to the table |
 | `sudo pomona start` | turns everything on again (for example after unplugging something) |
 
 The app is available in English, Italian, German, French, Spanish, Portuguese, Dutch and Polish.
@@ -91,13 +92,14 @@ The app is available in English, Italian, German, French, Spanish, Portuguese, D
 
 Tested on Ubuntu 26.04. Details and how to add your Mac: [docs/compatibility.md](docs/compatibility.md).
 
-**Help the list grow:** after a full shutdown and power-on, create a certificate from the **Report** page (or with `pomona certify`) and attach it to a [Compatibility report](https://github.com/MarcoDiGioia/Pomona/issues/new?template=compatibility-report.md). It contains no serial numbers.
+**Does it work on your Mac? Tell us.** After a full shutdown and power-on, open the **Report** page, press **Create certificate** and then **Share with the community**. Your browser opens a GitHub page with the certificate already filled in; press *Submit new issue* and your Mac is added to the table. It contains no serial numbers or personal data. How it works: [docs/certificates.md](docs/certificates.md).
 
 ## Documentation
 
 - [How Pomona works](docs/how-it-works.md): the technical details.
 - [Troubleshooting](docs/troubleshooting.md)
 - [Compatibility](docs/compatibility.md)
+- [Compatibility certificates](docs/certificates.md)
 - [Contributing and translations](CONTRIBUTING.md)
 
 ## Credits

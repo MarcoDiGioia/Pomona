@@ -6,6 +6,7 @@
 #   pomona stop       release the T1 before power-off (what the service runs at shutdown)
 #   pomona status     one screen with the state of every piece (--json for the GUI)
 #   pomona certify    run the checks and write a compatibility certificate
+#   pomona share      open your latest certificate as a pre-filled GitHub report
 #   pomona version
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
@@ -125,8 +126,8 @@ cmd_certify() {
 		echo
 		echo "Pomona is provided as is, without warranty, and is not affiliated with Apple Inc."
 		echo
-		echo "No serial numbers, ECID or UUIDs are included. Please attach this file to a"
-		echo "\"Compatibility report\" issue so the table in docs/compatibility.md can grow."
+		echo "No serial numbers, ECID or UUIDs are included. To add your Mac to the compatibility"
+		echo "table, run: pomona share"
 	} > "$base.md"
 	{
 		echo "{"
@@ -157,11 +158,34 @@ cmd_certify() {
 	[ "$verdict" = WORKING ]
 }
 
+cmd_share() {
+	local file="" url_only=0 a url
+	for a in "$@"; do
+		case "$a" in
+			--url) url_only=1;;
+			-*) et1_err "unknown option $a"; return 2;;
+			*) file=$a;;
+		esac
+	done
+	[ -n "$file" ] || file=$(et1_latest_certificate) || { et1_err "no certificate found: run  pomona certify  first"; return 1; }
+	[ -r "$file" ] || { et1_err "cannot read $file"; return 1; }
+	url=$(et1_share_url "$file") || { et1_err "$file is not a Pomona certificate"; return 1; }
+	if [ "$url_only" = 1 ]; then printf '%s\n' "$url"; return 0; fi
+	echo "Certificate: $file"
+	echo "Your browser will open a GitHub page with the certificate already filled in."
+	echo "Nothing is sent until you press \"Submit new issue\" there (a GitHub account is needed)."
+	if [ "$(id -u)" = 0 ] || ! command -v xdg-open >/dev/null; then
+		echo; echo "Open this address in your browser:"; echo "$url"; return 0
+	fi
+	xdg-open "$url" >/dev/null 2>&1 &
+}
+
 case "${1:-status}" in
 	start) et1_start;;
 	stop) et1_stop;;
 	status) shift; cmd_status "$@";;
 	certify) shift; cmd_certify "$@";;
+	share) shift; cmd_share "$@";;
 	version|--version|-V) echo "Pomona $POMONA_VERSION";;
 	help|-h|--help) sed -n '2,9p' "$_self" | sed 's/^# \{0,1\}//';;
 	*) echo "pomona: unknown command $1 (try: pomona help)" >&2; exit 2;;

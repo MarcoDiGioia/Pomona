@@ -1,0 +1,62 @@
+# Turns a "Compatibility report" issue into a pull request that adds the certificate.
+#
+# The issue text is untrusted. It is never put in a shell command: the Python script
+# reads it from the event file, validates it against a strict schema and writes only
+# values rebuilt from the validated fields. Nothing runs from the issue.
+#
+# One-time setup: Settings > Actions > General > Workflow permissions: "Read and write
+# permissions" and "Allow GitHub Actions to create and approve pull requests".
+name: Certificate intake
+
+on:
+  issues:
+    types: [opened]
+
+permissions: {}
+
+concurrency:
+  group: certificate-intake
+  cancel-in-progress: false
+
+jobs:
+  intake:
+    if: contains(github.event.issue.labels.*.name, 'compatibility') || startsWith(github.event.issue.title, 'Compatibility')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE_NUMBER: ${{ github.event.issue.number }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Validate the certificate
+        run: python3 -I tools/certificates.py intake "$GITHUB_EVENT_PATH" "$RUNNER_TEMP/intake"
+
+      - name: Open the pull request
+        run: |
+          set -eu
+          out="$RUNNER_TEMP/intake"
+          status=$(cat "$out/status")
+          if [ "$status" = ok ]; then
+            branch=$(cat "$out/branch")
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git checkout -b "$branch"
+            git add certificates docs/compatibility.md
+            git commit -m "$(cat "$out/title")"
+            git push origin "$branch"
+            gh pr create --base main --head "$branch" --title "$(cat "$out/title")" --body-file "$out/pr-body.md"
+            gh issue edit "$ISSUE_NUMBER" --add-label certificate
+          elif [ "$status" = duplicate ]; then
+            gh issue comment "$ISSUE_NUMBER" --body-file "$out/comment.md"
+            gh issue close "$ISSUE_NUMBER" --reason "not planned"
+            exit 0
+          else
+            gh issue edit "$ISSUE_NUMBER" --add-label invalid-certificate || true
+          fi
+          gh issue comment "$ISSUE_NUMBER" --body-file "$out/comment.md"

@@ -143,6 +143,17 @@ true_ "certificate json is valid" python3 -I -c "import json,sys; json.load(open
 false_ "no serial number in certificate" grep -qi 'serial\|ecid\|uuid:' "$js"
 eq "model in json" "$(python3 -I -c "import json,sys; print(json.load(open(sys.argv[1]))['model'])" "$js")" MacBookPro14,3
 
+echo "share a certificate"
+url=$(POMONA_LIB="$ROOT/lib/pomona.sh" bash "$ROOT/bin/pomona" share --url "$js")
+case "$url" in "https://github.com/MarcoDiGioia/Pomona/issues/new?template=compatibility-report.yml&title="*) ok "share url points at the issue form";; *) fail "share url points at the issue form";; esac
+back=$(python3 -I -c "
+import sys, urllib.parse, json
+q = urllib.parse.parse_qs(urllib.parse.urlparse(sys.argv[1]).query)
+print(json.loads(q['certificate'][0])['model'], '|', q['title'][0])" "$url")
+eq "url carries the certificate and a title" "$back" "MacBookPro14,3 | Compatibility: MacBookPro14,3 on $(POMONA_LIB="$ROOT/lib/pomona.sh" bash -c '. "$POMONA_LIB"; et1_os_field PRETTY_NAME')"
+false_ "share refuses a file that is not a certificate" env POMONA_LIB="$ROOT/lib/pomona.sh" bash "$ROOT/bin/pomona" share --url "$ROOT/README.md"
+false_ "share without a certificate fails" env POMONA_LIB="$ROOT/lib/pomona.sh" HOME="$TMP/nohome" bash -c 'cd "$1" && bash "$2/bin/pomona" share --url' _ "$TMP" "$ROOT"
+
 echo
 echo "lib tests: $PASS passed, $FAIL failed"
 [ "$FAIL" = 0 ]
