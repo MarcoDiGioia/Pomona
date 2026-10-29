@@ -38,6 +38,8 @@ sudo apt install ./pomona_*_amd64.deb
 
 The Touch Bar, camera and light sensor turn on right away, and from now on at every start.
 
+No Wi-Fi yet? That is the usual case on a new Linux install on these Macs. The package installs from a USB stick like any other: copy the `.deb` there and run the command above (Pomona's dependencies are part of a standard Ubuntu desktop; if `apt` asks to download something, connect with a cable or a phone's USB tethering). To fix the Wi-Fi itself you need the board file once: see [docs/wifi.md](docs/wifi.md).
+
 Prefer to build the package yourself?
 
 ```bash

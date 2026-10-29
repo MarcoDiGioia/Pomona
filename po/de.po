@@ -397,3 +397,12 @@ msgstr "Konfigurationsdatei herunterladen?"
 
 msgid "Download and fix"
 msgstr "Herunterladen und reparieren"
+
+msgid "I have the file…"
+msgstr "Ich habe die Datei…"
+
+msgid "Choose the board file"
+msgstr "Konfigurationsdatei auswählen"
+
+msgid "No connection? On another computer, save the file from this address, copy it here and choose “I have the file…”."
+msgstr "Keine Verbindung? Speichere die Datei auf einem anderen Computer von dieser Adresse, kopiere sie hierher und wähle „Ich habe die Datei…“."

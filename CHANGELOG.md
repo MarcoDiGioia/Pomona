@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The Wi-Fi fix works offline: in the download notice, *I have the file…* uses a copy saved from another computer (same SHA-256 check); `pomona-admin wifi-fix --board-file FILE`.
 - A GitHub wiki generated from the documents of the repository (`tools/wiki.py`, `tools/sync-wiki.sh`).
 
 ## 0.9.0 - 2026-10-29

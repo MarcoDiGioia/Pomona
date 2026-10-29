@@ -4,7 +4,7 @@
 #   pomona-admin start                 boot the T1 and bind its devices
 #   pomona-admin set-config FILE       validate FILE and install it as /etc/pomona/config.json
 #   pomona-admin enable | disable      the boot and Touch Bar services
-#   pomona-admin wifi-fix [--download] [--keep-mac | --mac aa:bb:cc:dd:ee:ff]   install the Wi-Fi board file and settings
+#   pomona-admin wifi-fix [--download | --board-file FILE] [--keep-mac | --mac aa:bb:cc:dd:ee:ff]   install the Wi-Fi board file and settings
 #   pomona-admin wifi-undo             put back the files the last Wi-Fi fix replaced
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
@@ -55,6 +55,16 @@ EOF
 			case "$1" in
 				--keep-mac) args+=(--keep-mac);;
 				--download) args+=(--download);;
+				--board-file)
+					# a copy the user saved: copied to a private file first, and only used if its checksum is the expected one
+					shift
+					f=${1:-}
+					if [ ! -f "$f" ] || [ -L "$f" ] || [ "$(stat -c %s "$f" 2>/dev/null || echo 99999999)" -gt 65536 ]; then
+						echo "pomona-admin: not a usable file" >&2; exit 2
+					fi
+					board_tmp=$(mktemp); trap 'rm -f "$board_tmp"' EXIT
+					cp -- "$f" "$board_tmp"
+					args+=(--board-file "$board_tmp");;
 				--mac)
 					shift
 					[[ "${1:-}" =~ ^([0-9a-f]{2}:){5}[0-9a-f]{2}$ ]] || { echo "pomona-admin: invalid MAC address" >&2; exit 2; }
@@ -63,7 +73,8 @@ EOF
 			esac
 			shift
 		done
-		exec "$LIBEXEC/../../bin/pomona" wifi fix ${args[@]+"${args[@]}"}
+		"$LIBEXEC/../../bin/pomona" wifi fix ${args[@]+"${args[@]}"}
+		exit $?
 		;;
 	wifi-undo)
 		exec "$LIBEXEC/../../bin/pomona" wifi undo

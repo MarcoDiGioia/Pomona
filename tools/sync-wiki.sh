@@ -18,6 +18,8 @@ git clone -q "$URL" "$WORK/wiki" || { echo "the wiki does not exist yet: create 
 find "$WORK/wiki" -maxdepth 1 -name '*.md' -delete
 python3 -I "$ROOT/tools/wiki.py" "$WORK/wiki" >/dev/null
 cd "$WORK/wiki"
+git config user.name "$(git -C "$ROOT" config user.name)"
+git config user.email "$(git -C "$ROOT" config user.email)"
 git add -A
 if git diff --cached --quiet; then echo "the wiki is up to date"; exit 0; fi
 git commit -q -m "Update the wiki from $(git -C "$ROOT" rev-parse --short HEAD)"

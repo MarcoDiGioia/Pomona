@@ -30,6 +30,8 @@ Pomona does not contain the board file. `pomona wifi fix` downloads it over http
 
 **You are asked first.** The download happens only with your explicit agreement: the app shows a notice (where the file comes from, that its author and licence are not known, that nothing about you is sent) with *Cancel* and *Download and fix*; in a terminal `pomona wifi fix` shows the same notice and asks, or you pass `--download`. With no agreement nothing is downloaded and nothing is installed.
 
+**Without a connection** (the usual case when the Wi-Fi is what does not work): connect the Mac another way and Pomona downloads the file over it, a cable or a phone's USB tethering both work; or, on another computer, save the file from the address the app shows, copy it to a USB stick, and in the app choose *I have the file…* in the download notice. The same SHA-256 check applies.
+
 Offline, or if the address stops working: save the file yourself and run `sudo pomona wifi fix --board-file /path/to/brcmfmac43602-pcie.txt`. It is checked against the same SHA-256. The app's *Fix* button needs a connection; if the card is the only way to get one, use a cable or a phone's USB tethering, or the `--board-file` form.
 
 ## The MAC address
