@@ -30,9 +30,10 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       ISSUE_NUMBER: ${{ github.event.issue.number }}
+      ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Validate the certificate
         run: python3 -I tools/certificates.py intake "$GITHUB_EVENT_PATH" "$RUNNER_TEMP/intake"
@@ -43,6 +44,14 @@ jobs:
           out="$RUNNER_TEMP/intake"
           status=$(cat "$out/status")
           if [ "$status" = ok ]; then
+            # flood protection: at most 30 certificate pull requests waiting, and 5 open reports per person
+            waiting=$(gh pr list --label certificate --state open --json number --jq length)
+            mine=$(gh issue list --author "$ISSUE_AUTHOR" --label compatibility --state open --json number --jq length)
+            if [ "$waiting" -ge 30 ] || [ "$mine" -gt 5 ]; then
+              printf '%s\n' "Thanks! Many certificates are already waiting for review (or you have several open reports), so this one was not turned into a pull request automatically. A maintainer will look at it." > "$out/comment.md"
+              gh issue comment "$ISSUE_NUMBER" --body-file "$out/comment.md"
+              exit 0
+            fi
             branch=$(cat "$out/branch")
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

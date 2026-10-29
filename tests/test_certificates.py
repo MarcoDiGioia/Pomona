@@ -261,6 +261,10 @@ class Workflow(unittest.TestCase):
                 if line.strip().startswith("run:") or line.startswith("          "):
                     self.assertNotIn(dangerous, line)
         self.assertIn("permissions: {}", text)
+        # actions are pinned to an exact commit, and nothing runs on pull requests from forks
+        self.assertRegex(text, r"uses: actions/checkout@[0-9a-f]{40}")
+        self.assertNotIn("pull_request", text)
+        self.assertNotIn("workflow_run", text)
         self.assertRegex(text, r"gh pr create[^\n]*--label certificate")
         try:
             import yaml

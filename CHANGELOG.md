@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- The certificate workflow pins its action to an exact commit, limits how many certificate pull requests can wait at once and how many open reports one person can have, and Dependabot keeps the pin up to date.
+- `SECURITY.md` (private vulnerability reporting) and `CODEOWNERS`.
+
 ## 0.8.0 - 2026-10-29
 
 - **Share your result with the community**: the Report page of the app has a *Share with the community* button, and `pomona share` does the same from a terminal. It opens a GitHub issue with your compatibility certificate already filled in; nothing is sent until you press *Submit new issue*.

@@ -1,0 +1,11 @@
+# Every change needs a review from the maintainer; the files that run with
+# privileges, or that end up as root on users' machines, are listed on purpose.
+*                         @MarcoDiGioia
+/.github/                 @MarcoDiGioia
+/tools/certificates.py    @MarcoDiGioia
+/libexec/                 @MarcoDiGioia
+/packaging/               @MarcoDiGioia
+/install.sh               @MarcoDiGioia
+/systemd/                 @MarcoDiGioia
+/data/*.policy            @MarcoDiGioia
+/data/*.rules             @MarcoDiGioia
