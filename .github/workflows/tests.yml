@@ -1,0 +1,30 @@
+name: Tests
+
+# Runs the test suite on every pull request (including from forks, with a read-only token and no
+# secrets) and on pushes to the two long-lived branches. The ruleset requires the "Tests" check.
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install the build dependencies
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends gcc make pkg-config libusb-1.0-0-dev python3-gi gir1.2-gtk-4.0 gir1.2-adw-1
+
+      - name: Lint
+        run: make lint
+
+      - name: Test
+        run: make test

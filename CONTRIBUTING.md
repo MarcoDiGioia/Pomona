@@ -8,6 +8,10 @@ The most useful contribution is a certificate from your Mac. Install Pomona, shu
 
 Certificates contain no serial numbers, ECID or UUIDs. Please don't add certificates by hand or edit the tables in `docs/compatibility.md`: they are generated from `certificates/` by `tools/certificates.py`.
 
+## Pull requests
+
+Only the maintainer creates branches in this repository: **fork it**, make a branch in your fork and open the pull request against `develop`. `main` and `develop` are protected and the **Tests** check must pass; see [docs/maintaining.md](docs/maintaining.md).
+
 ## Code
 
 - `make test` runs every test against fake sysfs trees; nothing touches the hardware.
