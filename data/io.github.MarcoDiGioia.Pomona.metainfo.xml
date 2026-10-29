@@ -146,6 +146,18 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="0.9.1" date="2026-10-29">
+      <description>
+        <p>New: the Wi-Fi fix also works without a connection, with a file saved from another computer, and the app says what to do (a cable or a phone’s USB tethering for a minute, or a prepared USB stick).</p>
+        <p xml:lang="it">Novità: il fix del Wi-Fi funziona anche senza connessione, con un file salvato da un altro computer, e l’app spiega cosa fare (un cavo o il tethering USB del telefono per un minuto, oppure una chiavetta preparata).</p>
+        <p xml:lang="de">Neu: Die WLAN-Korrektur funktioniert auch ohne Verbindung mit einer auf einem anderen Computer gespeicherten Datei, und die App erklärt, was zu tun ist (kurz ein Kabel oder USB-Tethering des Telefons oder ein vorbereiteter USB-Stick).</p>
+        <p xml:lang="fr">Nouveau : la correction du Wi-Fi fonctionne aussi sans connexion, avec un fichier enregistré sur un autre ordinateur, et l’application explique quoi faire (un câble ou le partage de connexion USB d’un téléphone pendant une minute, ou une clé USB préparée).</p>
+        <p xml:lang="es">Novedad: la corrección del Wi-Fi también funciona sin conexión, con un archivo guardado en otro equipo, y la aplicación explica qué hacer (un cable o el anclaje USB de un teléfono durante un minuto, o un USB preparado).</p>
+        <p xml:lang="pt">Novo: a correção do Wi-Fi também funciona sem ligação, com um ficheiro guardado noutro computador, e a aplicação explica o que fazer (um cabo ou a partilha de ligação USB de um telemóvel durante um minuto, ou uma pen preparada).</p>
+        <p xml:lang="nl">Nieuw: de wifi-reparatie werkt ook zonder verbinding, met een bestand van een andere computer, en de app legt uit wat te doen (even een kabel of USB-tethering van een telefoon, of een voorbereide USB-stick).</p>
+        <p xml:lang="pl">Nowość: naprawa Wi-Fi działa też bez połączenia, z plikiem zapisanym na innym komputerze, a aplikacja podpowiada, co zrobić (na chwilę kabel lub tethering USB z telefonu albo przygotowany pendrive).</p>
+      </description>
+    </release>
     <release version="0.9.0" date="2026-10-29">
       <description>
         <p>New: a Wi-Fi page fixes the Broadcom Wi-Fi card that rejects every connection, with a backup and an undo.</p>

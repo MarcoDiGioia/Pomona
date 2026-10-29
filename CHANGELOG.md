@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.1 - 2026-10-29
 
 - The README, the Wi-Fi guide and the download notice say what to do without a connection: a cable or a phone's USB tethering for a minute, or a USB stick prepared on another computer.
 - The Wi-Fi fix works offline: in the download notice, *I have the file…* uses a copy saved from another computer (same SHA-256 check); `pomona-admin wifi-fix --board-file FILE`.
