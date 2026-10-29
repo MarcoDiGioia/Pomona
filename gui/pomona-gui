@@ -512,7 +512,7 @@ class Window(Adw.ApplicationWindow):
             "Its author and licence are not known. Nothing about you is sent."))
         box.append(label)
         offline = Gtk.Label(wrap=True, xalign=0, label=_(
-            "No connection? On another computer, save the file from this address, copy it here and choose “I have the file…”."))
+            "No connection? Connect the Mac temporarily with a cable (a phone’s USB tethering works too), or on another computer save the file from this address, copy it here and choose “I have the file…”."))
         offline.add_css_class("dim-label")
         box.append(offline)
         address = Gtk.Label(wrap=True, xalign=0, selectable=True, label=BOARD_FILE_URL)

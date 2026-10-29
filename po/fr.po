@@ -404,5 +404,5 @@ msgstr "J’ai le fichier…"
 msgid "Choose the board file"
 msgstr "Choisir le fichier de configuration"
 
-msgid "No connection? On another computer, save the file from this address, copy it here and choose “I have the file…”."
-msgstr "Pas de connexion ? Sur un autre ordinateur, enregistrez le fichier depuis cette adresse, copiez-le ici et choisissez « J’ai le fichier… »."
+msgid "No connection? Connect the Mac temporarily with a cable (a phone’s USB tethering works too), or on another computer save the file from this address, copy it here and choose “I have the file…”."
+msgstr "Pas de connexion ? Branchez temporairement le Mac avec un câble (le partage de connexion USB d’un téléphone fonctionne aussi), ou, sur un autre ordinateur, enregistrez le fichier depuis cette adresse, copiez-le ici et choisissez « J’ai le fichier… »."
