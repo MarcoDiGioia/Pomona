@@ -21,5 +21,6 @@
     "Ambient light sensor present": true,
     "Boot service enabled": true,
     "Touch Bar daemon running": true
-  }
+  },
+  "reported_by": "MarcoDiGioia"
 }

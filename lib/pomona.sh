@@ -292,8 +292,11 @@ et1_share_url() {
 	python3 -I - "$1" "$POMONA_REPO_URL" <<'PYEOF'
 import json, sys, urllib.parse
 path, repo = sys.argv[1], sys.argv[2]
-with open(path, encoding="utf-8") as f:
-    cert = json.load(f)
+try:
+    with open(path, encoding="utf-8") as f:
+        cert = json.load(f)
+except (OSError, ValueError):
+    sys.exit("not a Pomona certificate")
 if not isinstance(cert, dict) or "model" not in cert:
     sys.exit("not a Pomona certificate")
 title = "Compatibility: %s on %s" % (cert.get("model", "?"), cert.get("distribution", "?"))

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Certificates are checked for contradictions and against the released Pomona versions, and the robot records the GitHub account that sent each one. Accounts younger than 30 days, or unexpected board ids, label the pull request `needs-review`.
+- The compatibility table has three levels: **Verified** (by the maintainer, listed in `certificates/VERIFIED`), **Tested by the community** and **Should work**.
 - The certificate workflow pins its action to an exact commit, limits how many certificate pull requests can wait at once and how many open reports one person can have, and Dependabot keeps the pin up to date.
 - `SECURITY.md` (private vulnerability reporting) and `CODEOWNERS`.
 

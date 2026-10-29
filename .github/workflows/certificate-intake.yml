@@ -35,6 +35,12 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
+      - name: Look up the reporter's GitHub account
+        run: |
+          # only digits, "T", "Z", ":" and "-" survive, so the value is safe to hand to the next step
+          created=$(gh api "users/$ISSUE_AUTHOR" --jq .created_at 2>/dev/null | tr -cd '0-9TZ:-' || true)
+          echo "POMONA_ACCOUNT_CREATED=$created" >> "$GITHUB_ENV"
+
       - name: Validate the certificate
         run: python3 -I tools/certificates.py intake "$GITHUB_EVENT_PATH" "$RUNNER_TEMP/intake"
 
@@ -59,7 +65,9 @@ jobs:
             git add certificates docs/compatibility.md
             git commit -m "$(cat "$out/title")"
             git push origin "$branch"
-            gh pr create --base main --head "$branch" --title "$(cat "$out/title")" --body-file "$out/pr-body.md" --label certificate
+            labels=certificate
+            if [ -s "$out/needs-review" ]; then labels="$labels,needs-review"; fi
+            gh pr create --base main --head "$branch" --title "$(cat "$out/title")" --body-file "$out/pr-body.md" --label "$labels"
             gh issue edit "$ISSUE_NUMBER" --add-label certificate
           elif [ "$status" = duplicate ]; then
             gh issue comment "$ISSUE_NUMBER" --body-file "$out/comment.md"

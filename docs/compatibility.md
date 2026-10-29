@@ -4,15 +4,20 @@
 
 ## Models
 
-**Tested** means at least one certificate with every check passing is in [`certificates/`](../certificates). **Should work** means the model has the same T1 chip (`iBridge1,1`, CPID `0x8002`) and the same start-up path as a tested one, but nobody has sent a certificate for it yet. The table is generated from the certificates.
+Each model is in one of these states. The table is generated from the certificates.
+
+- ✅ **Verified**: tested by the maintainer, or approved by him after seeing material evidence (photos, logs, a call) from people he trusts. The certificate is listed in [`certificates/VERIFIED`](../certificates/VERIFIED).
+- 🟢 **Tested by the community**: at least one user sent a working certificate. Certificates come from the users' own machines and are not checked one by one, so they cannot be proven.
+- 🟠 **Problems reported**: certificates exist, but none is fully working.
+- 🟡 **Should work**: the model has the same T1 chip (`iBridge1,1`, CPID `0x8002`) and the same start-up path as a tested one, but nobody has sent a certificate yet.
 
 <!-- models:start -->
-| Model | Machine | Status | Reports | Working |
+| Model | Machine | Status | Reports | People |
 | --- | --- | --- | --- | --- |
 | MacBookPro13,2 | 13", 2016, four Thunderbolt ports | 🟡 Should work | 0 | 0 |
 | MacBookPro13,3 | 15", 2016 | 🟡 Should work | 0 | 0 |
 | MacBookPro14,2 | 13", 2017, four Thunderbolt ports | 🟡 Should work | 0 | 0 |
-| MacBookPro14,3 | 15", 2017 | ✅ Tested | 1 | 1 |
+| MacBookPro14,3 | 15", 2017 | ✅ Verified | 1 | 1 |
 <!-- models:end -->
 
 Macs without a Touch Bar (MacBookPro13,1 and 14,1) have no T1, and 2018 and later Macs have a T2 chip instead: Pomona is not for them. For the T2 see [t2linux](https://wiki.t2linux.org).
@@ -38,9 +43,9 @@ Camera and light sensor need nothing beyond the T1 boot, so they are expected to
 Generated from [`certificates/`](../certificates), newest first.
 
 <!-- reports:start -->
-| Date | Model | Distribution | Kernel | Desktop | Mac firmware | EmbeddedOS | Pomona | Result |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 910 | 0.3.0 | ✅ Working |
+| Date | Model | Distribution | Kernel | Desktop | Mac firmware | EmbeddedOS | Pomona | Reported by | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 910 | 0.3.0 | @MarcoDiGioia | ✅ Working · verified |
 <!-- reports:end -->
 
 ## Adding your Mac

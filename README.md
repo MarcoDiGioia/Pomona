@@ -85,12 +85,12 @@ The app is available in English, Italian, German, French, Spanish, Portuguese, D
 
 | Mac | Status |
 | --- | --- |
-| MacBook Pro 15" 2017 (MacBookPro14,3) | ✅ Tested |
-| MacBook Pro 13" 2017 with Touch Bar (MacBookPro14,2) | Should work |
-| MacBook Pro 15" 2016 (MacBookPro13,3) | Should work |
-| MacBook Pro 13" 2016 with Touch Bar (MacBookPro13,2) | Should work |
+| MacBook Pro 15" 2017 (MacBookPro14,3) | ✅ Verified |
+| MacBook Pro 13" 2017 with Touch Bar (MacBookPro14,2) | 🟡 Should work |
+| MacBook Pro 15" 2016 (MacBookPro13,3) | 🟡 Should work |
+| MacBook Pro 13" 2016 with Touch Bar (MacBookPro13,2) | 🟡 Should work |
 
-Tested on Ubuntu 26.04. Details and how to add your Mac: [docs/compatibility.md](docs/compatibility.md).
+✅ Verified: tested by the maintainer. 🟢 Tested by the community: a user sent a working certificate. 🟡 Should work: same chip, nobody has reported yet. Verified on Ubuntu 26.04. Details and how to add your Mac: [docs/compatibility.md](docs/compatibility.md).
 
 **Does it work on your Mac? Tell us.** After a full shutdown and power-on, open the **Report** page, press **Create certificate** and then **Share with the community**. Your browser opens a GitHub page with the certificate already filled in; press *Submit new issue* and your Mac is added to the table. It contains no serial numbers or personal data. How it works: [docs/certificates.md](docs/certificates.md).
 

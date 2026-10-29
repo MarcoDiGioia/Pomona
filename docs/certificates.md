@@ -20,8 +20,8 @@ The workflow [`certificate-intake.yml`](../.github/workflows/certificate-intake.
 
 1. It reads the certificate from the issue text.
 2. It checks it against a strict schema: only the known fields, with the allowed characters and lengths; only the four supported Mac models; a date that is not in the future; exactly the ten known checks, each true or false; and a result that agrees with the checks.
-3. If it is valid, it **rebuilds** the certificate from the validated values, writes `certificates/<model>/<date>-<hash>.json` and `.md`, and regenerates the tables in `docs/compatibility.md`.
-4. The workflow opens a pull request with those files, labelled `certificate` (filter with `is:pr label:certificate` to see all the proposals), and comments on the issue. When the pull request is merged, the issue closes and the Mac appears in the table.
+3. It rejects certificates that contradict themselves (for example a camera present while the T1 is not running) or that claim a Pomona version that was never released, or a date earlier than that release. If it is valid, it **rebuilds** the certificate from the validated values, adds the name of the GitHub account that sent it (written by the robot, never taken from the certificate), writes `certificates/<model>/<date>-<hash>.json` and `.md`, and regenerates the tables in `docs/compatibility.md`.
+4. The workflow opens a pull request with those files, labelled `certificate`, and also `needs-review` when something deserves a closer look (an account younger than 30 days or whose age could not be checked, a board id other than the one usually reported by the model, the Touch Bar reported working on a kernel older than 6.15) (filter with `is:pr label:certificate` to see all the proposals), and comments on the issue. When the pull request is merged, the issue closes and the Mac appears in the table.
 5. An invalid certificate gets a comment that says what is wrong and changes nothing; a certificate already in the repository is closed as a duplicate.
 
 The pull request is reviewed and merged by a maintainer.
@@ -40,3 +40,15 @@ The workflow needs two settings: *Settings → Actions → General → Workflow 
 python3 tools/certificates.py check    # validate every committed certificate
 python3 tools/certificates.py table    # regenerate the tables in docs/compatibility.md
 ```
+
+## What a certificate can and cannot prove
+
+A certificate is written by the user's own machine, so it cannot be proven true. That is why the compatibility table has three levels:
+
+| Level | Meaning |
+| --- | --- |
+| ✅ Verified | the maintainer tested it, or approved it after seeing material evidence from people he trusts; listed in [`certificates/VERIFIED`](../certificates/VERIFIED) |
+| 🟢 Tested by the community | users sent working certificates; not checked one by one |
+| 🟡 Should work | same chip and start-up path as a tested model, nobody has reported yet |
+
+To verify a community certificate, the maintainer adds its id (the file name without extension) and a note on the evidence to `certificates/VERIFIED`, and runs `python3 tools/certificates.py table`.

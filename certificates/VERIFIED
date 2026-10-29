@@ -1,0 +1,7 @@
+# Certificates the maintainer has verified: tested on his own Mac, or approved after seeing material
+# evidence (photos, logs, a call) from people he trusts. A model with a verified, working certificate
+# shows as "Verified" in docs/compatibility.md; all others stay "Tested by the community".
+#
+# One certificate id per line (its file name without the extension), then a note on the evidence.
+# Only the maintainer edits this file.
+20261029-111827-1d139bcf  # tested on the maintainer's own MacBookPro14,3

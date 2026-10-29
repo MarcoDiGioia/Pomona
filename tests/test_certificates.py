@@ -23,6 +23,7 @@ def load():
 
 C = load()
 NOW = datetime.datetime(2026, 11, 1, 12, 0, 0)
+RELEASES = {"0.8.0": "2026-10-29", "0.7.3": "2026-10-29"}
 
 GOOD = {
     "schema": 1, "date": "2026-10-30T09:15:00Z", "pomona": "0.8.0", "result": "WORKING",
@@ -200,9 +201,10 @@ class Intake(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tmp)
 
-    def run_intake(self, body, number=7):
-        event = {"issue": {"number": number, "title": "Compatibility: x", "body": body}}
-        return C.intake(event, self.out, self.certs, self.doc, now=NOW)
+    def run_intake(self, body, number=7, login="jane-doe", created="2020-01-01T00:00:00Z", releases=RELEASES):
+        event = {"issue": {"number": number, "title": "Compatibility: x", "body": body, "user": {"login": login}}}
+        return C.intake(event, self.out, self.certs, self.doc, now=NOW, account_created=created,
+                        releases=releases, verified_ids=frozenset())
 
     def read(self, name):
         with open(os.path.join(self.out, name), encoding="utf-8") as f:
@@ -217,8 +219,12 @@ class Intake(unittest.TestCase):
         files = sorted(os.listdir(os.path.join(self.certs, "MacBookPro13_3")))
         self.assertEqual(len(files), 2)
         doc = read_text(self.doc)
-        self.assertIn("| MacBookPro13,3 | 15\", 2016 | ✅ Tested | 1 | 1 |", doc)
+        self.assertIn("| MacBookPro13,3 | 15\", 2016 | 🟢 Tested by the community | 1 | 1 |", doc)
+        self.assertIn("@jane-doe", doc)
+        self.assertNotIn("needs-review", os.listdir(self.out))
         self.assertIn("| 2026-10-30 | MacBookPro13,3 | Linux Mint 22.1 |", doc)
+        stored = json.loads(read_text(os.path.join(self.certs, "MacBookPro13_3", files[0])))
+        self.assertEqual(stored["reported_by"], "jane-doe")
 
     def test_same_certificate_twice_is_a_duplicate(self):
         body = issue_body(json.dumps(GOOD))
@@ -242,6 +248,39 @@ class Intake(unittest.TestCase):
         for needle in ("rm -rf", "<script>", "evil", "`id`"):
             self.assertNotIn(needle, everything)
 
+    def test_new_account_gets_the_review_label(self):
+        self.assertEqual(self.run_intake(issue_body(json.dumps(GOOD)), created="2026-10-30T00:00:00Z"), "ok")
+        self.assertIn("less than 30 days", self.read("needs-review"))
+        self.assertIn("Needs a closer look", self.read("pr-body.md"))
+
+    def test_unknown_account_age_is_flagged(self):
+        self.run_intake(issue_body(json.dumps(GOOD)), created=None)
+        self.assertIn("could not be checked", self.read("needs-review"))
+
+    def test_hostile_login_is_not_stored(self):
+        self.run_intake(issue_body(json.dumps(GOOD)), login="x`id`; rm")
+        self.assertIn("could not be identified", self.read("needs-review"))
+        everything = read_text(self.doc) + self.read("pr-body.md")
+        self.assertNotIn("`id`", everything)
+        stored = json.loads(read_text(os.path.join(self.certs, "MacBookPro13_3",
+                                                   os.listdir(os.path.join(self.certs, "MacBookPro13_3"))[0]
+                                                   if False else sorted(os.listdir(os.path.join(self.certs, "MacBookPro13_3")))[0])))
+        self.assertNotIn("reported_by", stored)
+
+    def test_inconsistent_certificate_is_rejected(self):
+        checks = {c: True for c in C.CHECKS}
+        checks["T1 running (05ac:8600)"] = False
+        bad = with_(checks=checks, result="PARTIAL" if False else "NOT-WORKING")
+        self.assertEqual(self.run_intake(issue_body(json.dumps(bad))), "invalid")
+        self.assertIn("not running", self.read("comment.md"))
+
+    def test_unreleased_version_is_rejected(self):
+        self.assertEqual(self.run_intake(issue_body(json.dumps(with_(pomona="9.9.9")))), "invalid")
+        self.assertIn("not a released version", self.read("comment.md"))
+
+    def test_user_supplied_reporter_is_rejected(self):
+        self.assertEqual(self.run_intake(issue_body(json.dumps(with_(reported_by="MarcoDiGioia")))), "invalid")
+
     def test_tables_are_deterministic(self):
         certs = [("a", C.validate(GOOD, now=NOW)), ("b", C.validate(with_(date="2026-10-31T10:00:00Z"), now=NOW))]
         self.assertEqual(C.report_table(certs), C.report_table(list(reversed(certs))))
@@ -250,6 +289,128 @@ class Intake(unittest.TestCase):
     def test_missing_markers_fail_loudly(self):
         with self.assertRaises(SystemExit):
             C.replace_block("no markers", "models", "x")
+
+
+class Consistency(unittest.TestCase):
+    def cert(self, **check_changes):
+        checks = {c: True for c in C.CHECKS}
+        checks.update(check_changes)
+        return C.validate(with_(checks=checks, result=C.derive_result(checks)), now=NOW)
+
+    def test_good_certificate_is_consistent(self):
+        C.check_consistency(self.cert(), RELEASES)
+
+    def test_devices_need_a_running_t1(self):
+        for name in C.DEVICE_CHECKS:
+            cert = self.cert(**{"T1 running (05ac:8600)": False})
+            self.assertTrue(cert["checks"][name])
+            with self.subTest(name=name), self.assertRaises(C.Invalid):
+                C.check_consistency(cert, RELEASES)
+
+    def test_firmware_described_but_missing(self):
+        bad = self.cert(**{"EmbeddedOS firmware on the EFI partition": False, "Firmware holds 4 signed images": False})
+        with self.assertRaises(C.Invalid):
+            C.check_consistency(bad, RELEASES)  # still says embeddedos 910
+
+    def test_not_a_t1_model_check(self):
+        with self.assertRaises(C.Invalid):
+            C.check_consistency(self.cert(**{"T1 MacBook Pro model": False}), RELEASES)
+
+    def test_pomona_version_must_have_been_released(self):
+        with self.assertRaises(C.Invalid):
+            C.check_consistency(C.validate(with_(pomona="9.9.9"), now=NOW), RELEASES)
+        with self.assertRaises(C.Invalid):
+            C.check_consistency(C.validate(with_(pomona="0.8.0", date="2026-10-28T10:00:00Z"), now=NOW), RELEASES)
+
+    def test_release_dates_come_from_the_changelog(self):
+        found = C.release_dates()
+        self.assertIn("0.7.3", found)
+        self.assertRegex(found["0.7.3"], r"^\d{4}-\d{2}-\d{2}$")
+        self.assertEqual(C.release_dates("/nonexistent"), {})
+
+
+class Review(unittest.TestCase):
+    def flags(self, age=400, **changes):
+        return C.review_flags(C.validate(with_(**changes), now=NOW), age)
+
+    def test_nothing_to_flag(self):
+        self.assertEqual(self.flags(), [])
+
+    def test_new_or_unknown_account(self):
+        self.assertTrue(any("less than 30 days" in f for f in self.flags(age=5)))
+        self.assertTrue(any("could not be checked" in f for f in self.flags(age=None)))
+        self.assertEqual(self.flags(age=30), [])
+
+    def test_unexpected_board_id(self):
+        self.assertTrue(any("board id" in f for f in self.flags(board="Mac-0000000000000000")))
+
+    def test_touch_bar_on_an_old_kernel(self):
+        self.assertTrue(any("older than 6.15" in f for f in self.flags(kernel="6.8.0-51-generic")))
+        self.assertEqual(self.flags(kernel="6.15.1"), [])
+        self.assertEqual(self.flags(kernel="7.0.0-42-generic"), [])
+
+    def test_account_age(self):
+        self.assertEqual(C.account_age_days("2026-10-01T00:00:00Z", NOW), 31)
+        for bad in (None, "", "yesterday", "2026-13-01T00:00:00Z", "2026-10-01T00:00:00Z\nx"):
+            self.assertIsNone(C.account_age_days(bad, NOW))
+
+
+class Reporter(unittest.TestCase):
+    def test_users_cannot_set_the_reporter(self):
+        with self.assertRaises(C.Invalid):
+            C.validate(with_(reported_by="someone"), now=NOW)
+        self.assertEqual(C.validate(with_(reported_by="someone"), now=NOW, stored=True)["reported_by"], "someone")
+        with self.assertRaises(C.Invalid):
+            C.validate(with_(reported_by="x`id`"), now=NOW, stored=True)
+
+    def test_digest_ignores_the_reporter(self):
+        a = C.validate(GOOD, now=NOW)
+        b = C.validate(with_(reported_by="jane-doe"), now=NOW, stored=True)
+        self.assertEqual(C.digest(a), C.digest(b))
+
+
+class Tiers(unittest.TestCase):
+    def entry(self, result="WORKING", name="x", who="jane-doe", **changes):
+        checks = {c: True for c in C.CHECKS}
+        if result != "WORKING":
+            checks["Boot service enabled"] = False
+        cert = C.validate(with_(result=result, checks=checks, reported_by=who, **changes), now=NOW, stored=True)
+        return ("/x/%s.json" % name, cert)
+
+    def test_status_levels(self):
+        self.assertEqual(C.model_status([], set()), "🟡 Should work")
+        self.assertEqual(C.model_status([self.entry("PARTIAL")], set()), "🟠 Problems reported")
+        self.assertEqual(C.model_status([self.entry()], set()), "🟢 Tested by the community")
+        self.assertEqual(C.model_status([self.entry(name="abc")], {"abc"}), "✅ Verified")
+
+    def test_verified_needs_a_working_certificate(self):
+        self.assertEqual(C.model_status([self.entry("PARTIAL", name="abc")], {"abc"}), "🟠 Problems reported")
+
+    def test_verification_is_per_certificate(self):
+        mine = [self.entry(name="a"), self.entry(name="b", who="john")]
+        self.assertEqual(C.model_status(mine, {"zzz"}), "🟢 Tested by the community")
+        self.assertIn("✅ Verified", C.model_status(mine, {"b"}))
+
+    def test_people_are_counted_once(self):
+        table = C.model_table([self.entry(name="a"), self.entry(name="b", who="jane-doe"), self.entry(name="c", who="john")])
+        self.assertIn("| MacBookPro13,3 | 15\", 2016 | 🟢 Tested by the community | 3 | 2 |", table)
+
+    def test_verified_marker_in_the_reports(self):
+        self.assertIn("✅ Working · verified", C.report_table([self.entry(name="abc")], {"abc"}))
+        self.assertNotIn("verified", C.report_table([self.entry(name="abc")], set()))
+
+    def test_verified_file(self):
+        with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as f:
+            f.write("# comment\n\n20261029-111827-1d139bcf  # my own Mac\n  abc-123\n")
+        try:
+            self.assertEqual(C.load_verified(f.name), {"20261029-111827-1d139bcf", "abc-123"})
+        finally:
+            os.unlink(f.name)
+        self.assertEqual(C.load_verified("/nonexistent"), set())
+
+    def test_repository_is_consistent(self):
+        self.assertGreaterEqual(C.check_repository(), 1)
+        self.assertTrue(C.load_verified())
 
 
 class Workflow(unittest.TestCase):
@@ -261,11 +422,14 @@ class Workflow(unittest.TestCase):
                 if line.strip().startswith("run:") or line.startswith("          "):
                     self.assertNotIn(dangerous, line)
         self.assertIn("permissions: {}", text)
+        self.assertIn("tr -cd '0-9TZ:-'", text)  # the account date is cleaned before it reaches the environment
+        self.assertIn("needs-review", text)
         # actions are pinned to an exact commit, and nothing runs on pull requests from forks
         self.assertRegex(text, r"uses: actions/checkout@[0-9a-f]{40}")
         self.assertNotIn("pull_request", text)
         self.assertNotIn("workflow_run", text)
-        self.assertRegex(text, r"gh pr create[^\n]*--label certificate")
+        self.assertRegex(text, r"labels=certificate")
+        self.assertRegex(text, r"gh pr create[^\n]*--label \"\$labels\"")
         try:
             import yaml
         except ImportError:
