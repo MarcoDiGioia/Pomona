@@ -17,7 +17,7 @@ Each model is in one of these states. The table is generated from the certificat
 | MacBookPro13,2 | 13", 2016, four Thunderbolt ports | 🟡 Should work | 0 | 0 |
 | MacBookPro13,3 | 15", 2016 | 🟡 Should work | 0 | 0 |
 | MacBookPro14,2 | 13", 2017, four Thunderbolt ports | 🟡 Should work | 0 | 0 |
-| MacBookPro14,3 | 15", 2017 | ✅ Verified | 1 | 1 |
+| MacBookPro14,3 | 15", 2017 | ✅ Verified | 2 | 1 |
 <!-- models:end -->
 
 Macs without a Touch Bar (MacBookPro13,1 and 14,1) have no T1, and 2018 and later Macs have a T2 chip instead: Pomona is not for them. For the T2 see [t2linux](https://wiki.t2linux.org).
@@ -45,6 +45,7 @@ Generated from [`certificates/`](../certificates), newest first.
 <!-- reports:start -->
 | Date | Model | Distribution | Kernel | Desktop | Mac firmware | EmbeddedOS | Pomona | Reported by | Result |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 910 | 0.8.0 | @MarcoDiGioia | ✅ Working |
 | 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 910 | 0.3.0 | @MarcoDiGioia | ✅ Working · verified |
 <!-- reports:end -->
 
