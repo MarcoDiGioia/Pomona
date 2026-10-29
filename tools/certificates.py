@@ -509,7 +509,7 @@ def intake(event, outdir, cert_dir=None, doc_path=None, now=None, account_create
     out("pr-body.md", body)
     out("comment.md", "Thank you! Your certificate passed the checks and a pull request was opened to add it. "
                       "It will appear in the compatibility table once it is merged.\n")
-    out("branch", "certificate/issue-%d" % number)
+    out("branch", "certificate-submit/issue-%d" % number)
     return "ok"
 
 

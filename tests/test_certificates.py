@@ -221,7 +221,7 @@ class Intake(unittest.TestCase):
     def test_valid_certificate_is_added(self):
         self.assertEqual(self.run_intake(issue_body(json.dumps(GOOD, indent=2))), "ok")
         self.assertEqual(self.read("status"), "ok")
-        self.assertEqual(self.read("branch"), "certificate/issue-7")
+        self.assertEqual(self.read("branch"), "certificate-submit/issue-7")
         self.assertIn("MacBookPro13,3", self.read("title"))
         self.assertIn("Closes #7", self.read("pr-body.md"))
         files = sorted(os.listdir(os.path.join(self.certs, "MacBookPro13_3")))
