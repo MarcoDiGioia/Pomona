@@ -7,6 +7,7 @@
 #   pomona status     one screen with the state of every piece (--json for the GUI)
 #   pomona certify    run the checks and write a compatibility certificate
 #   pomona share      open your latest certificate as a pre-filled GitHub report
+#   pomona wifi       Broadcom Wi-Fi: status | fix | undo | certify  (pomona wifi help)
 #   pomona version
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
@@ -34,7 +35,13 @@ cmd_status_json() {
   "model": $(json_str "$model"),
   "model_class": $(json_str "$(et1_model_class "$model")"),
   "compat": $(json_str "$(et1_compat_status "$model")"),
+  "board": $(json_str "$(et1_dmi board_name)"),
+  "mac_firmware": $(json_str "$(et1_dmi bios_version)"),
+  "kernel": $(json_str "$(uname -r)"),
+  "distribution": $(json_str "$(et1_os_field PRETTY_NAME)"),
   "t1_state": $(json_str "$(et1_t1_state)"),
+  "t1_product": $(json_str "$(et1_t1_attr product)"),
+  "camera_name": $(json_str "$(et1_camera_name)"),
   "usb_config": $(json_str "$(et1_usb_config || true)"),
   "firmware": $(json_str "$fw"),
   "firmware_version": $(json_str "$([ -n "$fw" ] && et1_firmware_version "$fw")"),
@@ -180,13 +187,179 @@ cmd_share() {
 	xdg-open "$url" >/dev/null 2>&1 &
 }
 
+# ------------------------------------------------------------------ wifi
+
+wifi_help() {
+	cat <<'EOF'
+pomona wifi status [--json]    what is in place and what is missing
+sudo pomona wifi fix           install the board file and settings (backed up first); then restart
+      --keep-mac               keep the MAC address already in the board file
+      --mac aa:bb:cc:dd:ee:ff  use this MAC address
+      --download               agree to download the board file (otherwise you are asked)
+      --board-file FILE        use this copy of the board file instead of downloading it
+      --force                  install even if the card is not found
+sudo pomona wifi undo          put the files back as they were before the last fix
+pomona wifi certify [DIR]      run the checks and write a compatibility certificate
+EOF
+}
+
+wifi_status_json() {
+	local model
+	model=$(et1_model)
+	cat <<EOF
+{
+  "version": $(json_str "$POMONA_VERSION"),
+  "model": $(json_str "$model"),
+  "model_class": $(json_str "$(et1_model_class "$model")"),
+  "state": $(json_str "$(wf_state)"),
+  "any_interface": $(json_str "$(wf_any_iface)"),
+  "any_driver": $(json_str "$(wf_any_attr driver)"),
+  "any_pci": $(json_str "$(wf_any_attr pci)"),
+  "any_operstate": $(json_str "$(wf_any_attr operstate)"),
+  "any_mac": $(json_str "$(wf_any_attr mac)"),
+  "kernel": $(json_str "$(uname -r)"),
+  "present": $(jbool wf_present),
+  "subsystem": $(json_str "$(wf_subsystem)"),
+  "driver": $(json_str "$(wf_driver)"),
+  "interface": $(json_str "$(wf_iface)"),
+  "operstate": $(json_str "$(wf_operstate)"),
+  "mac": $(json_str "$(wf_mac)"),
+  "board_file_installed": $(jbool wf_nvram_installed),
+  "board_file_ok": $(jbool wf_nvram_ok),
+  "board_file_mac": $(json_str "$(wf_nvram_mac)"),
+  "mac_is_placeholder": $(jbool wf_mac_placeholder),
+  "networkmanager": $(jbool wf_nm_installed),
+  "networkmanager_ok": $(jbool wf_nm_ok),
+  "driver_option_ok": $(jbool wf_modprobe_ok),
+  "restart_pending": $(jbool wf_restart_pending),
+  "backup": $(json_str "$(wf_latest_backup || true)"),
+  "board_file_cached": $(jbool wf_cache_ok),
+  "installed": $(jbool et1_installed)
+}
+EOF
+}
+
+wifi_status() {
+	[ "${1:-}" = --json ] && { wifi_status_json; return; }
+	if ! wf_present; then
+		echo "No Broadcom BCM43602 Wi-Fi card (14e4:43ba) found on this machine."
+		return 0
+	fi
+	local state
+	state=$(wf_state)
+	cat <<EOF
+Wi-Fi card       BCM43602 [14e4:43ba], subsystem $(wf_subsystem)
+driver           $(wf_driver || true)
+interface        $(wf_iface) ($(wf_operstate)), MAC $(wf_mac)
+board file       $(wf_nvram_ok && echo "installed" || { wf_nvram_installed && echo "installed, but not the expected file" || echo "missing"; })$(wf_mac_placeholder && echo "  (shared default MAC address: run  sudo pomona wifi fix  to give this Mac its own)")
+NetworkManager   $(wf_nm_installed && { wf_nm_ok && echo "keeps the real MAC address" || echo "randomises the MAC address"; } || echo "not used")
+driver option    $(wf_modprobe_ok && echo "feature_disable=$(wf_feature_disable)" || echo "not set")
+state            $state
+EOF
+	case "$state" in
+		needs-fix) echo; echo "Run  sudo pomona wifi fix  and restart.";;
+		restart) echo; echo "Restart the computer to load the driver with the new board file.";;
+	esac
+}
+
+cmd_wifi_certify() {
+	local out_dir=${1:-$PWD} model class stamp base sub iface pass=0 total=0 verdict checks=() name ok c i
+	model=$(et1_model); class=$(et1_model_class "$model")
+	stamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+	sub=$(wf_subsystem); iface=$(wf_iface)
+
+	check() { total=$((total + 1)); if [ "$2" = yes ]; then pass=$((pass + 1)); fi; checks+=("$1|$2"); }
+	check "Supported MacBook Pro model" "$([ "$class" = t1 ] && echo yes || echo no)"
+	check "Broadcom BCM43602 Wi-Fi chip (14e4:43ba)" "$(yesno wf_present)"
+	check "brcmfmac driver bound" "$(yesno wf_driver_ok)"
+	check "Board file installed" "$(yesno wf_nvram_ok)"
+	check "NetworkManager keeps the real MAC address" "$(yesno wf_nm_ok)"
+	check "Driver option feature_disable set" "$(yesno wf_modprobe_ok)"
+	check "Wi-Fi interface present" "$([ -n "$iface" ] && echo yes || echo no)"
+	check "Connected to a network" "$(yesno wf_connected)"
+	check "No restart pending" "$(if wf_restart_pending; then echo no; else echo yes; fi)"
+
+	if [ "$pass" = "$total" ]; then verdict=WORKING
+	elif [ -n "$iface" ]; then verdict=PARTIAL
+	else verdict=NOT-WORKING; fi
+
+	base="$out_dir/pomona-certificate-wifi-${model:-unknown}-$(date -u +%Y%m%d-%H%M%S)"
+	base=${base//,/_}
+	{
+		echo "# Pomona Wi-Fi compatibility certificate"
+		echo
+		echo "**Result: $verdict** ($pass/$total checks passed)"
+		echo
+		echo "| Field | Value |"
+		echo "| --- | --- |"
+		echo "| Date (UTC) | $stamp |"
+		echo "| Pomona | $POMONA_VERSION |"
+		echo "| Model | ${model:-unknown} |"
+		echo "| Board | $(et1_dmi board_name) |"
+		echo "| Mac firmware | $(et1_dmi bios_version) ($(et1_dmi bios_date)) |"
+		echo "| Wi-Fi card subsystem | ${sub:-n/a} |"
+		echo "| Distribution | $(et1_os_field PRETTY_NAME) |"
+		echo "| Kernel | $(uname -r) |"
+		echo "| Desktop | ${XDG_CURRENT_DESKTOP:-n/a} (${XDG_SESSION_TYPE:-n/a}) |"
+		echo
+		echo "| Check | Result |"
+		echo "| --- | --- |"
+		for c in "${checks[@]}"; do name=${c%|*}; ok=${c##*|}; echo "| $name | $([ "$ok" = yes ] && echo PASS || echo FAIL) |"; done
+		echo
+		echo "Pomona is provided as is, without warranty, and is not affiliated with Apple Inc. or Broadcom Inc."
+		echo
+		echo "No serial numbers, MAC addresses, network names or UUIDs are included. To add your Mac to the"
+		echo "compatibility table, run: pomona share"
+	} > "$base.md"
+	{
+		echo "{"
+		echo "  \"schema\": 2,"
+		echo "  \"module\": \"wifi\","
+		echo "  \"date\": $(json_str "$stamp"),"
+		echo "  \"pomona\": $(json_str "$POMONA_VERSION"),"
+		echo "  \"result\": $(json_str "$verdict"),"
+		echo "  \"model\": $(json_str "$model"),"
+		echo "  \"board\": $(json_str "$(et1_dmi board_name)"),"
+		echo "  \"mac_firmware\": $(json_str "$(et1_dmi bios_version)"),"
+		echo "  \"subsystem\": $(json_str "$sub"),"
+		echo "  \"distribution\": $(json_str "$(et1_os_field PRETTY_NAME)"),"
+		echo "  \"kernel\": $(json_str "$(uname -r)"),"
+		echo "  \"desktop\": $(json_str "${XDG_CURRENT_DESKTOP:-}"),"
+		echo "  \"checks\": {"
+		i=0
+		for c in "${checks[@]}"; do
+			i=$((i + 1)); name=${c%|*}; ok=${c##*|}
+			printf '    %s: %s%s\n' "$(json_str "$name")" "$([ "$ok" = yes ] && echo true || echo false)" "$([ "$i" -lt "${#checks[@]}" ] && echo ,)"
+		done
+		echo "  }"
+		echo "}"
+	} > "$base.json"
+	cat "$base.md"
+	echo
+	echo "written: $base.md"
+	echo "         $base.json"
+	[ "$verdict" = WORKING ]
+}
+
+cmd_wifi() {
+	case "${1:-status}" in
+		status) shift; wifi_status "$@";;
+		fix) shift; wf_fix "$@";;
+		undo) shift; wf_undo "$@";;
+		certify) shift; cmd_wifi_certify "$@";;
+		help|-h|--help) wifi_help;;
+		*) et1_err "unknown wifi command $1 (try: pomona wifi help)"; return 2;;
+	esac
+}
+
 case "${1:-status}" in
 	start) et1_start;;
 	stop) et1_stop;;
 	status) shift; cmd_status "$@";;
 	certify) shift; cmd_certify "$@";;
 	share) shift; cmd_share "$@";;
+	wifi) shift; cmd_wifi "$@";;
 	version|--version|-V) echo "Pomona $POMONA_VERSION";;
-	help|-h|--help) sed -n '2,9p' "$_self" | sed 's/^# \{0,1\}//';;
+	help|-h|--help) sed -n '2,10p' "$_self" | sed 's/^# \{0,1\}//';;
 	*) echo "pomona: unknown command $1 (try: pomona help)" >&2; exit 2;;
 esac

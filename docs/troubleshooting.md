@@ -39,6 +39,18 @@ USB configuration 1 was not selected. Check `cat /sys/bus/usb/devices/*/bConfigu
 - `cat /run/user/$(id -u)/pomona-focus` must change when you switch windows. The id shown is what goes in a profile.
 - Other desktops (KDE, Sway) are not supported yet: the default key set and Fn still work.
 
+## Wi-Fi sees networks but never connects
+
+`pomona wifi status` says what is missing. The usual cause is the missing board file: run `sudo pomona wifi fix` and **restart**. Details: [wifi.md](wifi.md).
+
+- After the fix, `journalctl -k -b | grep brcmfmac` should no longer show `ASSOC-REJECT`, and `ip link` should show the new MAC address (`pomona wifi status` prints it).
+- Still failing after a restart? Run `pomona wifi certify`, check which line fails, and open an issue with the certificate.
+- To go back to how things were: `sudo pomona wifi undo`, then restart.
+
+## My router sees a new device after the Wi-Fi fix
+
+The fix gives the Mac its own MAC address instead of the one every copy of the board file shares. Routers that remember devices by MAC address (parental controls, fixed addresses) will see a new one. Keep the old address with `sudo pomona wifi fix --keep-mac`, or choose one with `--mac`.
+
 ## Power-off freezes on the logo
 
 With the T1 running, the Mac freezes at the very end of power-off unless Linux releases the iBridge first. `pomona.service` does that when it stops (`pomona stop`); check that it is enabled with `systemctl is-enabled pomona`. The Touch Bar stays lit until the power actually goes off: that is normal.

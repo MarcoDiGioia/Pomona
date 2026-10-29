@@ -236,11 +236,11 @@ msgstr "En curso…"
 msgid "About Pomona"
 msgstr "Acerca de Pomona"
 
-msgid "Touch Bar, camera and light sensor for 2016–2017 MacBook Pro"
-msgstr "Touch Bar, cámara y sensor de luz para MacBook Pro 2016–2017"
+msgid "Touch Bar, camera, light sensor and Wi-Fi for 2016–2017 MacBook Pro"
+msgstr "Touch Bar, cámara, sensor de luz y Wi-Fi para MacBook Pro 2016–2017"
 
-msgid "Provided as is, without any warranty: use at your own risk. Not affiliated with Apple Inc.; Apple, MacBook and Touch Bar are trademarks of Apple Inc."
-msgstr "Se proporciona tal cual, sin ninguna garantía: úsalo bajo tu responsabilidad. No está afiliado a Apple Inc.; Apple, MacBook y Touch Bar son marcas de Apple Inc."
+msgid "Provided as is, without any warranty: use at your own risk. Not affiliated with Apple Inc. or Broadcom Inc.; Apple, MacBook and Touch Bar are trademarks of Apple Inc., Broadcom is a trademark of Broadcom Inc."
+msgstr "Se ofrece tal cual, sin ninguna garantía: úsalo bajo tu responsabilidad. No está afiliado a Apple Inc. ni a Broadcom Inc.; Apple, MacBook y Touch Bar son marcas de Apple Inc., Broadcom es una marca de Broadcom Inc."
 
 msgid "Share with the community"
 msgstr "Compartir con la comunidad"
@@ -253,3 +253,147 @@ msgstr "Añade tu Mac a la tabla de compatibilidad"
 
 msgid "Could not open the browser"
 msgstr "No se pudo abrir el navegador"
+
+msgid "Wi-Fi"
+msgstr "Wi-Fi"
+
+msgid "Restart the computer to finish"
+msgstr "Reinicia el equipo para terminar"
+
+msgid "Wi-Fi card"
+msgstr "Tarjeta Wi-Fi"
+
+msgid "This Mac’s Broadcom card sees networks but rejects every connection until its board file is installed."
+msgstr "La tarjeta Broadcom de este Mac ve las redes pero rechaza todas las conexiones hasta que se instale su archivo de configuración."
+
+msgid "Driver"
+msgstr "Controlador"
+
+msgid "Not loaded"
+msgstr "No cargado"
+
+msgid "Board file"
+msgstr "Archivo de configuración"
+
+msgid "Installed"
+msgstr "Instalado"
+
+msgid "Different from the expected file"
+msgstr "Distinto del archivo esperado"
+
+msgid "Missing: every connection is rejected without it"
+msgstr "Falta: sin él se rechaza toda conexión"
+
+msgid "Real MAC address"
+msgstr "Dirección MAC real"
+
+msgid "NetworkManager keeps the card’s own address"
+msgstr "NetworkManager conserva la dirección de la tarjeta"
+
+msgid "NetworkManager is not used"
+msgstr "NetworkManager no se usa"
+
+msgid "NetworkManager replaces it with a random one, which the card refuses"
+msgstr "NetworkManager la sustituye por una aleatoria, que la tarjeta rechaza"
+
+msgid "Driver option"
+msgstr "Opción del controlador"
+
+msgid "Set"
+msgstr "Establecida"
+
+msgid "Not set"
+msgstr "No establecida"
+
+msgid "Own MAC address"
+msgstr "Dirección MAC propia"
+
+msgid "This Mac has its own address"
+msgstr "Este Mac tiene su propia dirección"
+
+msgid "Every copy of the board file shares one address: give this Mac its own"
+msgstr "Todas las copias del archivo comparten una dirección: dale una propia a este Mac"
+
+msgid "Connected to a network"
+msgstr "Conectado a una red"
+
+msgid "Connected"
+msgstr "Conectado"
+
+msgid "Not connected"
+msgstr "No conectado"
+
+msgid "Restart needed"
+msgstr "Hace falta reiniciar"
+
+msgid "Restart the computer to load the new board file"
+msgstr "Reinicia el equipo para cargar el nuevo archivo de configuración"
+
+msgid "Wi-Fi is set up"
+msgstr "El Wi-Fi está configurado"
+
+msgid "The card is ready and connected."
+msgstr "La tarjeta está lista y conectada."
+
+msgid "Undo the changes"
+msgstr "Deshacer los cambios"
+
+msgid "Puts every file back as it was before the last fix"
+msgstr "Devuelve cada archivo a como estaba antes de la última corrección"
+
+msgid "Undo"
+msgstr "Deshacer"
+
+msgid "Runs the Wi-Fi checks and writes a report you can share"
+msgstr "Ejecuta las comprobaciones del Wi-Fi y escribe un informe que puedes compartir"
+
+msgid "Wi-Fi status"
+msgstr "Estado del Wi-Fi"
+
+msgid "No Wi-Fi card found"
+msgstr "No se encontró ninguna tarjeta Wi-Fi"
+
+msgid "Nothing to fix"
+msgstr "Nada que arreglar"
+
+msgid "Pomona has no fix for this card: it is not needed or not supported yet"
+msgstr "Pomona no tiene corrección para esta tarjeta: no hace falta o aún no es compatible"
+
+msgid "Hardware"
+msgstr "Hardware"
+
+msgid "Mac firmware"
+msgstr "Firmware del Mac"
+
+msgid "T1 chip"
+msgstr "Chip T1"
+
+msgid "Kernel"
+msgstr "Núcleo"
+
+msgid "Distribution"
+msgstr "Distribución"
+
+msgid "Desktop"
+msgstr "Escritorio"
+
+msgid "Chip"
+msgstr "Chip"
+
+msgid "Subsystem"
+msgstr "Subsistema"
+
+msgid "Network interface"
+msgstr "Interfaz de red"
+
+msgid "MAC address"
+msgstr "Dirección MAC"
+
+msgid "The Wi-Fi card needs a board file that Pomona does not include. It will be downloaded from a public GitHub page where the Linux community shares it, and checked against a known SHA-256 before use. Its author and licence are not known. Nothing about you is sent."
+msgstr "La tarjeta Wi-Fi necesita un archivo de configuración que Pomona no incluye. Se descargará de una página pública de GitHub donde la comunidad Linux lo comparte y se comprobará con un SHA-256 conocido antes de usarlo. Se desconocen su autor y su licencia. No se envía nada sobre ti."
+
+msgid "Download the board file?"
+msgstr "¿Descargar el archivo de configuración?"
+
+msgid "Download and fix"
+msgstr "Descargar y arreglar"

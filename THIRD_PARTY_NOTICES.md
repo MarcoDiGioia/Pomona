@@ -1,6 +1,6 @@
 # Third-party notices
 
-Pomona (GPL-3.0-or-later) contains no third-party code; every licence listed below is compatible with it. It was written with the help of the public knowledge and
+Pomona (GPL-3.0-or-later) contains no third-party code and distributes no third-party file. Every licence listed below is compatible with the GPL. It was written with the help of the public knowledge and
 open-source projects below, which are credited here.
 
 | Project | Licence | What Pomona learned from it |
@@ -9,6 +9,12 @@ open-source projects below, which are credited here.
 | [t1-revive](https://github.com/niconistal/t1-revive) | MIT | where the T1 EmbeddedOS lives, the `05ac:1281` / `05ac:8600` states, the `memboot` request with `bRequest=1` |
 | [t1bridge](https://github.com/standardagents/t1bridge) | MIT, kernel parts GPL-2.0 | the T1's USB configurations and the need to disable runtime autosuspend |
 | Linux `hid-appletb-kbd` driver | GPL-2.0 | used as is, from the running kernel; Pomona only binds it to the T1 |
+| Linux `brcmfmac` driver | GPL-2.0 / ISC | used as is, from the running kernel; Pomona only supplies the board file and settings it needs |
+| [t2linux](https://wiki.t2linux.org) | documentation, nothing copied | the `feature_disable=0x82000` driver option for Broadcom Wi-Fi on Macs |
+
+## Wi-Fi board file
+
+The Wi-Fi fix downloads `brcmfmac43602-pcie.txt`, a board configuration file for the Broadcom BCM43602 Wi-Fi card, shared by the Linux community (for example in [the discussion of kernel bug 193121](https://bugzilla.kernel.org/show_bug.cgi?id=193121)). Its original author and licence are unknown; Pomona does not include it. See [data/wifi/README.md](data/wifi/README.md) and [LEGAL.md](LEGAL.md#the-wi-fi-board-file).
 
 ## Artwork
 

@@ -5,3 +5,4 @@
 # One certificate id per line (its file name without the extension), then a note on the evidence.
 # Only the maintainer edits this file.
 20261029-111827-1d139bcf  # tested on the maintainer's own MacBookPro14,3
+wifi-20261029-220913-1c8833fd  # tested on the maintainer's own MacBookPro14,3 (Wi-Fi)

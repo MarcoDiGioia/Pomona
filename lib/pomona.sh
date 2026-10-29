@@ -8,7 +8,7 @@
 #   POMONA_OS_RELEASE                   (default /etc/os-release)
 # shellcheck shell=bash
 
-POMONA_VERSION=0.8.0
+POMONA_VERSION=0.9.0
 POMONA_REPO_URL=https://github.com/MarcoDiGioia/Pomona
 
 : "${POMONA_SYS:=/sys}"
@@ -212,6 +212,24 @@ et1_camera_present() {
 	return 1
 }
 
+# et1_camera_name -> name of the T1 camera as the kernel reports it
+et1_camera_name() {
+	local v
+	for v in "$POMONA_SYS"/class/video4linux/video*; do
+		[ -e "$v/name" ] || continue
+		if grep -qi 'facetime\|ibridge\|apple' "$v/name"; then tr -d '\n' < "$v/name"; return 0; fi
+	done
+	return 0
+}
+
+# et1_t1_attr NAME -> a USB attribute of the T1 (product, manufacturer)
+et1_t1_attr() {
+	local d
+	d=$(et1_t1_sysfs) || return 0
+	tr -d '\n' < "$d/$1" 2>/dev/null
+	return 0
+}
+
 et1_als_present() {
 	local d
 	for d in "$POMONA_SYS"/bus/iio/devices/iio:device*; do
@@ -299,7 +317,7 @@ except (OSError, ValueError):
     sys.exit("not a Pomona certificate")
 if not isinstance(cert, dict) or "model" not in cert:
     sys.exit("not a Pomona certificate")
-title = "Compatibility: %s on %s" % (cert.get("model", "?"), cert.get("distribution", "?"))
+title = "Compatibility%s: %s on %s" % (" (Wi-Fi)" if cert.get("module") == "wifi" else "", cert.get("model", "?"), cert.get("distribution", "?"))
 query = urllib.parse.urlencode({
     "template": "compatibility-report.yml",
     "title": title,
@@ -308,3 +326,8 @@ query = urllib.parse.urlencode({
 print("%s/issues/new?%s" % (repo, query))
 PYEOF
 }
+
+# ------------------------------------------------------------------ Wi-Fi module
+
+# shellcheck source=wifi.sh
+[ -r "$POMONA_LIBEXEC/wifi.sh" ] && . "$POMONA_LIBEXEC/wifi.sh"

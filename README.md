@@ -8,12 +8,15 @@
 
 On a 2016–2017 MacBook Pro with Touch Bar, Linux usually leaves the **Touch Bar dark**, finds **no FaceTime camera** and ignores the **ambient light sensor**. Pomona turns all three on, at every start, without touching macOS or the Mac's firmware.
 
+The same Macs have a Broadcom Wi-Fi card that often **sees networks but rejects every connection**. Pomona fixes that too: one click installs the missing board file (downloaded when you run it) and settings, with a backup and an undo.
+
 With Pomona you get:
 
 - a working **Touch Bar**, with Esc, F1–F12 and the special keys (brightness, volume, media);
 - the **FaceTime camera**, usable in any video-call or camera app;
 - **automatic screen brightness** from the light sensor;
-- an app to check that everything works, choose what the Touch Bar shows (also per application) and create a compatibility certificate.
+- a **Wi-Fi card that connects** (Broadcom BCM43602), with every changed file backed up first;
+- an app to check that everything works, choose what the Touch Bar shows (also per application), fix the Wi-Fi and create a compatibility certificate.
 
 Pomona is named after the Roman goddess of orchards and fruit trees.
 
@@ -58,6 +61,8 @@ The installer adds what it needs with your package manager (apt, dnf, pacman or 
 - Installed as a package: `sudo apt remove pomona`
 - Installed with `install.sh`: `sudo ./uninstall.sh`
 
+Removing Pomona does not undo the Wi-Fi fix, so the Wi-Fi keeps working. To go back first: `sudo pomona wifi undo`.
+
 ## Using Pomona
 
 Open **Pomona** from the applications menu.
@@ -66,7 +71,10 @@ Open **Pomona** from the applications menu.
 | --- | --- |
 | **Setup** | See every step, from the Mac model to the start at boot. Steps already done are marked as done; anything missing has a button that fixes it. |
 | **Customize** | Choose what the Touch Bar shows (Esc only, F1–F12 or special keys), whether holding Fn swaps them, when it dims, and a different set for each application. |
-| **Report** | Create a compatibility certificate for your Mac. |
+| **Wi-Fi** | The state of your Wi-Fi first; on Macs with the Broadcom card, also what is missing, a button to fix it, undo and a Wi-Fi certificate. |
+| **Report** | Create a compatibility certificate for your Mac and share it. |
+
+Every page ends with a **Hardware** group that lists the components it is about (model, firmware, chip, driver, kernel).
 
 Per-application key sets work on GNOME: after installing, log out and back in once, then enable the extension from the **Customize** page.
 
@@ -76,6 +84,10 @@ From the terminal:
 | --- | --- |
 | `pomona status` | shows whether the Touch Bar, camera and light sensor are working |
 | `pomona certify` | creates the compatibility certificate |
+| `pomona wifi status` | shows what the Wi-Fi card is missing |
+| `sudo pomona wifi fix` | installs the Wi-Fi board file and settings (then restart) |
+| `sudo pomona wifi undo` | puts back the files the fix replaced |
+| `pomona wifi certify` | creates the Wi-Fi compatibility certificate |
 | `pomona share` | opens your certificate as a pre-filled GitHub report, to add your Mac to the table |
 | `sudo pomona start` | turns everything on again (for example after unplugging something) |
 
@@ -90,13 +102,14 @@ The app is available in English, Italian, German, French, Spanish, Portuguese, D
 | MacBook Pro 15" 2016 (MacBookPro13,3) | 🟡 Should work |
 | MacBook Pro 13" 2016 with Touch Bar (MacBookPro13,2) | 🟡 Should work |
 
-✅ Verified: tested by the maintainer. 🟢 Tested by the community: a user sent a working certificate. 🟡 Should work: same chip, nobody has reported yet. Verified on Ubuntu 26.04. Details and how to add your Mac: [docs/compatibility.md](docs/compatibility.md).
+✅ Verified: tested by the maintainer. 🟢 Tested by the community: a user sent a working certificate. 🟡 Should work: same chip, nobody has reported yet. Verified on Ubuntu 26.04. The same four models carry the Wi-Fi card, with their own table. Details and how to add your Mac: [docs/compatibility.md](docs/compatibility.md).
 
 **Does it work on your Mac? Tell us.** After a full shutdown and power-on, open the **Report** page, press **Create certificate** and then **Share with the community**. Your browser opens a GitHub page with the certificate already filled in; press *Submit new issue* and your Mac is added to the table. It contains no serial numbers or personal data. How it works: [docs/certificates.md](docs/certificates.md).
 
 ## Documentation
 
 - [How Pomona works](docs/how-it-works.md): the technical details.
+- [Wi-Fi](docs/wifi.md): what the fix changes, the MAC address, undo.
 - [Troubleshooting](docs/troubleshooting.md)
 - [Compatibility](docs/compatibility.md)
 - [Compatibility certificates](docs/certificates.md)
@@ -104,15 +117,15 @@ The app is available in English, Italian, German, French, Spanish, Portuguese, D
 
 ## Credits
 
-Pomona builds on the research of [t1-revive](https://github.com/niconistal/t1-revive), [t1bridge](https://github.com/standardagents/t1bridge) and the [libimobiledevice](https://libimobiledevice.org) project. Details in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Pomona builds on the research of [t1-revive](https://github.com/niconistal/t1-revive), [t1bridge](https://github.com/standardagents/t1bridge) and the [libimobiledevice](https://libimobiledevice.org) project. The Wi-Fi board file is a community-shared configuration for the card, downloaded and not redistributed. Details in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [data/wifi/README.md](data/wifi/README.md).
 
 ## Legal
 
 > **Use at your own risk.** Pomona is provided "as is", without warranty of any kind; the authors are not liable for any damage, data loss or loss of manufacturer support.
 
-- Pomona is **not affiliated with, endorsed or sponsored by Apple Inc.** Apple, Mac, MacBook, Touch Bar, FaceTime and macOS are trademarks of Apple Inc., used here only to describe compatible hardware.
-- Pomona **contains and distributes no Apple software**, and changes nothing in macOS or in the Mac's firmware.
-- It collects no personal data and makes no network connections.
+- Pomona is **not affiliated with, endorsed or sponsored by Apple Inc.** Apple, Mac, MacBook, Touch Bar, FaceTime and macOS are trademarks of Apple Inc., and Broadcom is a trademark of Broadcom Inc.; they are used here only to describe compatible hardware.
+- Pomona **contains and distributes no Apple software**, and changes nothing in macOS or in the Mac's firmware. The Wi-Fi board file is not part of Pomona: it is downloaded from its community source when you run the Wi-Fi fix (see [LEGAL.md](LEGAL.md#the-wi-fi-board-file)).
+- It collects no personal data. It makes a network connection only when you run the Wi-Fi fix, to download the board file.
 
 Full text: [LEGAL.md](LEGAL.md).
 

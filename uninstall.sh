@@ -16,7 +16,7 @@ systemctl disable --now pomona.service 2>/dev/null || true
 rm -f /etc/systemd/system/pomona.service /etc/systemd/system/pomona-touchbard.service /usr/lib/systemd/system-sleep/pomona
 rm -f "$PREFIX/bin/pomona" "$PREFIX/bin/pomona-gui"
 rm -f "$PREFIX/lib/pomona/pomona-t1-boot" "$PREFIX/lib/pomona/pomona-touchbard" \
-      "$PREFIX/lib/pomona/pomona-admin" "$PREFIX/lib/pomona/pomona.sh"
+      "$PREFIX/lib/pomona/pomona-admin" "$PREFIX/lib/pomona/pomona.sh" "$PREFIX/lib/pomona/wifi.sh"
 rm -rf "$PREFIX/lib/pomona/__pycache__"
 rmdir "$PREFIX/lib/pomona" 2>/dev/null || true
 rm -f "$PREFIX"/share/locale/*/LC_MESSAGES/pomona.mo "$PREFIX/share/pomona/pomona-mascot-256.png"

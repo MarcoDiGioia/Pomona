@@ -4,22 +4,22 @@
 <policyconfig>
   <vendor>Pomona</vendor>
   <action id="io.github.MarcoDiGioia.Pomona.admin">
-    <description>Configure the Apple T1 (Touch Bar, camera)</description>
-    <description xml:lang="it">Configurare il chip Apple T1 (Touch Bar, webcam)</description>
-    <description xml:lang="de">Den Apple-T1-Chip konfigurieren (Touch Bar, Kamera)</description>
-    <description xml:lang="es">Configurar el chip Apple T1 (Touch Bar, cámara)</description>
-    <description xml:lang="fr">Configurer la puce Apple T1 (Touch Bar, caméra)</description>
-    <description xml:lang="nl">De Apple T1-chip configureren (Touch Bar, camera)</description>
-    <description xml:lang="pl">Konfiguracja układu Apple T1 (Touch Bar, kamera)</description>
-    <description xml:lang="pt">Configurar o chip Apple T1 (Touch Bar, câmara)</description>
-    <message>Authentication is required to start the T1 or change the Touch Bar settings</message>
-    <message xml:lang="it">Serve la password per avviare il T1 o cambiare le impostazioni della Touch Bar</message>
-    <message xml:lang="de">Zum Starten des T1 oder Ändern der Touch-Bar-Einstellungen ist eine Authentifizierung erforderlich</message>
-    <message xml:lang="es">Se necesita autenticación para iniciar el T1 o cambiar los ajustes de la Touch Bar</message>
-    <message xml:lang="fr">Une authentification est nécessaire pour démarrer le T1 ou modifier les réglages de la Touch Bar</message>
-    <message xml:lang="nl">Authenticatie is nodig om de T1 te starten of de Touch Bar-instellingen te wijzigen</message>
-    <message xml:lang="pl">Do uruchomienia T1 lub zmiany ustawień Touch Bara wymagane jest uwierzytelnienie</message>
-    <message xml:lang="pt">É necessária autenticação para iniciar o T1 ou alterar as definições da Touch Bar</message>
+    <description>Configure the Apple T1, Touch Bar and Wi-Fi card</description>
+    <description xml:lang="it">Configurare il chip Apple T1, la Touch Bar e la scheda Wi-Fi</description>
+    <description xml:lang="de">Den Apple-T1-Chip, die Touch Bar und die WLAN-Karte konfigurieren</description>
+    <description xml:lang="es">Configurar el chip Apple T1, la Touch Bar y la tarjeta Wi-Fi</description>
+    <description xml:lang="fr">Configurer la puce Apple T1, la Touch Bar et la carte Wi-Fi</description>
+    <description xml:lang="nl">De Apple T1-chip, de Touch Bar en de wifikaart configureren</description>
+    <description xml:lang="pl">Konfiguracja układu Apple T1, Touch Bara i karty Wi-Fi</description>
+    <description xml:lang="pt">Configurar o chip Apple T1, a Touch Bar e a placa Wi-Fi</description>
+    <message>Authentication is required to start the T1, change the Touch Bar settings or fix the Wi-Fi card</message>
+    <message xml:lang="it">Serve la password per avviare il T1, cambiare le impostazioni della Touch Bar o sistemare la scheda Wi-Fi</message>
+    <message xml:lang="de">Zum Starten des T1, Ändern der Touch-Bar-Einstellungen oder Reparieren der WLAN-Karte ist eine Authentifizierung erforderlich</message>
+    <message xml:lang="es">Se necesita autenticación para iniciar el T1, cambiar los ajustes de la Touch Bar o arreglar la tarjeta Wi-Fi</message>
+    <message xml:lang="fr">Une authentification est nécessaire pour démarrer le T1, modifier les réglages de la Touch Bar ou réparer la carte Wi-Fi</message>
+    <message xml:lang="nl">Authenticatie is nodig om de T1 te starten, de Touch Bar-instellingen te wijzigen of de wifikaart te repareren</message>
+    <message xml:lang="pl">Do uruchomienia T1, zmiany ustawień Touch Bara lub naprawy karty Wi-Fi wymagane jest uwierzytelnienie</message>
+    <message xml:lang="pt">É necessária autenticação para iniciar o T1, alterar as definições da Touch Bar ou reparar a placa Wi-Fi</message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>

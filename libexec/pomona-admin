@@ -4,6 +4,8 @@
 #   pomona-admin start                 boot the T1 and bind its devices
 #   pomona-admin set-config FILE       validate FILE and install it as /etc/pomona/config.json
 #   pomona-admin enable | disable      the boot and Touch Bar services
+#   pomona-admin wifi-fix [--download] [--keep-mac | --mac aa:bb:cc:dd:ee:ff]   install the Wi-Fi board file and settings
+#   pomona-admin wifi-undo             put back the files the last Wi-Fi fix replaced
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 set -uo pipefail
@@ -46,6 +48,26 @@ EOF
 		mv -f "$tmp" "$CONFIG_DIR/config.json"
 		echo "saved $CONFIG_DIR/config.json"
 		;;
+	wifi-fix)
+		shift
+		args=()
+		while [ $# -gt 0 ]; do
+			case "$1" in
+				--keep-mac) args+=(--keep-mac);;
+				--download) args+=(--download);;
+				--mac)
+					shift
+					[[ "${1:-}" =~ ^([0-9a-f]{2}:){5}[0-9a-f]{2}$ ]] || { echo "pomona-admin: invalid MAC address" >&2; exit 2; }
+					args+=(--mac "$1");;
+				*) echo "pomona-admin: unknown option" >&2; exit 2;;
+			esac
+			shift
+		done
+		exec "$LIBEXEC/../../bin/pomona" wifi fix ${args[@]+"${args[@]}"}
+		;;
+	wifi-undo)
+		exec "$LIBEXEC/../../bin/pomona" wifi undo
+		;;
 	enable)
 		systemctl enable --now $UNITS
 		;;
@@ -53,7 +75,7 @@ EOF
 		systemctl disable --now $UNITS
 		;;
 	*)
-		sed -n '2,7p' "$0" | sed 's/^# \{0,1\}//'
+		sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'
 		exit 2
 		;;
 esac

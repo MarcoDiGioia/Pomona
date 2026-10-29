@@ -4,6 +4,7 @@
     certificates.py intake EVENT.json OUTDIR   process a GitHub "issues" event
     certificates.py table                      rebuild the tables in docs/compatibility.md
     certificates.py check                      validate every committed certificate
+    certificates.py validate FILE              validate one certificate file
 
 A certificate is the JSON file `pomona certify` writes. People send it through a
 GitHub issue form; a workflow runs `intake` on the issue, which is untrusted text.
@@ -64,6 +65,23 @@ CHECKS = [
     "Boot service enabled",
     "Touch Bar daemon running",
 ]
+# the checks `pomona wifi certify` runs
+WIFI_CHECKS = [
+    "Supported MacBook Pro model",
+    "Broadcom BCM43602 Wi-Fi chip (14e4:43ba)",
+    "brcmfmac driver bound",
+    "Board file installed",
+    "NetworkManager keeps the real MAC address",
+    "Driver option feature_disable set",
+    "Wi-Fi interface present",
+    "Connected to a network",
+    "No restart pending",
+]
+WIFI_MODEL = "Supported MacBook Pro model"
+WIFI_CHIP = "Broadcom BCM43602 Wi-Fi chip (14e4:43ba)"
+WIFI_DRIVER = "brcmfmac driver bound"
+WIFI_IFACE = "Wi-Fi interface present"
+WIFI_CONNECTED = "Connected to a network"
 T1_RUNNING = "T1 running (05ac:8600)"
 FIRMWARE = "EmbeddedOS firmware on the EFI partition"
 TOUCHBAR = "Touch Bar bound to hid-appletb-kbd"
@@ -75,6 +93,16 @@ FIELDS = ["schema", "date", "pomona", "result", "model", "board", "mac_firmware"
           "distribution", "kernel", "desktop", "checks"]
 # written by the robot, never accepted from a user: the GitHub account that sent the certificate
 STORED_EXTRA = "reported_by"
+WIFI_FIELDS = ["schema", "module", "date", "pomona", "result", "model", "board", "mac_firmware", "subsystem",
+               "distribution", "kernel", "desktop", "checks"]
+
+# what each module of Pomona certifies. T1 certificates (schema 1) have no `module` field.
+MODULES = {
+    "t1": {"schema": 1, "fields": FIELDS, "checks": CHECKS, "main": T1_RUNNING, "prefix": "",
+           "title": "Pomona compatibility certificate"},
+    "wifi": {"schema": 2, "fields": WIFI_FIELDS, "checks": WIFI_CHECKS, "main": WIFI_IFACE, "prefix": "wifi-",
+             "title": "Pomona Wi-Fi compatibility certificate"},
+}
 
 # text fields: plain characters only, no markdown, HTML or shell metacharacters
 PATTERNS = {
@@ -82,6 +110,7 @@ PATTERNS = {
     "board": r"Mac-[0-9A-F]{16}",
     "mac_firmware": r"[0-9A-Za-z.]{1,40}",
     "embeddedos": r"(\d{1,4})?",
+    "subsystem": r"([0-9a-f]{4}:[0-9a-f]{4})?",
     "distribution": r"[A-Za-z0-9 ._()+:/-]{1,60}",
     "kernel": r"[0-9A-Za-z._+~-]{1,60}",
     "desktop": r"[A-Za-z0-9 :._-]{0,40}",
@@ -96,10 +125,27 @@ class Invalid(Exception):
 
 # ------------------------------------------------------------------ validation
 
-def derive_result(checks):
+def module_of(cert):
+    return cert.get("module", "t1")
+
+
+def derive_result(checks, module="t1"):
     if all(checks.values()):
         return "WORKING"
-    return "PARTIAL" if checks.get(T1_RUNNING) else "NOT-WORKING"
+    return "PARTIAL" if checks.get(MODULES[module]["main"]) else "NOT-WORKING"
+
+
+def module_for_schema(raw):
+    """Which module a certificate is for, from its schema (and `module`) values."""
+    schema = raw.get("schema")
+    if isinstance(schema, bool) or schema not in (1, 2):
+        raise Invalid("unsupported schema version")
+    if schema == 1:
+        return "t1"
+    module = raw.get("module")
+    if not isinstance(module, str) or module not in MODULES or MODULES[module]["schema"] != 2:
+        raise Invalid("unknown module")
+    return module
 
 
 def normalize(raw):
@@ -118,16 +164,19 @@ def validate(raw, now=None, stored=False):
     raw = normalize(raw)
     if not isinstance(raw, dict):
         raise Invalid("the certificate is not a JSON object")
-    allowed = set(FIELDS) | ({STORED_EXTRA} if stored else set())
+    module = module_for_schema(raw)
+    spec = MODULES[module]
+    fields, check_names = spec["fields"], spec["checks"]
+    allowed = set(fields) | ({STORED_EXTRA} if stored else set())
     extra = sorted(set(raw) - allowed)
-    missing = [f for f in FIELDS if f not in raw]
+    missing = [f for f in fields if f not in raw]
     if extra:
         raise Invalid("unknown field(s): " + ", ".join(re.sub(r"[^A-Za-z0-9_]", "?", k)[:20] for k in extra[:5]))
     if missing:
         raise Invalid("missing field(s): " + ", ".join(missing))
-    if raw["schema"] != 1 or isinstance(raw["schema"], bool):
-        raise Invalid("unsupported schema version")
     for name in PATTERNS:
+        if name not in fields:
+            continue
         value = raw[name]
         if not isinstance(value, str) or not re.fullmatch(PATTERNS[name], value):
             raise Invalid("invalid value for '%s'" % name)
@@ -146,13 +195,13 @@ def validate(raw, now=None, stored=False):
     if raw["result"] not in RESULTS:
         raise Invalid("invalid value for 'result'")
     checks = raw["checks"]
-    if not isinstance(checks, dict) or set(checks) != set(CHECKS):
+    if not isinstance(checks, dict) or set(checks) != set(check_names):
         raise Invalid("the list of checks does not match this version of Pomona")
     if not all(isinstance(v, bool) for v in checks.values()):
         raise Invalid("every check must be true or false")
-    if raw["result"] != derive_result(checks):
+    if raw["result"] != derive_result(checks, module):
         raise Invalid("the result does not match the checks")
-    cert = {f: ({c: checks[c] for c in CHECKS} if f == "checks" else raw[f]) for f in FIELDS}
+    cert = {f: ({c: checks[c] for c in check_names} if f == "checks" else raw[f]) for f in fields}
     if stored and STORED_EXTRA in raw:
         login = raw[STORED_EXTRA]
         if not isinstance(login, str) or not LOGIN_RE.fullmatch(login):
@@ -164,12 +213,22 @@ def validate(raw, now=None, stored=False):
 def check_consistency(cert, releases=None):
     """Reject certificates that are plainly impossible. `releases` is {version: release date}."""
     c = cert["checks"]
-    if not c["T1 MacBook Pro model"]:
-        raise Invalid("the certificate says this is not a T1 MacBook Pro, but the model is one")
-    if not c[T1_RUNNING] and any(c[k] for k in DEVICE_CHECKS):
-        raise Invalid("devices are reported present although the T1 is not running")
-    if not c[FIRMWARE] and (cert["embeddedos"] or c["Firmware holds 4 signed images"]):
-        raise Invalid("the firmware is reported missing but described")
+    if module_of(cert) == "wifi":
+        if not c[WIFI_MODEL]:
+            raise Invalid("the certificate says this is not a supported MacBook Pro, but the model is one")
+        if not c[WIFI_CHIP] and any(c[k] for k in (WIFI_DRIVER, WIFI_IFACE, WIFI_CONNECTED)):
+            raise Invalid("the Wi-Fi card is reported missing although it has a driver, an interface or a connection")
+        if not c[WIFI_DRIVER] and (c[WIFI_IFACE] or c[WIFI_CONNECTED]):
+            raise Invalid("a Wi-Fi interface or connection is reported without the driver")
+        if not c[WIFI_IFACE] and c[WIFI_CONNECTED]:
+            raise Invalid("a connection is reported without a Wi-Fi interface")
+    else:
+        if not c["T1 MacBook Pro model"]:
+            raise Invalid("the certificate says this is not a T1 MacBook Pro, but the model is one")
+        if not c[T1_RUNNING] and any(c[k] for k in DEVICE_CHECKS):
+            raise Invalid("devices are reported present although the T1 is not running")
+        if not c[FIRMWARE] and (cert["embeddedos"] or c["Firmware holds 4 signed images"]):
+            raise Invalid("the firmware is reported missing but described")
     if releases:
         version = cert["pomona"]
         if version not in releases:
@@ -211,7 +270,7 @@ def review_flags(cert, age_days):
     if expected and cert["board"] != expected:
         flags.append("the board id is not the one usually reported by this model")
     m = re.match(r"(\d+)\.(\d+)", cert["kernel"])
-    if cert["checks"][TOUCHBAR] and m and (int(m.group(1)), int(m.group(2))) < (6, 15):
+    if cert["checks"].get(TOUCHBAR) and m and (int(m.group(1)), int(m.group(2))) < (6, 15):
         flags.append("the Touch Bar is reported working on a kernel older than 6.15 (possible only with a backported driver)")
     if age_days is None:
         flags.append("the age of the reporter's GitHub account could not be checked")
@@ -254,29 +313,35 @@ def md_escape(text):
 
 
 def render_markdown(cert):
+    module = module_of(cert)
+    spec = MODULES[module]
+    check_names = spec["checks"]
+    extra = ("Wi-Fi card subsystem", cert["subsystem"] or "n/a") if module == "wifi" else \
+        ("T1 EmbeddedOS on ESP", cert["embeddedos"] or "n/a")
     rows = [
         ("Date (UTC)", cert["date"]), ("Pomona", cert["pomona"]), ("Model", cert["model"]),
         ("Board", cert["board"]), ("Mac firmware", cert["mac_firmware"]),
-        ("T1 EmbeddedOS on ESP", cert["embeddedos"] or "n/a"), ("Distribution", cert["distribution"]),
+        extra, ("Distribution", cert["distribution"]),
         ("Kernel", cert["kernel"]), ("Desktop", cert["desktop"] or "n/a"),
     ]
     if cert.get(STORED_EXTRA):
         rows.append(("Reported by", "@" + cert[STORED_EXTRA]))
     passed = sum(cert["checks"].values())
-    out = ["# Pomona compatibility certificate", "",
-           "**Result: %s** (%d/%d checks passed)" % (cert["result"], passed, len(CHECKS)), "",
+    out = ["# " + spec["title"], "",
+           "**Result: %s** (%d/%d checks passed)" % (cert["result"], passed, len(check_names)), "",
            "| Field | Value |", "| --- | --- |"]
     out += ["| %s | %s |" % (k, md_escape(v)) for k, v in rows]
     out += ["", "| Check | Result |", "| --- | --- |"]
-    out += ["| %s | %s |" % (c, "PASS" if cert["checks"][c] else "FAIL") for c in CHECKS]
-    out += ["", "Pomona is provided as is, without warranty, and is not affiliated with Apple Inc.", ""]
+    out += ["| %s | %s |" % (c, "PASS" if cert["checks"][c] else "FAIL") for c in check_names]
+    out += ["", "Pomona is provided as is, without warranty, and is not affiliated with Apple Inc."
+            + (" or Broadcom Inc." if module == "wifi" else ""), ""]
     return "\n".join(out)
 
 
 def cert_paths(cert, cert_dir=None):
     stamp = cert["date"].replace("-", "").replace(":", "").replace("T", "-").rstrip("Z")
     folder = os.path.join(cert_dir or CERT_DIR, cert["model"].replace(",", "_"))
-    base = os.path.join(folder, "%s-%s" % (stamp, digest(cert)))
+    base = os.path.join(folder, "%s%s-%s" % (MODULES[module_of(cert)]["prefix"], stamp, digest(cert)))
     return folder, base + ".json", base + ".md"
 
 
@@ -337,25 +402,28 @@ def model_status(mine, verified_ids):
     return "🟡 Should work"
 
 
-def model_table(certs, verified_ids=frozenset()):
+def model_table(certs, verified_ids=frozenset(), module="t1"):
     out = ["| Model | Machine | Status | Reports | People |", "| --- | --- | --- | --- | --- |"]
     for model, desc in MODELS.items():
-        mine = [(p, c) for p, c in certs if c["model"] == model]
+        mine = [(p, c) for p, c in certs if c["model"] == model and module_of(c) == module]
         people = len({c.get(STORED_EXTRA) for _, c in mine if c.get(STORED_EXTRA)})
         out.append("| %s | %s | %s | %d | %d |" % (model, desc, model_status(mine, verified_ids), len(mine), people))
     return "\n".join(out)
 
 
-def report_table(certs, verified_ids=frozenset()):
-    out = ["| Date | Model | Distribution | Kernel | Desktop | Mac firmware | EmbeddedOS | Pomona | Reported by | Result |",
+def report_table(certs, verified_ids=frozenset(), module="t1"):
+    certs = [(p, c) for p, c in certs if module_of(c) == module]
+    third = "Wi-Fi card" if module == "wifi" else "EmbeddedOS"
+    out = ["| Date | Model | Distribution | Kernel | Desktop | Mac firmware | %s | Pomona | Reported by | Result |" % third,
            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     icon = {"WORKING": "✅ Working", "PARTIAL": "🟡 Partial", "NOT-WORKING": "❌ Not working"}
     for path, c in sorted(certs, key=lambda x: (x[1]["date"], x[1]["model"]), reverse=True):
         who = "@" + c[STORED_EXTRA] if c.get(STORED_EXTRA) else "n/a"
         result = icon[c["result"]] + (" · verified" if cert_id(path) in verified_ids else "")
+        detail = (c["subsystem"] or "n/a") if module == "wifi" else (c["embeddedos"] or "n/a")
         out.append("| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |" % (
             c["date"][:10], c["model"], md_escape(c["distribution"]), c["kernel"], md_escape(c["desktop"] or "n/a"),
-            c["mac_firmware"], c["embeddedos"] or "n/a", c["pomona"], who, result))
+            c["mac_firmware"], detail, c["pomona"], who, result))
     if not certs:
         out.append("| | | | | | | | | | |")
     return "\n".join(out)
@@ -374,8 +442,10 @@ def update_doc(certs, doc_path=None, verified_ids=None):
     verified = load_verified() if verified_ids is None else verified_ids
     with open(path, encoding="utf-8") as f:
         text = f.read()
-    new = replace_block(replace_block(text, "models", model_table(certs, verified)), "reports",
-                        report_table(certs, verified))
+    new = text
+    for module, prefix in (("t1", ""), ("wifi", "wifi-")):
+        new = replace_block(new, prefix + "models", model_table(certs, verified, module))
+        new = replace_block(new, prefix + "reports", report_table(certs, verified, module))
     if new != text:
         with open(path, "w", encoding="utf-8") as f:
             f.write(new)
@@ -423,7 +493,8 @@ def intake(event, outdir, cert_dir=None, doc_path=None, now=None, account_create
         return "duplicate"
     update_doc(load_all(cert_dir), doc_path, verified_ids)
     label = {"WORKING": "working", "PARTIAL": "partially working", "NOT-WORKING": "not working"}[cert["result"]]
-    title = "Add compatibility certificate: %s on %s" % (cert["model"], cert["distribution"])
+    title = "Add %scompatibility certificate: %s on %s" % ("Wi-Fi " if module_of(cert) == "wifi" else "",
+                                                          cert["model"], cert["distribution"])
     body = ("Adds the certificate sent in #%d: **%s**, %s, kernel %s, Pomona %s (%s)%s.\n\n"
             "The certificate was checked against the schema and rebuilt from the validated values; "
             "`docs/compatibility.md` was regenerated from `certificates/`.\n\n"
@@ -438,7 +509,7 @@ def intake(event, outdir, cert_dir=None, doc_path=None, now=None, account_create
     out("pr-body.md", body)
     out("comment.md", "Thank you! Your certificate passed the checks and a pull request was opened to add it. "
                       "It will appear in the compatibility table once it is merged.\n")
-    out("branch", "certificate/issue-%d" % number)
+    out("branch", "certificate-submit/issue-%d" % number)
     return "ok"
 
 
@@ -466,6 +537,16 @@ def main(argv):
             event = json.load(f)
         print(intake(event, argv[3], account_created=os.environ.get("POMONA_ACCOUNT_CREATED"),
                      releases=release_dates()))
+        return 0
+    if cmd == "validate" and len(argv) == 3:
+        try:
+            with open(argv[2], encoding="utf-8") as f:
+                cert = validate(json.load(f), stored=True)
+            check_consistency(cert, release_dates())
+        except (Invalid, OSError, ValueError) as e:
+            print("invalid: %s" % e)
+            return 1
+        print("valid")
         return 0
     if cmd == "table" and len(argv) == 2:
         print("updated" if update_doc(load_all()) else "up to date")

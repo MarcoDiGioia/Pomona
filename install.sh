@@ -78,6 +78,7 @@ install -m 755 "$BUILD/pomona-t1-boot" "$PREFIX/lib/pomona/pomona-t1-boot"
 install -m 755 "$SRC/libexec/pomona-touchbard" "$PREFIX/lib/pomona/pomona-touchbard"
 install -m 755 "$SRC/libexec/pomona-admin" "$PREFIX/lib/pomona/pomona-admin"
 install -m 644 "$SRC/lib/pomona.sh" "$PREFIX/lib/pomona/pomona.sh"
+install -m 644 "$SRC/lib/wifi.sh" "$PREFIX/lib/pomona/wifi.sh"
 install -m 755 "$SRC/bin/pomona" "$PREFIX/bin/pomona"
 install -m 755 "$SRC/gui/pomona-gui" "$PREFIX/bin/pomona-gui"
 # templates: @PREFIX@ becomes the install prefix
@@ -125,4 +126,5 @@ echo
 pomona status
 echo
 echo "Done. Open \"Pomona\" from the applications menu, or check it with: pomona certify"
+echo "Wi-Fi card (Broadcom BCM43602) rejecting every connection? pomona wifi status, then sudo pomona wifi fix"
 echo "For per-application Touch Bar keys: log out and back in, then enable the extension from the app."
