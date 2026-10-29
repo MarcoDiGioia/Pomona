@@ -45,7 +45,7 @@ Generated from [`certificates/`](../certificates), newest first.
 <!-- reports:start -->
 | Date | Model | Distribution | Kernel | Desktop | Mac firmware | EmbeddedOS | Pomona | Reported by | Result |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 910 | 0.8.0 | @MarcoDiGioia | ✅ Working |
+| 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 910 | 0.8.0 | @MarcoDiGioia | ✅ Working · verified |
 | 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 910 | 0.3.0 | @MarcoDiGioia | ✅ Working · verified |
 <!-- reports:end -->
 
