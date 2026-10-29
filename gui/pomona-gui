@@ -491,7 +491,33 @@ class Window(Adw.ApplicationWindow):
     # -------------------------------------------------------------- wifi
 
     def wifi_fix(self):
-        self.admin(["wifi-fix"], "wifi-fix", then=lambda ok, _out: ok and self.toast(_("Restart the computer to finish")))
+        def run(extra):
+            self.admin(["wifi-fix"] + extra, "wifi-fix",
+                       then=lambda ok, _out: ok and self.toast(_("Restart the computer to finish")))
+
+        w = self.wifi
+        if w.get("board_file_ok") or w.get("board_file_cached"):
+            run([])  # nothing to download
+            return
+        # the board file is not part of Pomona: ask before downloading it
+        close = [None]
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
+                      margin_top=12, margin_bottom=12, margin_start=12, margin_end=12)
+        label = Gtk.Label(wrap=True, xalign=0, label=_(
+            "The Wi-Fi card needs a board file that Pomona does not include. It will be downloaded from a public "
+            "GitHub page where the Linux community shares it, and checked against a known SHA-256 before use. "
+            "Its author and licence are not known. Nothing about you is sent."))
+        box.append(label)
+        buttons = Gtk.Box(spacing=12, halign=Gtk.Align.END)
+        cancel = Gtk.Button(label=_("Cancel"))
+        cancel.connect("clicked", lambda *_a: close[0]())
+        go = Gtk.Button(label=_("Download and fix"))
+        go.add_css_class("suggested-action")
+        go.connect("clicked", lambda *_a: (close[0](), run(["--download"])))
+        buttons.append(cancel)
+        buttons.append(go)
+        box.append(buttons)
+        close[0] = present_dialog(self, _("Download the board file?"), box)
 
     def build_wifi_page(self):
         w = self.wifi

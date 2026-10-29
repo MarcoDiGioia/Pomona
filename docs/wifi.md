@@ -28,6 +28,8 @@ If a setting is already in place (in any file of `conf.d` or `modprobe.d`), Pomo
 
 Pomona does not contain the board file. `pomona wifi fix` downloads it over https from a fixed address (a public gist, pinned to one revision, in `lib/wifi.sh`), keeps a copy in `/var/lib/pomona/wifi-cache/` and **uses it only if its SHA-256 matches** (computed with the `macaddr=` line set to the shared placeholder, so that the checksum does not depend on the address). A wrong or oversized download is discarded. Where it comes from and under what terms: [data/wifi/README.md](../data/wifi/README.md) and [LEGAL.md](../LEGAL.md#the-wi-fi-board-file).
 
+**You are asked first.** The download happens only with your explicit agreement: the app shows a notice (where the file comes from, that its author and licence are not known, that nothing about you is sent) with *Cancel* and *Download and fix*; in a terminal `pomona wifi fix` shows the same notice and asks, or you pass `--download`. With no agreement nothing is downloaded and nothing is installed.
+
 Offline, or if the address stops working: save the file yourself and run `sudo pomona wifi fix --board-file /path/to/brcmfmac43602-pcie.txt`. It is checked against the same SHA-256. The app's *Fix* button needs a connection; if the card is the only way to get one, use a cable or a phone's USB tethering, or the `--board-file` form.
 
 ## The MAC address

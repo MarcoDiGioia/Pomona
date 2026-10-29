@@ -4,7 +4,7 @@
 #   pomona-admin start                 boot the T1 and bind its devices
 #   pomona-admin set-config FILE       validate FILE and install it as /etc/pomona/config.json
 #   pomona-admin enable | disable      the boot and Touch Bar services
-#   pomona-admin wifi-fix [--keep-mac | --mac aa:bb:cc:dd:ee:ff]   install the Wi-Fi board file and settings
+#   pomona-admin wifi-fix [--download] [--keep-mac | --mac aa:bb:cc:dd:ee:ff]   install the Wi-Fi board file and settings
 #   pomona-admin wifi-undo             put back the files the last Wi-Fi fix replaced
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
@@ -54,6 +54,7 @@ EOF
 		while [ $# -gt 0 ]; do
 			case "$1" in
 				--keep-mac) args+=(--keep-mac);;
+				--download) args+=(--download);;
 				--mac)
 					shift
 					[[ "${1:-}" =~ ^([0-9a-f]{2}:){5}[0-9a-f]{2}$ ]] || { echo "pomona-admin: invalid MAC address" >&2; exit 2; }

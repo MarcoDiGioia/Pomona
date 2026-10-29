@@ -195,6 +195,7 @@ pomona wifi status [--json]    what is in place and what is missing
 sudo pomona wifi fix           install the board file and settings (backed up first); then restart
       --keep-mac               keep the MAC address already in the board file
       --mac aa:bb:cc:dd:ee:ff  use this MAC address
+      --download               agree to download the board file (otherwise you are asked)
       --board-file FILE        use this copy of the board file instead of downloading it
       --force                  install even if the card is not found
 sudo pomona wifi undo          put the files back as they were before the last fix

@@ -89,6 +89,7 @@ eq "an override is ignored on the real /etc" "$(POMONA_ETC=/etc POMONA_WIFI_URL=
 
 echo "-- getting the board file"
 fake_machine
+WF_DOWNLOAD_OK=1
 ref=$BOARD
 got=$(wf_board_source 2>/dev/null)
 eq "downloaded into the cache" "$got" "$(wf_cache_file)"
@@ -106,6 +107,7 @@ printf 'boardrev=0x1101\nvendid=0x14e4\ndevid=0x43ba\n\nmacaddr=00:90:4c:0d:f4:3
 eq "a local copy is checked and used" "$(wf_board_source "$BOARD" 2>/dev/null)" "$BOARD"
 wf_board_source /etc/hostname >/dev/null 2>&1; eq "a wrong local copy is refused" "$?" "1"
 eq "the stand-in carries the placeholder" "$(wf_file_mac "$ref")" "$WF_PLACEHOLDER_MAC"
+unset WF_DOWNLOAD_OK
 
 echo "-- MAC addresses"
 true_ "valid unicast" wf_valid_mac 02:11:22:33:44:55
@@ -145,7 +147,7 @@ false_ "a comment does not count" wf_modprobe_ok
 
 echo "-- fix"
 fake_machine
-out=$(wf_fix 2>&1); rc=$?
+out=$(wf_fix --download 2>&1); rc=$?
 eq "fix succeeds" "$rc" "0"
 true_ "board file installed" test -r "$TMP/fw/brcmfmac43602-pcie.txt"
 true_ "it is the shipped one" wf_nvram_ok
@@ -161,7 +163,7 @@ eq "restart is pending (marker newer than boot)" "$(wf_state)" "restart"
 echo "btime 4000000000" > "$TMP/proc/stat"
 eq "no longer pending after a boot" "$(wf_state)" "ok"
 sum1=$(find "$TMP/fw" "$TMP/etc" -type f | sort | xargs sha256sum | sha256sum)
-out=$(wf_fix 2>&1); rc=$?
+out=$(wf_fix --download 2>&1); rc=$?
 eq "second fix succeeds" "$rc" "0"
 case "$out" in *"nothing to change"*) ok "second fix changes nothing";; *) fail "second fix changes nothing";; esac
 eq "files unchanged" "$(find "$TMP/fw" "$TMP/etc" -type f | sort | xargs sha256sum | sha256sum)" "$sum1"
@@ -177,7 +179,7 @@ sed 's/^macaddr=.*/macaddr=02:aa:bb:cc:dd:ee/' "$ref" > "$TMP/fw/brcmfmac43602-p
 printf '[device]\nwifi.scan-rand-mac-address=no\n[connection]\nwifi.cloned-mac-address=permanent\n' > "$TMP/etc/NetworkManager/conf.d/90-brcmfmac.conf"
 echo 'options brcmfmac feature_disable=0x82000' > "$TMP/etc/modprobe.d/brcmfmac.conf"
 eq "already fixed machine" "$(wf_state)" "ok"
-wf_fix >/dev/null 2>&1
+wf_fix --download >/dev/null 2>&1
 eq "own MAC kept" "$(wf_nvram_mac)" "02:aa:bb:cc:dd:ee"
 false_ "no duplicate NetworkManager file" test -e "$TMP/etc/NetworkManager/conf.d/$WF_NM_FILE"
 false_ "no duplicate driver option file" test -e "$TMP/etc/modprobe.d/$WF_MODPROBE_FILE"
@@ -185,23 +187,23 @@ false_ "no backup when nothing changed" test -d "$TMP/state/wifi-backup"
 # the shared default MAC is replaced unless asked otherwise
 cp "$ref" "$TMP/fw/brcmfmac43602-pcie.txt"
 true_ "placeholder detected" wf_mac_placeholder
-wf_fix --keep-mac >/dev/null 2>&1
+wf_fix --download --keep-mac >/dev/null 2>&1
 eq "--keep-mac keeps the shared MAC" "$(wf_nvram_mac)" "$WF_PLACEHOLDER_MAC"
-wf_fix >/dev/null 2>&1
+wf_fix --download >/dev/null 2>&1
 eq "default fix gives the machine its own MAC" "$(wf_nvram_mac)" "$(wf_generate_mac)"
-wf_fix --mac 02:12:34:56:78:9a >/dev/null 2>&1
+wf_fix --download --mac 02:12:34:56:78:9a >/dev/null 2>&1
 eq "--mac is used" "$(wf_nvram_mac)" "02:12:34:56:78:9a"
-wf_fix >/dev/null 2>&1
+wf_fix --download >/dev/null 2>&1
 eq "a MAC chosen earlier is kept by the next fix" "$(wf_nvram_mac)" "02:12:34:56:78:9a"
-wf_fix --mac 03:12:34:56:78:9a >/dev/null 2>&1; eq "multicast MAC refused" "$?" "2"
-wf_fix --mac nonsense >/dev/null 2>&1; eq "bad MAC refused" "$?" "2"
-wf_fix --nope >/dev/null 2>&1; eq "unknown option refused" "$?" "2"
+wf_fix --download --mac 03:12:34:56:78:9a >/dev/null 2>&1; eq "multicast MAC refused" "$?" "2"
+wf_fix --download --mac nonsense >/dev/null 2>&1; eq "bad MAC refused" "$?" "2"
+wf_fix --download --nope >/dev/null 2>&1; eq "unknown option refused" "$?" "2"
 
 echo "-- fix replaces a different board file, with a backup"
 fake_machine
 echo "boardtype=0x1234" > "$TMP/fw/brcmfmac43602-pcie.txt"
 echo "# mine" > "$TMP/etc/modprobe.d/other.conf"
-wf_fix >/dev/null 2>&1
+wf_fix --download >/dev/null 2>&1
 true_ "shipped board file installed" wf_nvram_ok
 b=$(wf_latest_backup)
 eq "old board file saved" "$(cat "$b/0")" "boardtype=0x1234"
@@ -220,23 +222,37 @@ eq "after the undo a restart is needed to load the old settings" "$(wf_state)" "
 
 echo "-- undo refuses a tampered backup"
 fake_machine
-wf_fix >/dev/null 2>&1
+wf_fix --download >/dev/null 2>&1
 b=$(wf_latest_backup)
 printf '9\t/etc/passwd\t0\n' >> "$b/manifest"
 wf_undo >/dev/null 2>&1; eq "path outside the managed folders is refused" "$?" "1"
 true_ "nothing was removed" test -e /etc/passwd
 true_ "and nothing else was touched either" wf_nvram_ok
 
+echo "-- consent"
+fake_machine
+wf_fix </dev/null >/dev/null 2>&1; eq "no agreement, no download" "$?" "5"
+false_ "nothing installed without it" test -e "$TMP/fw/brcmfmac43602-pcie.txt"
+false_ "and nothing cached" test -e "$(wf_cache_file)"
+wf_fix --board-file "$BOARD" </dev/null >/dev/null 2>&1; eq "a local copy needs no download agreement" "$?" "0"
+fake_machine
+case "$(wf_fix </dev/null 2>&1)" in *"--download"*) ok "the refusal says how to agree";; *) fail "the refusal says how to agree";; esac
+case "$WF_NOTICE" in *"licence are not known"*"Nothing about you is sent"*) ok "the notice tells the licence is unknown";; *) fail "the notice";; esac
+fake_machine
+wf_fix --download >/dev/null 2>&1
+eq "with agreement it works" "$(wf_nvram_ok && echo yes)" "yes"
+wf_fix </dev/null >/dev/null 2>&1; eq "an already complete setup asks nothing" "$?" "0"
+
 echo "-- no card"
 fake_machine nocard
-wf_fix >/dev/null 2>&1; eq "fix refuses without the card" "$?" "3"
+wf_fix --download >/dev/null 2>&1; eq "fix refuses without the card" "$?" "3"
 false_ "and writes nothing" test -e "$TMP/fw/brcmfmac43602-pcie.txt"
-wf_fix --force >/dev/null 2>&1; eq "--force installs anyway" "$?" "0"
+wf_fix --download --force >/dev/null 2>&1; eq "--force installs anyway" "$?" "0"
 true_ "board file installed with --force" test -r "$TMP/fw/brcmfmac43602-pcie.txt"
 
 echo "-- board file cannot be downloaded"
 fake_machine
-POMONA_WIFI_URL="file://$TMP/none" wf_fix >/dev/null 2>&1; eq "reported as an error" "$?" "1"
+POMONA_WIFI_URL="file://$TMP/none" wf_fix --download >/dev/null 2>&1; eq "reported as an error" "$?" "1"
 false_ "and nothing is installed" test -e "$TMP/fw/brcmfmac43602-pcie.txt"
 wf_fix --board-file "$BOARD" >/dev/null 2>&1; eq "offline: a given copy works" "$?" "0"
 true_ "and is installed" wf_nvram_ok
@@ -248,7 +264,7 @@ js=$(pomona wifi status --json)
 eq "json is valid" "$(printf '%s' "$js" | python3 -c 'import json,sys; print(json.load(sys.stdin)["state"])')" "needs-fix"
 eq "json: present" "$(printf '%s' "$js" | python3 -c 'import json,sys; print(json.load(sys.stdin)["present"])')" "True"
 eq "json: subsystem" "$(printf '%s' "$js" | python3 -c 'import json,sys; print(json.load(sys.stdin)["subsystem"])')" "106b:0173"
-pomona wifi fix >/dev/null 2>&1; eq "wifi fix" "$?" "0"
+pomona wifi fix --download >/dev/null 2>&1; eq "wifi fix" "$?" "0"
 eq "status after the fix" "$(pomona wifi status --json | python3 -c 'import json,sys; print(json.load(sys.stdin)["state"])')" "restart"
 out=$(pomona wifi status); case "$out" in *"Restart the computer"*) ok "status asks for a restart";; *) fail "status asks for a restart";; esac
 pomona wifi undo >/dev/null 2>&1; eq "wifi undo" "$?" "0"
@@ -259,7 +275,7 @@ case "$(pomona wifi status)" in *"No Broadcom BCM43602"*) ok "status without the
 
 echo "-- certificate"
 fake_machine
-wf_fix >/dev/null 2>&1
+wf_fix --download >/dev/null 2>&1
 echo "btime 4000000000" > "$TMP/proc/stat"
 mkdir -p "$TMP/certs"
 pomona wifi certify "$TMP/certs" >/dev/null 2>&1; eq "working machine: exit 0" "$?" "0"

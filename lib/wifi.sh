@@ -133,6 +133,23 @@ wf_genuine() {
 	[ -r "$1" ] && [ "$(sed "s/^macaddr=.*/macaddr=$WF_PLACEHOLDER_MAC/" "$1" | sha256sum | cut -d' ' -f1)" = "$(wf_board_sha)" ]
 }
 
+WF_NOTICE="The Wi-Fi card needs a board file that Pomona does not include. It would be downloaded from
+  $(printf '%s' "$WF_BOARD_URL" | cut -d/ -f1-5)
+a public page where the Linux community shares it, and checked against a known SHA-256 before use.
+Its author and licence are not known. Nothing about you is sent."
+
+# wf_consent: the user agreed to the download (--download), or says yes now at a terminal
+wf_consent() {
+	[ "${WF_DOWNLOAD_OK:-0}" = 1 ] && return 0
+	if [ -t 0 ] && [ -t 2 ]; then
+		printf '%s\n\nDownload it now? [y/N] ' "$WF_NOTICE" >&2
+		local a
+		read -r a
+		case "$a" in y|Y|yes|YES|s|S|si|sì) return 0;; esac
+	fi
+	return 1
+}
+
 # wf_board_source [FILE] -> path of a verified copy of the board file. With FILE (offline use) that
 # file is checked and used; otherwise the cached copy, or a fresh download over https.
 wf_board_source() {
@@ -145,6 +162,10 @@ wf_board_source() {
 	cache=$(wf_cache_file)
 	if wf_genuine "$cache"; then printf '%s\n' "$cache"; return 0; fi
 	url=$(wf_board_url)
+	wf_consent || {
+		et1_err "the board file has to be downloaded and you have not agreed (run with --download, or use --board-file FILE)"
+		return 5
+	}
 	install -d -m 755 "$(dirname "$cache")" || return 1
 	tmp=$(mktemp "$cache.XXXXXX") || return 1
 	et1_err "downloading the Wi-Fi board file from $(printf '%s' "$url" | cut -d/ -f1-3)"
@@ -306,17 +327,18 @@ wf_refresh_initramfs() {
 }
 
 # wf_fix [--mac MAC | --keep-mac] [--force]
-#   [--board-file FILE: use this copy of the board file instead of downloading it]
+#   [--download: agree to download the board file | --board-file FILE: use this copy instead]
 #   board file, NetworkManager setting and driver option, each only when missing; backed up first.
 #   MAC: the one given, else the one already in the board file (unless it is the shared placeholder),
 #   else one derived from this machine.
 wf_fix() {
-	local mac="" keep=0 force=0 a board=""
+	local mac="" keep=0 force=0 a board="" WF_DOWNLOAD_OK=${WF_DOWNLOAD_OK:-0}
 	while [ $# -gt 0 ]; do
 		case "$1" in
 			--mac) shift; mac=${1:-}; wf_valid_mac "$mac" || { et1_err "invalid MAC address (use lower-case aa:bb:cc:dd:ee:ff, unicast)"; return 2; };;
 			--keep-mac) keep=1;;
 			--force) force=1;;
+			--download) WF_DOWNLOAD_OK=1;;
 			--board-file) shift; board=${1:-}; [ -r "$board" ] || { et1_err "cannot read the board file"; return 2; };;
 			*) et1_err "unknown option $1"; return 2;;
 		esac
@@ -339,7 +361,7 @@ wf_fix() {
 	work=$(mktemp -d) || return 1
 	# 1. the board file, with this machine's address
 	if ! { wf_nvram_ok && [ "$mac" = "$cur" ]; }; then
-		ref=$(wf_board_source "$board") || { rm -rf "$work"; return 1; }
+		ref=$(wf_board_source "$board") || { local rc=$?; rm -rf "$work"; return "$rc"; }
 		sed "s/^macaddr=.*/macaddr=$mac/" "$ref" > "$work/nvram"
 		if ! cmp -s "$work/nvram" "$(wf_nvram_file)"; then files+=("$work/nvram"); dests+=("$(wf_nvram_file)"); fi
 	fi

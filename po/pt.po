@@ -388,3 +388,12 @@ msgstr "Interface de rede"
 
 msgid "MAC address"
 msgstr "Endereço MAC"
+
+msgid "The Wi-Fi card needs a board file that Pomona does not include. It will be downloaded from a public GitHub page where the Linux community shares it, and checked against a known SHA-256 before use. Its author and licence are not known. Nothing about you is sent."
+msgstr "A placa Wi-Fi precisa de um ficheiro de configuração que o Pomona não inclui. Será descarregado de uma página pública do GitHub onde a comunidade Linux o partilha e verificado com um SHA-256 conhecido antes de ser usado. O autor e a licença não são conhecidos. Nada sobre si é enviado."
+
+msgid "Download the board file?"
+msgstr "Descarregar o ficheiro de configuração?"
+
+msgid "Download and fix"
+msgstr "Descarregar e reparar"
