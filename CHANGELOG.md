@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- A GitHub wiki generated from the documents of the repository (`tools/wiki.py`, `tools/sync-wiki.sh`).
+
 ## 0.9.0 - 2026-10-29
 
 - **New Wi-Fi module for the Broadcom BCM43602 card** of the 2016–2017 MacBook Pro. Without a board file the driver sees the networks but every connection is rejected; `sudo pomona wifi fix` (or the new **Wi-Fi** page of the app) installs the file, tells NetworkManager to keep the card's real MAC address and sets the driver option the t2linux project recommends. Each file is backed up first and `sudo pomona wifi undo` puts everything back. The Mac gets its own MAC address instead of the one every copy of the board file shares. The board file is not part of Pomona: the fix downloads it (https, fixed address, SHA-256 checked), or uses a copy you give with `--board-file`. Nothing is downloaded without your explicit agreement: the app asks, the terminal asks (or `--download`).

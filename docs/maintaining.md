@@ -30,6 +30,17 @@ bash tools/prepare-public.sh
 
 The script creates or updates the two rulesets from `.github/rulesets/` and turns the other settings on. It can be run again at any time.
 
+## Wiki
+
+The GitHub wiki is a copy of the documents in the repository, so there is one source to maintain. `tools/wiki.py` builds the pages (links between documents become wiki links, other files link to GitHub, images come from the repository) and `tools/sync-wiki.sh` pushes them. Do not edit the wiki pages by hand: the next sync overwrites them.
+
+```bash
+bash tools/sync-wiki.sh --dry-run   # build the pages and list them
+bash tools/sync-wiki.sh             # publish
+```
+
+The wiki repository only exists once its first page has been created on the website (*Wiki* tab → *Create the first page*). In *Settings → Features → Wikis*, keep **Restrict editing to collaborators only** on, otherwise anyone can edit the pages.
+
 ## Releasing
 
 1. Update `POMONA_VERSION` in `lib/pomona.sh`, the top of `CHANGELOG.md` (with the date) and the `<releases>` of the metainfo file.
