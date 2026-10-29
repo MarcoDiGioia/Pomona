@@ -261,6 +261,7 @@ class Workflow(unittest.TestCase):
                 if line.strip().startswith("run:") or line.startswith("          "):
                     self.assertNotIn(dangerous, line)
         self.assertIn("permissions: {}", text)
+        self.assertRegex(text, r"gh pr create[^\n]*--label certificate")
         try:
             import yaml
         except ImportError:

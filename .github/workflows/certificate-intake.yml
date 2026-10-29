@@ -50,7 +50,7 @@ jobs:
             git add certificates docs/compatibility.md
             git commit -m "$(cat "$out/title")"
             git push origin "$branch"
-            gh pr create --base main --head "$branch" --title "$(cat "$out/title")" --body-file "$out/pr-body.md"
+            gh pr create --base main --head "$branch" --title "$(cat "$out/title")" --body-file "$out/pr-body.md" --label certificate
             gh issue edit "$ISSUE_NUMBER" --add-label certificate
           elif [ "$status" = duplicate ]; then
             gh issue comment "$ISSUE_NUMBER" --body-file "$out/comment.md"

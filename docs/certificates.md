@@ -21,7 +21,7 @@ The workflow [`certificate-intake.yml`](../.github/workflows/certificate-intake.
 1. It reads the certificate from the issue text.
 2. It checks it against a strict schema: only the known fields, with the allowed characters and lengths; only the four supported Mac models; a date that is not in the future; exactly the ten known checks, each true or false; and a result that agrees with the checks.
 3. If it is valid, it **rebuilds** the certificate from the validated values, writes `certificates/<model>/<date>-<hash>.json` and `.md`, and regenerates the tables in `docs/compatibility.md`.
-4. The workflow opens a pull request with those files and comments on the issue. When the pull request is merged, the issue closes and the Mac appears in the table.
+4. The workflow opens a pull request with those files, labelled `certificate` (filter with `is:pr label:certificate` to see all the proposals), and comments on the issue. When the pull request is merged, the issue closes and the Mac appears in the table.
 5. An invalid certificate gets a comment that says what is wrong and changes nothing; a certificate already in the repository is closed as a duplicate.
 
 The pull request is reviewed and merged by a maintainer.
