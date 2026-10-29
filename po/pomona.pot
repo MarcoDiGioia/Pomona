@@ -236,10 +236,10 @@ msgstr ""
 msgid "About Pomona"
 msgstr ""
 
-msgid "Touch Bar, camera and light sensor for 2016–2017 MacBook Pro"
+msgid "Touch Bar, camera, light sensor and Wi-Fi for 2016–2017 MacBook Pro"
 msgstr ""
 
-msgid "Provided as is, without any warranty: use at your own risk. Not affiliated with Apple Inc.; Apple, MacBook and Touch Bar are trademarks of Apple Inc."
+msgid "Provided as is, without any warranty: use at your own risk. Not affiliated with Apple Inc. or Broadcom Inc.; Apple, MacBook and Touch Bar are trademarks of Apple Inc., Broadcom is a trademark of Broadcom Inc."
 msgstr ""
 
 msgid "Share with the community"
@@ -252,4 +252,97 @@ msgid "Add your Mac to the compatibility table"
 msgstr ""
 
 msgid "Could not open the browser"
+msgstr ""
+
+msgid "Wi-Fi"
+msgstr ""
+
+msgid "Restart the computer to finish"
+msgstr ""
+
+msgid "Wi-Fi card"
+msgstr ""
+
+msgid "This Mac’s Broadcom card sees networks but rejects every connection until its board file is installed."
+msgstr ""
+
+msgid "Driver"
+msgstr ""
+
+msgid "Not loaded"
+msgstr ""
+
+msgid "Board file"
+msgstr ""
+
+msgid "Installed"
+msgstr ""
+
+msgid "Different from the one Pomona ships"
+msgstr ""
+
+msgid "Missing: every connection is rejected without it"
+msgstr ""
+
+msgid "Real MAC address"
+msgstr ""
+
+msgid "NetworkManager keeps the card’s own address"
+msgstr ""
+
+msgid "NetworkManager is not used"
+msgstr ""
+
+msgid "NetworkManager replaces it with a random one, which the card refuses"
+msgstr ""
+
+msgid "Driver option"
+msgstr ""
+
+msgid "Set"
+msgstr ""
+
+msgid "Not set"
+msgstr ""
+
+msgid "Own MAC address"
+msgstr ""
+
+msgid "This Mac has its own address"
+msgstr ""
+
+msgid "Every copy of the board file shares one address: give this Mac its own"
+msgstr ""
+
+msgid "Connected to a network"
+msgstr ""
+
+msgid "Connected"
+msgstr ""
+
+msgid "Not connected"
+msgstr ""
+
+msgid "Restart needed"
+msgstr ""
+
+msgid "Restart the computer to load the new board file"
+msgstr ""
+
+msgid "Wi-Fi is set up"
+msgstr ""
+
+msgid "The card is ready and connected."
+msgstr ""
+
+msgid "Undo the changes"
+msgstr ""
+
+msgid "Puts every file back as it was before the last fix"
+msgstr ""
+
+msgid "Undo"
+msgstr ""
+
+msgid "Runs the Wi-Fi checks and writes a report you can share"
 msgstr ""

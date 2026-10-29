@@ -10,9 +10,9 @@ body:
 
         If you came here from the app or from `pomona share`, the certificate below is already filled in: check it and press **Submit new issue**. A robot will check it and open a pull request that adds your Mac to the compatibility table.
 
-        The certificate contains only the Mac model, firmware versions, distribution, kernel, desktop and the result of each check. It has **no serial numbers or personal data**.
+        The certificate contains only the Mac model, firmware versions, distribution, kernel, desktop and the result of each check. It has **no serial numbers, MAC addresses, network names or personal data**.
 
-        To create one by hand: `pomona certify`, then paste the content of the `.json` file below.
+        To create one by hand: `pomona certify` (Touch Bar, camera, light sensor) or `pomona wifi certify` (Wi-Fi), then paste the content of the `.json` file below.
   - type: textarea
     id: certificate
     attributes:

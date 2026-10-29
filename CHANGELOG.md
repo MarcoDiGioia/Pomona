@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0 - 2026-10-29
+
+- **New Wi-Fi module for the Broadcom BCM43602 card** of the 2016–2017 MacBook Pro. Without a board file the driver sees the networks but every connection is rejected; `sudo pomona wifi fix` (or the new **Wi-Fi** page of the app) installs the file, tells NetworkManager to keep the card's real MAC address and sets the driver option the t2linux project recommends. Each file is backed up first and `sudo pomona wifi undo` puts everything back. The Mac gets its own MAC address instead of the one every copy of the board file shares.
+- `pomona wifi status` (also `--json`) shows what is in place and what is missing, and asks for a restart when one is needed.
+- `pomona wifi certify` writes a Wi-Fi compatibility certificate (nine checks, no MAC addresses or network names). Certificates now carry a module (`schema 2`); the robot, the tables in `docs/compatibility.md` and `certificates/` handle both the Touch Bar and the Wi-Fi.
+- The Wi-Fi page of the app only appears on Macs that have the card.
+- The board file shipped with Pomona is a community file whose origin is documented in `THIRD_PARTY_NOTICES.md`; it is not covered by the GPL.
+
 ## 0.8.0 - 2026-10-29
 
 - **Share your result with the community**: the Report page of the app has a *Share with the community* button, and `pomona share` does the same from a terminal. It opens a GitHub issue with your compatibility certificate already filled in; nothing is sent until you press *Submit new issue*.

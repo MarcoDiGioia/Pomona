@@ -6,14 +6,14 @@
   <project_license>GPL-3.0-or-later</project_license>
   <name>Pomona</name>
 
-  <summary>Touch Bar, camera and light sensor for 2016–2017 MacBook Pro</summary>
-  <summary xml:lang="it">Touch Bar, webcam e sensore di luce per MacBook Pro 2016–2017</summary>
-  <summary xml:lang="de">Touch Bar, Kamera und Lichtsensor für MacBook Pro 2016–2017</summary>
-  <summary xml:lang="es">Touch Bar, cámara y sensor de luz para MacBook Pro 2016–2017</summary>
-  <summary xml:lang="fr">Touch Bar, caméra et capteur de lumière pour MacBook Pro 2016–2017</summary>
-  <summary xml:lang="nl">Touch Bar, camera en lichtsensor voor MacBook Pro 2016–2017</summary>
-  <summary xml:lang="pl">Touch Bar, kamera i czujnik światła dla MacBooka Pro 2016–2017</summary>
-  <summary xml:lang="pt">Touch Bar, câmara e sensor de luz para MacBook Pro 2016–2017</summary>
+  <summary>Touch Bar, camera, light sensor and Wi-Fi for 2016–2017 MacBook Pro</summary>
+  <summary xml:lang="it">Touch Bar, webcam, sensore di luce e Wi-Fi per MacBook Pro 2016–2017</summary>
+  <summary xml:lang="de">Touch Bar, Kamera, Lichtsensor und WLAN für MacBook Pro 2016–2017</summary>
+  <summary xml:lang="es">Touch Bar, cámara, sensor de luz y Wi-Fi para MacBook Pro 2016–2017</summary>
+  <summary xml:lang="fr">Touch Bar, caméra, capteur de lumière et Wi-Fi pour MacBook Pro 2016–2017</summary>
+  <summary xml:lang="nl">Touch Bar, camera, lichtsensor en wifi voor MacBook Pro 2016–2017</summary>
+  <summary xml:lang="pl">Touch Bar, kamera, czujnik światła i Wi-Fi dla MacBooka Pro 2016–2017</summary>
+  <summary xml:lang="pt">Touch Bar, câmara, sensor de luz e Wi-Fi para MacBook Pro 2016–2017</summary>
 
   <description>
     <p>
@@ -34,6 +34,14 @@
     <p xml:lang="nl">Op de MacBook Pro 2016–2017 met Touch Bar worden de Touch Bar, de FaceTime-camera en de omgevingslichtsensor aangestuurd door de Apple T1-chip, die Linux vaak vast in de herstelmodus aantreft. pomona start de T1 bij elke keer aanzetten met de firmware die macOS al op de EFI-partitie bewaart, en koppelt zijn apparaten aan de stuurprogramma's van de kernel.</p>
     <p xml:lang="pl">W MacBookach Pro 2016–2017 z Touch Barem Touch Bar, kamerą FaceTime i czujnikiem światła otoczenia steruje układ Apple T1, który Linux często zastaje zablokowany w trybie odzyskiwania. Pomona uruchamia T1 przy każdym włączeniu, korzystając z oprogramowania, które macOS przechowuje już na partycji EFI, i łączy jego urządzenia ze sterownikami jądra.</p>
     <p xml:lang="pt">Nos MacBook Pro 2016–2017 com Touch Bar, a Touch Bar, a câmara FaceTime e o sensor de luz ambiente dependem do chip Apple T1, que o Linux encontra muitas vezes preso no modo de recuperação. O Pomona inicia o T1 sempre que liga o computador, com o firmware que o macOS já guarda na partição EFI, e liga os seus dispositivos aos controladores do kernel.</p>
+    <p>It also fixes the Broadcom Wi-Fi card of these Macs, which sees networks but rejects every connection until its board file is installed. Every file it changes is backed up first and can be restored.</p>
+    <p xml:lang="it">Sistema anche la scheda Wi-Fi Broadcom di questi Mac, che vede le reti ma rifiuta ogni connessione finché non è installato il suo file di configurazione. Ogni file modificato viene prima salvato e può essere ripristinato.</p>
+    <p xml:lang="de">Außerdem repariert sie die Broadcom-WLAN-Karte dieser Macs, die Netzwerke sieht, aber jede Verbindung ablehnt, bis ihre Konfigurationsdatei installiert ist. Jede geänderte Datei wird vorher gesichert und kann wiederhergestellt werden.</p>
+    <p xml:lang="es">También arregla la tarjeta Wi-Fi Broadcom de estos Mac, que ve las redes pero rechaza todas las conexiones hasta que se instale su archivo de configuración. Cada archivo modificado se guarda antes y se puede restaurar.</p>
+    <p xml:lang="fr">Elle répare aussi la carte Wi-Fi Broadcom de ces Mac, qui voit les réseaux mais refuse toute connexion tant que son fichier de configuration n’est pas installé. Chaque fichier modifié est d’abord sauvegardé et peut être restauré.</p>
+    <p xml:lang="nl">Ook repareert het de Broadcom-wifikaart van deze Macs, die netwerken ziet maar elke verbinding weigert totdat het configuratiebestand is geïnstalleerd. Elk gewijzigd bestand wordt eerst bewaard en kan worden hersteld.</p>
+    <p xml:lang="pl">Naprawia też kartę Wi-Fi Broadcom w tych Makach, która widzi sieci, ale odrzuca każde połączenie, dopóki nie zostanie zainstalowany jej plik konfiguracyjny. Każdy zmieniany plik jest wcześniej kopiowany i można go przywrócić.</p>
+    <p xml:lang="pt">Também repara a placa Wi-Fi Broadcom destes Mac, que vê as redes mas recusa todas as ligações até o seu ficheiro de configuração ser instalado. Cada ficheiro alterado é guardado antes e pode ser restaurado.</p>
     <p>The app guides you through it and lets you:</p>
     <p xml:lang="it">L'app ti guida passo passo e ti permette di:</p>
     <p xml:lang="de">Die App führt dich durch alles und ermöglicht dir:</p>
@@ -117,6 +125,8 @@
     <keyword>T1</keyword>
     <keyword>MacBook</keyword>
     <keyword>webcam</keyword>
+    <keyword>Wi-Fi</keyword>
+    <keyword>Broadcom</keyword>
     <keyword xml:lang="it">fotocamera</keyword>
   </keywords>
 
@@ -124,6 +134,8 @@
     <!-- the T1 in recovery mode and running -->
     <modalias>usb:v05ACp1281*</modalias>
     <modalias>usb:v05ACp8600*</modalias>
+    <!-- the Broadcom BCM43602 Wi-Fi card -->
+    <modalias>pci:v000014E4d000043BA*</modalias>
   </supports>
 
   <branding>
@@ -134,6 +146,18 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="0.9.0" date="2026-10-29">
+      <description>
+        <p>New: a Wi-Fi page fixes the Broadcom Wi-Fi card that rejects every connection, with a backup and an undo.</p>
+        <p xml:lang="it">Novità: una pagina Wi-Fi sistema la scheda Broadcom che rifiuta ogni connessione, con backup e annullamento.</p>
+        <p xml:lang="de">Neu: Eine WLAN-Seite repariert die Broadcom-Karte, die jede Verbindung ablehnt, mit Sicherung und Rückgängig-Funktion.</p>
+        <p xml:lang="fr">Nouveau : une page Wi-Fi répare la carte Broadcom qui refuse toute connexion, avec sauvegarde et annulation.</p>
+        <p xml:lang="es">Novedad: una página Wi-Fi arregla la tarjeta Broadcom que rechaza todas las conexiones, con copia de seguridad y deshacer.</p>
+        <p xml:lang="pt">Novo: uma página Wi-Fi repara a placa Broadcom que recusa todas as ligações, com cópia de segurança e anulação.</p>
+        <p xml:lang="nl">Nieuw: een wifipagina repareert de Broadcom-kaart die elke verbinding weigert, met back-up en ongedaan maken.</p>
+        <p xml:lang="pl">Nowość: strona Wi-Fi naprawia kartę Broadcom odrzucającą każde połączenie, z kopią zapasową i możliwością cofnięcia.</p>
+      </description>
+    </release>
     <release version="0.8.0" date="2026-10-29">
       <description>
         <p>New: share your compatibility certificate with the community from the Report page.</p>

@@ -8,4 +8,6 @@
 /install.sh               @MarcoDiGioia
 /systemd/                 @MarcoDiGioia
 /data/*.policy            @MarcoDiGioia
+/data/wifi/               @MarcoDiGioia
+/lib/                     @MarcoDiGioia
 /data/*.rules             @MarcoDiGioia

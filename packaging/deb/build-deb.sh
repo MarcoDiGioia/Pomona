@@ -28,6 +28,8 @@ install -m 755 "$WORK/build/pomona-t1-boot"       "$PKG/usr/lib/pomona/pomona-t1
 install -m 755 "$ROOT/libexec/pomona-touchbard" "$PKG/usr/lib/pomona/pomona-touchbard"
 install -m 755 "$ROOT/libexec/pomona-admin"    "$PKG/usr/lib/pomona/pomona-admin"
 install -m 644 "$ROOT/lib/pomona.sh"           "$PKG/usr/lib/pomona/pomona.sh"
+install -m 644 "$ROOT/lib/wifi.sh"             "$PKG/usr/lib/pomona/wifi.sh"
+install -D -m 644 "$ROOT/data/wifi/brcmfmac43602-pcie.txt" "$PKG/usr/share/pomona/wifi/brcmfmac43602-pcie.txt"
 install -m 755 "$ROOT/bin/pomona"              "$PKG/usr/bin/pomona"
 install -m 755 "$ROOT/gui/pomona-gui"          "$PKG/usr/bin/pomona-gui"
 tmpl "$ROOT/systemd/pomona.service"            "$PKG/usr/lib/systemd/system/pomona.service"
@@ -69,7 +71,7 @@ Provides: easy-t1
 Homepage: https://github.com/MarcoDiGioia/Pomona
 Section: utils
 Priority: optional
-Description: Linux grows well on your Mac: Touch Bar, camera and light sensor for 2016-2017 MacBook Pro
+Description: Linux grows well on your Mac: Touch Bar, camera, light sensor and Wi-Fi for 2016-2017 MacBook Pro
  Pomona fixes the hardware problems of Linux on Mac computers. Its first
  module boots the Apple T1 coprocessor of 2016-2017 MacBook Pro with Touch Bar
  from the EmbeddedOS image macOS keeps on the EFI partition, at every
@@ -78,6 +80,10 @@ Description: Linux grows well on your Mac: Touch Bar, camera and light sensor fo
  (default keys, Fn, dimming, per-application key sets) and write a
  compatibility certificate. Nothing is written to the chip or the EFI
  partition.
+ .
+ A second module fixes the Broadcom BCM43602 Wi-Fi card of the same Macs,
+ which sees networks but rejects every connection until its board file is
+ installed. Every file it changes is backed up first and can be restored.
 EOF
 
 cat > "$PKG/DEBIAN/postinst" <<'EOF'

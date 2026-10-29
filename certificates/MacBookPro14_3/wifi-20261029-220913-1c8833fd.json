@@ -1,0 +1,26 @@
+{
+  "schema": 2,
+  "module": "wifi",
+  "date": "2026-10-29T22:09:13Z",
+  "pomona": "0.9.0",
+  "result": "WORKING",
+  "model": "MacBookPro14,3",
+  "board": "Mac-551B86E5744E2388",
+  "mac_firmware": "529.140.2.0.0",
+  "subsystem": "106b:0173",
+  "distribution": "Ubuntu 26.04.1 LTS",
+  "kernel": "7.0.0-42-generic",
+  "desktop": "ubuntu:GNOME",
+  "checks": {
+    "Supported MacBook Pro model": true,
+    "Broadcom BCM43602 Wi-Fi chip (14e4:43ba)": true,
+    "brcmfmac driver bound": true,
+    "Board file installed": true,
+    "NetworkManager keeps the real MAC address": true,
+    "Driver option feature_disable set": true,
+    "Wi-Fi interface present": true,
+    "Connected to a network": true,
+    "No restart pending": true
+  },
+  "reported_by": "MarcoDiGioia"
+}

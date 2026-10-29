@@ -48,12 +48,33 @@ Generated from [`certificates/`](../certificates), newest first.
 | 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 910 | 0.3.0 | @MarcoDiGioia | ✅ Working · verified |
 <!-- reports:end -->
 
+## Wi-Fi (Broadcom BCM43602)
+
+The same four models carry the Broadcom BCM43602 Wi-Fi card (`14e4:43ba`, driver `brcmfmac`). **Verified** and **Tested by the community** mean the same as above, for the Wi-Fi module: a certificate made with `pomona wifi certify` where every check passes, after the fix and a restart. **Should work** means the model has the same card but nobody has sent a Wi-Fi certificate yet.
+
+<!-- wifi-models:start -->
+| Model | Machine | Status | Reports | People |
+| --- | --- | --- | --- | --- |
+| MacBookPro13,2 | 13", 2016, four Thunderbolt ports | 🟡 Should work | 0 | 0 |
+| MacBookPro13,3 | 15", 2016 | 🟡 Should work | 0 | 0 |
+| MacBookPro14,2 | 13", 2017, four Thunderbolt ports | 🟡 Should work | 0 | 0 |
+| MacBookPro14,3 | 15", 2017 | ✅ Verified | 1 | 1 |
+<!-- wifi-models:end -->
+
+Wi-Fi certificates received, newest first:
+
+<!-- wifi-reports:start -->
+| Date | Model | Distribution | Kernel | Desktop | Mac firmware | Wi-Fi card | Pomona | Reported by | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 106b:0173 | 0.9.0 | @MarcoDiGioia | ✅ Working · verified |
+<!-- wifi-reports:end -->
+
 ## Adding your Mac
 
 1. Install Pomona and **shut down** (a restart does not reset the T1), then power on into Linux.
-2. Open Pomona, go to the **Report** page, press **Create certificate**, then **Share with the community**.
+2. Open Pomona, go to the **Report** page (Touch Bar) or the **Wi-Fi** page, press **Create certificate**, then **Share with the community**.
 3. Your browser opens a GitHub issue with the certificate already filled in. Check it and press **Submit new issue** (you need a GitHub account).
 
-A robot checks the certificate and opens a pull request that adds it to the table; once it is merged, your Mac appears here. From a terminal: `pomona certify`, then `pomona share`.
+A robot checks the certificate and opens a pull request that adds it to the table; once it is merged, your Mac appears here. From a terminal: `pomona certify` (Touch Bar) or `pomona wifi certify` (Wi-Fi), then `pomona share`.
 
-A certificate that fails is just as useful: it says which step breaks on which machine. Certificates contain only the Mac model, firmware versions, distribution, kernel, desktop and the result of each check, never serial numbers.
+A certificate that fails is just as useful: it says which step breaks on which machine. Certificates contain only the Mac model, firmware versions, distribution, kernel, desktop and the result of each check, never serial numbers, MAC addresses or network names.

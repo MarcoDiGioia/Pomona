@@ -40,7 +40,8 @@ def installed_admin():
 
 MODE_NAMES = ["Esc only", "F1–F12", "Special keys"]
 DISCLAIMER = ("Provided as is, without any warranty: use at your own risk. "
-              "Not affiliated with Apple Inc.; Apple, MacBook and Touch Bar are trademarks of Apple Inc.")
+              "Not affiliated with Apple Inc. or Broadcom Inc.; Apple, MacBook and Touch Bar are trademarks of Apple Inc., "
+              "Broadcom is a trademark of Broadcom Inc.")
 
 
 def mascot_texture():
@@ -287,6 +288,10 @@ class Window(Adw.ApplicationWindow):
         self.stack.add_titled_with_icon(self.setup_page, "setup", _("Setup"), "emblem-system-symbolic")
         self.touchbar_page = Adw.PreferencesPage()
         self.stack.add_titled_with_icon(self.touchbar_page, "customize", _("Customize"), "input-keyboard-symbolic")
+        self.wifi = {}
+        self.wifi_page = Adw.PreferencesPage()
+        self.wifi_tab = self.stack.add_titled_with_icon(self.wifi_page, "wifi", _("Wi-Fi"), "network-wireless-symbolic")
+        self.wifi_tab.set_visible(False)  # only on Macs that have the card
         self.report_page = Adw.PreferencesPage()
         self.stack.add_titled_with_icon(self.report_page, "report", _("Report"), "emblem-documents-symbolic")
 
@@ -332,11 +337,20 @@ class Window(Adw.ApplicationWindow):
 
         run_async(pomona_cmd() + ["status", "--json"], done)
 
+        def wifi_done(ok, out):
+            try:
+                self.wifi = json.loads(out) if ok else {}
+            except ValueError:
+                self.wifi = {}
+            self.build_wifi_page()
+
+        run_async(pomona_cmd() + ["wifi", "status", "--json"], wifi_done)
+
     def show_about(self):
         dialog = Gtk.AboutDialog(
             transient_for=self, modal=True,
             program_name="Pomona", logo_icon_name="io.github.MarcoDiGioia.Pomona", version=app_version(),
-            comments=_("Touch Bar, camera and light sensor for 2016–2017 MacBook Pro") + "\n\n" + _(DISCLAIMER),
+            comments=_("Touch Bar, camera, light sensor and Wi-Fi for 2016–2017 MacBook Pro") + "\n\n" + _(DISCLAIMER),
             license_type=Gtk.License.GPL_3_0, authors=["Marco Di Gioia"],
             copyright="© 2026 Marco Di Gioia")
         dialog.present()
@@ -426,6 +440,82 @@ class Window(Adw.ApplicationWindow):
             return
         self.toast(_("Working…"))
         run_async(["pkexec", "bash", script], lambda ok, out: (self.toast(_("Done") if ok else _("Failed")), self.refresh()))
+
+    # -------------------------------------------------------------- wifi
+
+    def wifi_fix(self):
+        self.admin(["wifi-fix"], "wifi-fix", then=lambda ok, _out: ok and self.toast(_("Restart the computer to finish")))
+
+    def build_wifi_page(self):
+        w = self.wifi
+        page = self.wifi_page
+        self.clear(page)
+        present = bool(w.get("present"))
+        self.wifi_tab.set_visible(present)
+        if not present:
+            return
+
+        card = Adw.PreferencesGroup(
+            title=_("Wi-Fi card"),
+            description=_("This Mac’s Broadcom card sees networks but rejects every connection until its board file is installed."))
+        card.add(Adw.ActionRow(title="Broadcom BCM43602", subtitle="14e4:43ba · %s · %s" % (
+            w.get("subsystem") or "?", w.get("interface") or "?")))
+        self.add_group(page, card)
+
+        steps = Adw.PreferencesGroup(title=_("Steps"), description=_("Every step is listed; the ones not done yet have a button."))
+        self.add_group(page, steps)
+        installed = bool(w.get("installed"))
+        fix = self.wifi_fix if installed else None
+        oks = []
+        driver = w.get("driver") or ""
+        oks.append(self.step(steps, _("Driver"), driver == "brcmfmac", driver or _("Not loaded")))
+        board_ok = bool(w.get("board_file_ok"))
+        oks.append(self.step(steps, _("Board file"), board_ok,
+                             _("Installed") if board_ok else
+                             (_("Different from the one Pomona ships") if w.get("board_file_installed")
+                              else _("Missing: every connection is rejected without it")),
+                             _("Fix"), fix))
+        nm_ok = bool(w.get("networkmanager_ok"))
+        oks.append(self.step(steps, _("Real MAC address"), nm_ok,
+                             (_("NetworkManager keeps the card’s own address") if w.get("networkmanager")
+                              else _("NetworkManager is not used")) if nm_ok else
+                             _("NetworkManager replaces it with a random one, which the card refuses"),
+                             _("Fix"), fix))
+        oks.append(self.step(steps, _("Driver option"), bool(w.get("driver_option_ok")),
+                             _("Set") if w.get("driver_option_ok") else _("Not set"), _("Fix"), fix))
+        own = not w.get("mac_is_placeholder")
+        oks.append(self.step(steps, _("Own MAC address"), own,
+                             _("This Mac has its own address") if own else
+                             _("Every copy of the board file shares one address: give this Mac its own"),
+                             _("Fix"), fix))
+        up = w.get("operstate") == "up"
+        oks.append(self.step(steps, _("Connected to a network"), up, _("Connected") if up else _("Not connected")))
+        pending = bool(w.get("restart_pending"))
+        if pending:
+            oks.append(self.step(steps, _("Restart needed"), False,
+                                 _("Restart the computer to load the new board file")))
+
+        if all(oks):
+            done = Adw.PreferencesGroup()
+            done.add(Adw.StatusPage(icon_name="emblem-ok-symbolic", title=_("Wi-Fi is set up"),
+                                    description=_("The card is ready and connected.")))
+            self.add_group(page, done)
+
+        tools = Adw.PreferencesGroup()
+        undo_row = Adw.ActionRow(title=_("Undo the changes"),
+                                 subtitle=_("Puts every file back as it was before the last fix"))
+        undo = Gtk.Button(label=_("Undo"), valign=Gtk.Align.CENTER, sensitive=installed and bool(w.get("backup")))
+        undo.connect("clicked", lambda *_a: self.admin(
+            ["wifi-undo"], "wifi-undo", then=lambda ok, _out: ok and self.toast(_("Restart the computer to finish"))))
+        undo_row.add_suffix(undo)
+        tools.add(undo_row)
+        cert_row = Adw.ActionRow(title=_("Compatibility certificate"),
+                                 subtitle=_("Runs the Wi-Fi checks and writes a report you can share"))
+        cert = Gtk.Button(label=_("Create certificate"), valign=Gtk.Align.CENTER)
+        cert.connect("clicked", lambda *_a: self.certify(["wifi", "certify"]))
+        cert_row.add_suffix(cert)
+        tools.add(cert_row)
+        self.add_group(page, tools)
 
     # -------------------------------------------------------------- touch bar
 
@@ -630,13 +720,14 @@ class Window(Adw.ApplicationWindow):
 
         run_async(pomona_cmd() + ["share", "--url", path], done)
 
-    def certify(self):
+    def certify(self, command=("certify",)):
         def done(_ok, out):
             self.report_view.get_buffer().set_text(out)
             self.open_btn.set_sensitive(True)
             self.share_btn.set_sensitive(bool(self.latest_certificate()))
+            self.stack.set_visible_child_name("report")
 
-        run_async(pomona_cmd() + ["certify", self.cert_dir()], done)
+        run_async(pomona_cmd() + list(command) + [self.cert_dir()], done)
 
 
 class App(Adw.Application):

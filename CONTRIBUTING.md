@@ -4,7 +4,7 @@ By contributing you agree that your contribution is licensed under the [GPL-3.0-
 
 ## Compatibility reports
 
-The most useful contribution is a certificate from your Mac. Install Pomona, shut down and power on, then in the app go to **Report**, press **Create certificate** and **Share with the community** (or run `pomona certify` and `pomona share`). Your browser opens a pre-filled GitHub issue: press *Submit new issue*. A robot checks the certificate and opens a pull request that adds it. See [docs/certificates.md](docs/certificates.md).
+The most useful contribution is a certificate from your Mac. Install Pomona, shut down and power on, then in the app go to **Report**, press **Create certificate** and **Share with the community** (or run `pomona certify` and `pomona share`). On a Mac with the Broadcom Wi-Fi card, also send one from the **Wi-Fi** page (`pomona wifi certify`). Your browser opens a pre-filled GitHub issue: press *Submit new issue*. A robot checks the certificate and opens a pull request that adds it. See [docs/certificates.md](docs/certificates.md).
 
 Certificates contain no serial numbers, ECID or UUIDs. Please don't add certificates by hand or edit the tables in `docs/compatibility.md`: they are generated from `certificates/` by `tools/certificates.py`.
 
@@ -12,6 +12,7 @@ Certificates contain no serial numbers, ECID or UUIDs. Please don't add certific
 
 - `make test` runs every test against fake sysfs trees; nothing touches the hardware.
 - `make lint` runs `bash -n`, `py_compile` and, if installed, `shellcheck`.
+- `data/wifi/brcmfmac43602-pcie.txt` is checked against `data/wifi/SHA256SUMS`. Please do not change it in a pull request without opening an issue first: it is hardware calibration data and every Mac with the card installs it.
 - Keep the promise in the README: Pomona never writes to the chip's persistent state, the EFI partition or macOS. A change that needs to is a different project.
 
 ## Translations

@@ -23,7 +23,7 @@ def load():
 
 C = load()
 NOW = datetime.datetime(2026, 11, 1, 12, 0, 0)
-RELEASES = {"0.8.0": "2026-10-29", "0.7.3": "2026-10-29"}
+RELEASES = {"0.9.0": "2026-10-29", "0.8.0": "2026-10-29", "0.7.3": "2026-10-29"}
 
 GOOD = {
     "schema": 1, "date": "2026-10-30T09:15:00Z", "pomona": "0.8.0", "result": "WORKING",
@@ -186,6 +186,14 @@ text
 <!-- reports:start -->
 old
 <!-- reports:end -->
+
+<!-- wifi-models:start -->
+old
+<!-- wifi-models:end -->
+
+<!-- wifi-reports:start -->
+old
+<!-- wifi-reports:end -->
 """
 
 
@@ -411,6 +419,173 @@ class Tiers(unittest.TestCase):
     def test_repository_is_consistent(self):
         self.assertGreaterEqual(C.check_repository(), 1)
         self.assertTrue(C.load_verified())
+
+
+WIFI = {
+    "schema": 2, "module": "wifi", "date": "2026-10-30T09:15:00Z", "pomona": "0.9.0", "result": "WORKING",
+    "model": "MacBookPro14,3", "board": "Mac-551B86E5744E2388", "mac_firmware": "529.140.2.0.0",
+    "subsystem": "106b:0173", "distribution": "Ubuntu 26.04.1 LTS", "kernel": "7.0.0-42-generic",
+    "desktop": "ubuntu:GNOME", "checks": {c: True for c in C.WIFI_CHECKS},
+}
+
+
+def wifi_(**changes):
+    cert = copy.deepcopy(WIFI)
+    cert.update(changes)
+    return cert
+
+
+def wifi_checks(**off):
+    checks = {c: True for c in C.WIFI_CHECKS}
+    checks.update(off)
+    return checks
+
+
+class WifiCertificates(unittest.TestCase):
+    def test_good_certificate(self):
+        cert = C.validate(WIFI, now=NOW)
+        self.assertEqual(list(cert), C.WIFI_FIELDS)
+        self.assertEqual(C.module_of(cert), "wifi")
+        self.assertEqual(C.module_of(C.validate(GOOD, now=NOW)), "t1")
+
+    def test_modules_do_not_mix(self):
+        with self.assertRaises(C.Invalid):  # a T1 certificate dressed as Wi-Fi
+            C.validate(with_(schema=2, module="wifi"), now=NOW)
+        with self.assertRaises(C.Invalid):  # a Wi-Fi certificate with the T1 checks
+            C.validate(wifi_(checks={c: True for c in C.CHECKS}), now=NOW)
+        with self.assertRaises(C.Invalid):  # schema 1 has no module field
+            C.validate(with_(module="wifi"), now=NOW)
+
+    def test_unknown_module_or_schema(self):
+        for bad in (wifi_(module="audio"), wifi_(module=None), wifi_(module=["wifi"]), wifi_(schema=3), wifi_(schema=True)):
+            with self.subTest(bad=bad), self.assertRaises(C.Invalid):
+                C.validate(bad, now=NOW)
+        no_module = copy.deepcopy(WIFI)
+        del no_module["module"]
+        with self.assertRaises(C.Invalid):
+            C.validate(no_module, now=NOW)
+
+    def test_subsystem_pattern(self):
+        for ok in ("", "106b:0173", "14e4:43ba"):
+            C.validate(wifi_(subsystem=ok), now=NOW)
+        for bad in ("106B:0173", "106b-0173", "106b:017", "x`id`", "106b:0173\n"):
+            with self.subTest(bad=bad), self.assertRaises(C.Invalid):
+                C.validate(wifi_(subsystem=bad), now=NOW)
+
+    def test_result_follows_the_checks(self):
+        partial = wifi_checks(**{"Connected to a network": False})
+        C.validate(wifi_(result="PARTIAL", checks=partial), now=NOW)
+        with self.assertRaises(C.Invalid):
+            C.validate(wifi_(result="WORKING", checks=partial), now=NOW)
+        none = wifi_checks(**{c: False for c in C.WIFI_CHECKS})
+        C.validate(wifi_(result="NOT-WORKING", checks=none), now=NOW)
+
+    def consistent(self, **off):
+        checks = wifi_checks(**off)
+        cert = C.validate(wifi_(checks=checks, result=C.derive_result(checks, "wifi")), now=NOW)
+        C.check_consistency(cert, RELEASES)
+
+    def test_consistency(self):
+        self.consistent()
+        self.consistent(**{"Connected to a network": False})
+        self.consistent(**{"Board file installed": False})
+        with self.assertRaises(C.Invalid):
+            self.consistent(**{C.WIFI_CHIP: False})
+        with self.assertRaises(C.Invalid):
+            self.consistent(**{C.WIFI_DRIVER: False})
+        with self.assertRaises(C.Invalid):
+            self.consistent(**{C.WIFI_IFACE: False})
+        with self.assertRaises(C.Invalid):
+            self.consistent(**{C.WIFI_MODEL: False})
+        everything_off = {c: False for c in C.WIFI_CHECKS if c != C.WIFI_MODEL}
+        self.consistent(**everything_off)
+
+    def test_release_must_exist(self):
+        with self.assertRaises(C.Invalid):
+            C.check_consistency(C.validate(wifi_(pomona="9.9.9"), now=NOW), RELEASES)
+
+    def test_review_flags_work_for_wifi(self):
+        self.assertEqual(C.review_flags(C.validate(WIFI, now=NOW), 400), [])
+        self.assertTrue(any("board id" in f for f in C.review_flags(C.validate(wifi_(board="Mac-0000000000000000"), now=NOW), 400)))
+
+    def test_markdown(self):
+        md = C.render_markdown(C.validate(WIFI, now=NOW))
+        self.assertIn("# Pomona Wi-Fi compatibility certificate", md)
+        self.assertIn("**Result: WORKING** (9/9 checks passed)", md)
+        self.assertIn("| Wi-Fi card subsystem | 106b:0173 |", md)
+        self.assertIn("| Board file installed | PASS |", md)
+        self.assertIn("Broadcom Inc.", md)
+        self.assertNotIn("EmbeddedOS", md)
+
+    def test_paths_do_not_collide_with_the_t1_ones(self):
+        w = C.cert_paths(C.validate(WIFI, now=NOW), "/x")
+        t = C.cert_paths(C.validate(with_(model="MacBookPro14,3"), now=NOW), "/x")
+        self.assertRegex(os.path.basename(w[1]), r"^wifi-20261030-091500-[0-9a-f]{8}\.json$")
+        self.assertNotEqual(w[1], t[1])
+
+    def test_digest_differs_from_the_t1_certificate(self):
+        self.assertNotEqual(C.digest(C.validate(WIFI, now=NOW)), C.digest(C.validate(with_(model="MacBookPro14,3"), now=NOW)))
+
+    def test_tables_are_separate(self):
+        certs = [("/x/20261030-091500-aaaaaaaa.json", C.validate(with_(model="MacBookPro14,3"), now=NOW)),
+                 ("/x/wifi-20261030-091500-bbbbbbbb.json", C.validate(WIFI, now=NOW))]
+        t1 = C.model_table(certs)
+        wifi = C.model_table(certs, module="wifi")
+        self.assertIn("| MacBookPro14,3 | 15\", 2017 | 🟢 Tested by the community | 1 | 0 |", t1)
+        self.assertIn("| MacBookPro14,3 | 15\", 2017 | 🟢 Tested by the community | 1 | 0 |", wifi)
+        self.assertIn("| MacBookPro13,3 | 15\", 2016 | 🟡 Should work | 0 | 0 |", wifi)
+        self.assertIn("EmbeddedOS", C.report_table(certs))
+        self.assertIn("Wi-Fi card", C.report_table(certs, module="wifi"))
+        self.assertNotIn("106b:0173", C.report_table(certs))
+        self.assertIn("106b:0173", C.report_table(certs, module="wifi"))
+        # a Wi-Fi certificate never makes the Touch Bar look tested
+        only_wifi = [certs[1]]
+        self.assertIn("🟡 Should work", C.model_table(only_wifi).splitlines()[-1])
+
+    def test_verified_is_per_module(self):
+        certs = [("/x/wifi-20261030-091500-bbbbbbbb.json", C.validate(WIFI, now=NOW))]
+        self.assertIn("✅ Verified", C.model_table(certs, {"wifi-20261030-091500-bbbbbbbb"}, "wifi"))
+        self.assertIn("🟡 Should work", C.model_table(certs, {"wifi-20261030-091500-bbbbbbbb"}))
+
+
+class WifiIntake(unittest.TestCase):
+    """The same robot handles a Wi-Fi certificate and keeps the two tables apart."""
+
+    setUp, tearDown, run_intake, read = Intake.setUp, Intake.tearDown, Intake.run_intake, Intake.read
+
+    def test_wifi_certificate_is_added(self):
+        self.assertEqual(self.run_intake(issue_body(json.dumps(WIFI, indent=2))), "ok")
+        self.assertIn("Wi-Fi compatibility certificate", self.read("title"))
+        files = os.listdir(os.path.join(self.certs, "MacBookPro14_3"))
+        self.assertEqual(sorted(f.split(".")[-1] for f in files), ["json", "md"])
+        self.assertTrue(all(f.startswith("wifi-") for f in files))
+        doc = read_text(self.doc)
+        top, bottom = doc.split("<!-- wifi-models:start -->")
+        self.assertIn("MacBookPro14,3 | 15\", 2017 | 🟡 Should work | 0 | 0 |", top)
+        self.assertIn("MacBookPro14,3 | 15\", 2017 | 🟢 Tested by the community | 1 | 1 |", bottom)
+        self.assertIn("@jane-doe", bottom)
+        self.assertNotIn("@jane-doe", top)
+
+    def test_wifi_duplicate(self):
+        self.assertEqual(self.run_intake(issue_body(json.dumps(WIFI))), "ok")
+        self.assertEqual(self.run_intake(issue_body(json.dumps(WIFI)), number=8), "duplicate")
+
+    def test_wifi_and_t1_certificates_coexist(self):
+        self.assertEqual(self.run_intake(issue_body(json.dumps(with_(model="MacBookPro14,3")))), "ok")
+        self.assertEqual(self.run_intake(issue_body(json.dumps(WIFI)), number=8), "ok")
+        self.assertEqual(len(os.listdir(os.path.join(self.certs, "MacBookPro14_3"))), 4)
+
+    def test_inconsistent_wifi_certificate_is_rejected(self):
+        checks = wifi_checks(**{C.WIFI_CHIP: False})
+        bad = wifi_(checks=checks, result=C.derive_result(checks, "wifi"))
+        self.assertEqual(self.run_intake(issue_body(json.dumps(bad))), "invalid")
+
+    def test_hostile_wifi_text_never_reaches_the_outputs(self):
+        for key in ("subsystem", "distribution", "kernel", "module"):
+            with self.subTest(key=key):
+                self.assertEqual(self.run_intake(issue_body(json.dumps(wifi_(**{key: "$(rm -rf /)`x`"})))), "invalid")
+                everything = " ".join(read_text(os.path.join(self.out, f)) for f in os.listdir(self.out))
+                self.assertNotIn("rm -rf", everything)
 
 
 class Workflow(unittest.TestCase):

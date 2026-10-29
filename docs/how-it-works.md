@@ -60,7 +60,11 @@ It reads Fn from the `Apple SPI Keyboard` input device, and the application in t
 
 ## The app and root
 
-The app runs as the user. It reads `pomona status --json` and `/etc/pomona/config.json`, and does the few root actions through `pkexec /usr/lib/pomona/pomona-admin` (`start`, `set-config`, `enable`, `disable`). `set-config` re-serialises the file through the daemon's own validator, so only known keys with sane values reach `/etc`.
+The app runs as the user. It reads `pomona status --json` and `/etc/pomona/config.json`, and does the few root actions through `pkexec /usr/lib/pomona/pomona-admin` (`start`, `set-config`, `enable`, `disable`, `wifi-fix`, `wifi-undo`). `set-config` re-serialises the file through the daemon's own validator, so only known keys with sane values reach `/etc`.
+
+## The Wi-Fi module
+
+A separate part of Pomona, described in [wifi.md](wifi.md): it installs a board file and two settings for the Broadcom Wi-Fi card, with backups. Unlike the T1 module it does write files outside Pomona's folders, only when you ask (`pomona wifi fix`), and `pomona wifi undo` puts them back.
 
 ## What is never touched
 
