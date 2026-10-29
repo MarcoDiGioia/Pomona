@@ -21,7 +21,7 @@ tmpl() { sed "s#@PREFIX@#/usr#g" "$1" > "$2"; chmod 644 "$2"; }
 d() { install -d "$PKG/$1"; }
 
 d usr/bin; d usr/lib/pomona; d usr/lib/systemd/system; d usr/share/polkit-1/actions
-d usr/share/applications; d usr/share/icons/hicolor/scalable/apps; d "usr/share/gnome-shell/extensions/$EXT"
+d usr/share/applications; d "usr/share/gnome-shell/extensions/$EXT"
 d usr/share/doc/pomona; d DEBIAN
 
 install -m 755 "$WORK/build/pomona-t1-boot"       "$PKG/usr/lib/pomona/pomona-t1-boot"
@@ -45,7 +45,10 @@ for l in $(cat "$ROOT/po/LINGUAS"); do
 	install -D -m 644 "$WORK/locale/$l/LC_MESSAGES/pomona.mo" "$PKG/usr/share/locale/$l/LC_MESSAGES/pomona.mo"
 done
 install -m 644 "$ROOT/data/io.github.MarcoDiGioia.Pomona.metainfo.xml" "$PKG/usr/share/metainfo/io.github.MarcoDiGioia.Pomona.metainfo.xml"
-install -m 644 "$ROOT/data/io.github.MarcoDiGioia.Pomona.svg" "$PKG/usr/share/icons/hicolor/scalable/apps/io.github.MarcoDiGioia.Pomona.svg"
+for icon in "$ROOT"/data/icons/hicolor/*/apps/io.github.MarcoDiGioia.Pomona.png; do
+	size=$(basename "$(dirname "$(dirname "$icon")")")
+	install -D -m 644 "$icon" "$PKG/usr/share/icons/hicolor/$size/apps/io.github.MarcoDiGioia.Pomona.png"
+done
 install -m 644 "$ROOT/gnome-extension/$EXT/metadata.json" "$ROOT/gnome-extension/$EXT/extension.js" \
 	"$PKG/usr/share/gnome-shell/extensions/$EXT/"
 install -m 644 "$ROOT/README.md" "$ROOT/CHANGELOG.md" "$ROOT/LEGAL.md" "$ROOT/THIRD_PARTY_NOTICES.md" "$ROOT/docs/"*.md "$PKG/usr/share/doc/pomona/"

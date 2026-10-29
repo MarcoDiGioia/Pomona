@@ -8,7 +8,7 @@
 #   POMONA_OS_RELEASE                   (default /etc/os-release)
 # shellcheck shell=bash
 
-POMONA_VERSION=0.7.1
+POMONA_VERSION=0.7.2
 
 : "${POMONA_SYS:=/sys}"
 : "${POMONA_PROC:=/proc}"

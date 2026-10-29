@@ -21,8 +21,9 @@ rm -rf "$PREFIX/lib/pomona/__pycache__"
 rmdir "$PREFIX/lib/pomona" 2>/dev/null || true
 rm -f "$PREFIX"/share/locale/*/LC_MESSAGES/pomona.mo "$PREFIX/share/pomona/pomona-mascot-256.png"
 rmdir "$PREFIX/share/pomona" 2>/dev/null || true
+rm -f "$PREFIX"/share/icons/hicolor/*/apps/io.github.MarcoDiGioia.Pomona.png
 rm -f /usr/share/polkit-1/actions/io.github.MarcoDiGioia.Pomona.admin.policy /etc/udev/rules.d/60-pomona.rules
-rm -f "$PREFIX/share/metainfo/io.github.MarcoDiGioia.Pomona.metainfo.xml" "$PREFIX/share/applications/io.github.MarcoDiGioia.Pomona.desktop" "$PREFIX/share/icons/hicolor/scalable/apps/io.github.MarcoDiGioia.Pomona.svg"
+rm -f "$PREFIX/share/metainfo/io.github.MarcoDiGioia.Pomona.metainfo.xml" "$PREFIX/share/applications/io.github.MarcoDiGioia.Pomona.desktop"
 rm -f "/usr/share/gnome-shell/extensions/$EXT/metadata.json" "/usr/share/gnome-shell/extensions/$EXT/extension.js"
 rmdir "/usr/share/gnome-shell/extensions/$EXT" 2>/dev/null || true
 if [ "${1:-}" = --purge ]; then

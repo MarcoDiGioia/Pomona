@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.2 - 2026-10-29
+
+- The app icon is now the original logo artwork (PNG at every hicolor size, 16–512 px) instead of a redrawn vector.
+
 ## 0.7.1 - 2026-10-29
 
 - New logo: a crowned pomegranate in a laurel wreath, redrawn as a vector icon so it stays sharp at every size.

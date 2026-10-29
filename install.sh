@@ -89,7 +89,7 @@ udevadm control --reload 2>/dev/null || true
 install -d /usr/lib/systemd/system-sleep
 tmpl "$SRC/systemd/pomona.sleep" /usr/lib/systemd/system-sleep/pomona
 chmod 755 /usr/lib/systemd/system-sleep/pomona
-install -d /usr/share/polkit-1/actions "$PREFIX/share/applications" "$PREFIX/share/icons/hicolor/scalable/apps"
+install -d /usr/share/polkit-1/actions "$PREFIX/share/applications"
 tmpl "$SRC/data/io.github.MarcoDiGioia.Pomona.admin.policy" /usr/share/polkit-1/actions/io.github.MarcoDiGioia.Pomona.admin.policy
 tmpl "$SRC/data/io.github.MarcoDiGioia.Pomona.desktop" "$PREFIX/share/applications/io.github.MarcoDiGioia.Pomona.desktop"
 for l in $(cat "$SRC/po/LINGUAS"); do
@@ -98,7 +98,10 @@ done
 install -D -m 644 "$SRC/assets/pomona-mascot-256.png" "$PREFIX/share/pomona/pomona-mascot-256.png"
 install -d "$PREFIX/share/metainfo"
 install -m 644 "$SRC/data/io.github.MarcoDiGioia.Pomona.metainfo.xml" "$PREFIX/share/metainfo/io.github.MarcoDiGioia.Pomona.metainfo.xml"
-install -m 644 "$SRC/data/io.github.MarcoDiGioia.Pomona.svg" "$PREFIX/share/icons/hicolor/scalable/apps/io.github.MarcoDiGioia.Pomona.svg"
+for icon in "$SRC"/data/icons/hicolor/*/apps/io.github.MarcoDiGioia.Pomona.png; do
+	size=$(basename "$(dirname "$(dirname "$icon")")")
+	install -D -m 644 "$icon" "$PREFIX/share/icons/hicolor/$size/apps/io.github.MarcoDiGioia.Pomona.png"
+done
 EXT=pomona@MarcoDiGioia.github.io
 install -d "/usr/share/gnome-shell/extensions/$EXT"
 install -m 644 "$SRC/gnome-extension/$EXT/metadata.json" "$SRC/gnome-extension/$EXT/extension.js" "/usr/share/gnome-shell/extensions/$EXT/"

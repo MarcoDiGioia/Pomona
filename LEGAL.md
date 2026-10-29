@@ -55,7 +55,7 @@ lawyer.
 
 ## Artwork
 
-The Pomona logo (`data/io.github.MarcoDiGioia.Pomona.svg`) and mascot (`assets/`) were designed by Marco Di Gioia with the help of Google Gemini and are released under the [Creative Commons Attribution-ShareAlike 4.0](https://creativecommons.org/licenses/by-sa/4.0/) licence. They contain no Apple logo or artwork; the mascot is an original penguin, not Tux.
+The Pomona logo (`assets/pomona-logo-1024.png`, `data/icons/`) and mascot (`assets/`) were designed by Marco Di Gioia with the help of Google Gemini and are released under the [Creative Commons Attribution-ShareAlike 4.0](https://creativecommons.org/licenses/by-sa/4.0/) licence. They contain no Apple logo or artwork; the mascot is an original penguin, not Tux.
 
 ## Privacy
 

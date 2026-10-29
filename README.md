@@ -1,6 +1,6 @@
 <p align="center"><img src="assets/pomona-mascot-256.png" width="200" alt="Pomona, the mascot: a penguin dressed as the Roman goddess of orchards, holding a pomegranate"></p>
 
-# Pomona
+# <img src="assets/pomona-logo-1024.png" width="44" alt=""> Pomona
 
 **Linux grows well on your Mac.**
 
