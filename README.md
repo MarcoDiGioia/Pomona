@@ -8,7 +8,7 @@
 
 On a 2016–2017 MacBook Pro with Touch Bar, Linux usually leaves the **Touch Bar dark**, finds **no FaceTime camera** and ignores the **ambient light sensor**. Pomona turns all three on, at every start, without touching macOS or the Mac's firmware.
 
-The same Macs have a Broadcom Wi-Fi card that often **sees networks but rejects every connection**. Pomona fixes that too: one click installs the missing board file and settings, with a backup and an undo.
+The same Macs have a Broadcom Wi-Fi card that often **sees networks but rejects every connection**. Pomona fixes that too: one click installs the missing board file (downloaded when you run it) and settings, with a backup and an undo.
 
 With Pomona you get:
 
@@ -115,15 +115,15 @@ The app is available in English, Italian, German, French, Spanish, Portuguese, D
 
 ## Credits
 
-Pomona builds on the research of [t1-revive](https://github.com/niconistal/t1-revive), [t1bridge](https://github.com/standardagents/t1bridge) and the [libimobiledevice](https://libimobiledevice.org) project. The Wi-Fi board file is a community-shared configuration for the card. Details in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [data/wifi/README.md](data/wifi/README.md).
+Pomona builds on the research of [t1-revive](https://github.com/niconistal/t1-revive), [t1bridge](https://github.com/standardagents/t1bridge) and the [libimobiledevice](https://libimobiledevice.org) project. The Wi-Fi board file is a community-shared configuration for the card, downloaded and not redistributed. Details in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [data/wifi/README.md](data/wifi/README.md).
 
 ## Legal
 
 > **Use at your own risk.** Pomona is provided "as is", without warranty of any kind; the authors are not liable for any damage, data loss or loss of manufacturer support.
 
 - Pomona is **not affiliated with, endorsed or sponsored by Apple Inc.** Apple, Mac, MacBook, Touch Bar, FaceTime and macOS are trademarks of Apple Inc., and Broadcom is a trademark of Broadcom Inc.; they are used here only to describe compatible hardware.
-- Pomona **contains and distributes no Apple software**, and changes nothing in macOS or in the Mac's firmware. The Wi-Fi board file it installs is a community-shared Broadcom configuration, not covered by the GPL: see [LEGAL.md](LEGAL.md#the-wi-fi-board-file).
-- It collects no personal data and makes no network connections.
+- Pomona **contains and distributes no Apple software**, and changes nothing in macOS or in the Mac's firmware. The Wi-Fi board file is not part of Pomona: it is downloaded from its community source when you run the Wi-Fi fix (see [LEGAL.md](LEGAL.md#the-wi-fi-board-file)).
+- It collects no personal data. It makes a network connection only when you run the Wi-Fi fix, to download the board file.
 
 Full text: [LEGAL.md](LEGAL.md).
 

@@ -485,7 +485,7 @@ class Window(Adw.ApplicationWindow):
         board_ok = bool(w.get("board_file_ok"))
         oks.append(self.step(steps, _("Board file"), board_ok,
                              _("Installed") if board_ok else
-                             (_("Different from the one Pomona ships") if w.get("board_file_installed")
+                             (_("Different from the expected file") if w.get("board_file_installed")
                               else _("Missing: every connection is rejected without it")),
                              _("Fix"), fix))
         nm_ok = bool(w.get("networkmanager_ok"))

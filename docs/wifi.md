@@ -18,13 +18,17 @@ It makes three changes, each only when it is missing, and backs up what it repla
 
 | File | What | Why |
 | --- | --- | --- |
-| `/lib/firmware/brcm/brcmfmac43602-pcie.txt` | the board file shipped with Pomona, with this Mac's own MAC address | the card needs it to associate |
+| `/lib/firmware/brcm/brcmfmac43602-pcie.txt` | the board file (downloaded, see below), with this Mac's own MAC address | the card needs it to associate |
 | `/etc/NetworkManager/conf.d/90-pomona-wifi.conf` | `wifi.scan-rand-mac-address=no` and `wifi.cloned-mac-address=permanent` | the card refuses the random addresses NetworkManager uses by default |
 | `/etc/modprobe.d/90-pomona-brcmfmac.conf` | `options brcmfmac feature_disable=0x82000` | the setting the t2linux project gives for Broadcom Wi-Fi on Macs; it was in place on the Mac where the fix was verified |
 
 If a setting is already in place (in any file of `conf.d` or `modprobe.d`), Pomona does not add a second copy. If NetworkManager is not installed, that step is skipped.
 
-The shipped board file is `data/wifi/brcmfmac43602-pcie.txt`. Where it comes from and under what terms: [data/wifi/README.md](../data/wifi/README.md) and [LEGAL.md](../LEGAL.md#the-wi-fi-board-file).
+## The board file download
+
+Pomona does not contain the board file. `pomona wifi fix` downloads it over https from a fixed address (a public gist, pinned to one revision, in `lib/wifi.sh`), keeps a copy in `/var/lib/pomona/wifi-cache/` and **uses it only if its SHA-256 matches** (computed with the `macaddr=` line set to the shared placeholder, so that the checksum does not depend on the address). A wrong or oversized download is discarded. Where it comes from and under what terms: [data/wifi/README.md](../data/wifi/README.md) and [LEGAL.md](../LEGAL.md#the-wi-fi-board-file).
+
+Offline, or if the address stops working: save the file yourself and run `sudo pomona wifi fix --board-file /path/to/brcmfmac43602-pcie.txt`. It is checked against the same SHA-256. The app's *Fix* button needs a connection; if the card is the only way to get one, use a cable or a phone's USB tethering, or the `--board-file` form.
 
 ## The MAC address
 
@@ -68,7 +72,7 @@ It also reports whether the card is connected (the interface is `up`), and wheth
 1. supported MacBook Pro model;
 2. the BCM43602 chip is present;
 3. the `brcmfmac` driver is bound;
-4. the board file installed is the one Pomona ships (the MAC address is ignored in the comparison);
+4. the board file installed is the expected one (the MAC address is ignored in the comparison);
 5. NetworkManager keeps the real MAC address (true when NetworkManager is not used);
 6. the `feature_disable` driver option is set;
 7. a Wi-Fi interface exists;
@@ -91,4 +95,4 @@ The certificate has no MAC address, network name or machine id. It joins the com
 
 ## How the app runs it
 
-The **Wi-Fi** page is always there and starts with the state of the Wi-Fi (connection, card, driver). For other cards it says there is nothing to fix; with the BCM43602 it adds the steps, *Fix*, *Undo* and the certificate. *Fix* and *Undo* run `pomona-admin wifi-fix` and `wifi-undo` through `pkexec`; the helper accepts only `--keep-mac` and `--mac` with a well-formed address, and calls `pomona wifi fix` or `undo`. No network connection is made.
+The **Wi-Fi** page is always there and starts with the state of the Wi-Fi (connection, card, driver). For other cards it says there is nothing to fix; with the BCM43602 it adds the steps, *Fix*, *Undo* and the certificate. *Fix* and *Undo* run `pomona-admin wifi-fix` and `wifi-undo` through `pkexec`; the helper accepts only `--keep-mac` and `--mac` with a well-formed address, and calls `pomona wifi fix` or `undo`. The only network connection is the board-file download.

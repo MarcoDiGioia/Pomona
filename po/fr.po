@@ -278,8 +278,8 @@ msgstr "Fichier de configuration"
 msgid "Installed"
 msgstr "Installé"
 
-msgid "Different from the one Pomona ships"
-msgstr "Différent de celui fourni par Pomona"
+msgid "Different from the expected file"
+msgstr "Différent du fichier attendu"
 
 msgid "Missing: every connection is rejected without it"
 msgstr "Absent : sans lui, toute connexion est refusée"

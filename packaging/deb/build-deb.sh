@@ -29,7 +29,6 @@ install -m 755 "$ROOT/libexec/pomona-touchbard" "$PKG/usr/lib/pomona/pomona-touc
 install -m 755 "$ROOT/libexec/pomona-admin"    "$PKG/usr/lib/pomona/pomona-admin"
 install -m 644 "$ROOT/lib/pomona.sh"           "$PKG/usr/lib/pomona/pomona.sh"
 install -m 644 "$ROOT/lib/wifi.sh"             "$PKG/usr/lib/pomona/wifi.sh"
-install -D -m 644 "$ROOT/data/wifi/brcmfmac43602-pcie.txt" "$PKG/usr/share/pomona/wifi/brcmfmac43602-pcie.txt"
 install -m 755 "$ROOT/bin/pomona"              "$PKG/usr/bin/pomona"
 install -m 755 "$ROOT/gui/pomona-gui"          "$PKG/usr/bin/pomona-gui"
 tmpl "$ROOT/systemd/pomona.service"            "$PKG/usr/lib/systemd/system/pomona.service"

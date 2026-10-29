@@ -10,7 +10,7 @@ How a certificate created on someone's Mac ends up in the [compatibility table](
 
 For the Wi-Fi card use the **Wi-Fi** page of the app (or `pomona wifi certify`, then `pomona share`) after the fix and a restart. `pomona share` sends the newest certificate, whichever module wrote it.
 
-Pomona itself makes no network connection: the page is opened by your browser, and nothing is sent until you submit it.
+Sharing makes no network connection from Pomona: the page is opened by your browser, and nothing is sent until you submit it.
 
 ## What a certificate contains
 

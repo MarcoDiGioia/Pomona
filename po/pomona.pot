@@ -278,7 +278,7 @@ msgstr ""
 msgid "Installed"
 msgstr ""
 
-msgid "Different from the one Pomona ships"
+msgid "Different from the expected file"
 msgstr ""
 
 msgid "Missing: every connection is rejected without it"

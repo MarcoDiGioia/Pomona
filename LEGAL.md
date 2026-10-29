@@ -43,10 +43,10 @@ not be accepted.
 
 The Wi-Fi module installs `brcmfmac43602-pcie.txt`, a board configuration file for the Broadcom BCM43602 card: a list of hardware parameters (antennas, power and calibration tables) that the Linux driver hands to the card's firmware. It is not part of `linux-firmware`.
 
-- The copy in this repository (`data/wifi/brcmfmac43602-pcie.txt`) is the one widely shared by the Linux-on-Mac community and in use on the maintainer's own MacBook Pro. It carries Broadcom's lab-notebook references, so it was derived from Broadcom reference data; **the exact origin and the copyright holder are not known to the maintainer, and the file states no licence.**
-- It contains hardware parameters, not program code, and no Apple or Broadcom firmware or software. Pomona makes no claim on it, and it is **not covered by the GPL** that applies to the rest of the project.
-- It is distributed for the same interoperability purpose as the rest of Pomona: letting the owner of the card use it under Linux. Whether that is lawful in your jurisdiction is your responsibility; if in doubt, ask a lawyer.
-- If a rights holder asks for it to be removed, it will be removed and the Wi-Fi module will be changed to obtain the file in another way. Contact: marco.digioia.dev@gmail.com.
+- **Pomona does not contain or distribute the file.** When you run `pomona wifi fix`, your computer downloads it from the address where the community shares it (a public GitHub gist, pinned to one revision) and checks its SHA-256 before using it. Anything that does not match is discarded.
+- The file is the one widely shared by the Linux-on-Mac community and in use on the maintainer's own MacBook Pro. It carries Broadcom's lab-notebook references, so it was derived from Broadcom reference data; **the exact origin and the copyright holder are not known to the maintainer, and the file states no licence.** It is hardware parameters, not program code, and no Apple or Broadcom firmware or software.
+- Downloading it and installing it on your own computer, to make your own card work, is your own use; whether that is lawful in your jurisdiction is your responsibility. If in doubt, ask a lawyer.
+- If the address stops working, or a rights holder has the file removed, the fix reports it and you can supply a copy yourself with `--board-file`. Pomona will then be changed to obtain the file in another way. Contact: marco.digioia.dev@gmail.com.
 
 ## Interoperability, no circumvention
 
@@ -70,7 +70,7 @@ The Pomona logo (`assets/pomona-logo-1024.png`, `data/icons/`) and mascot (`asse
 
 ## Privacy
 
-Pomona does not collect, send or store personal data and makes no network connections. The
+Pomona does not collect, send or store personal data. Its only network connection is the board-file download of `pomona wifi fix` (a plain request to a public address that carries nothing about you). The
 Wi-Fi fix derives the card's MAC address from the machine id without storing or printing the id.
 The compatibility certificate (`pomona certify`, `pomona wifi certify`) is written only to your disk; it lists the Mac
 model, firmware versions, distribution, kernel and test results, and deliberately leaves out

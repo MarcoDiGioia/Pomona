@@ -1,6 +1,6 @@
 # Third-party notices
 
-Pomona (GPL-3.0-or-later) contains no third-party code, with one exception: the Wi-Fi board file described below, a data file under no stated licence. Every licence listed below is compatible with the GPL. It was written with the help of the public knowledge and
+Pomona (GPL-3.0-or-later) contains no third-party code and distributes no third-party file. Every licence listed below is compatible with the GPL. It was written with the help of the public knowledge and
 open-source projects below, which are credited here.
 
 | Project | Licence | What Pomona learned from it |
@@ -14,7 +14,7 @@ open-source projects below, which are credited here.
 
 ## Wi-Fi board file
 
-`data/wifi/brcmfmac43602-pcie.txt` is a board configuration file for the Broadcom BCM43602 Wi-Fi card, shared by the Linux community (for example in [the discussion of kernel bug 193121](https://bugzilla.kernel.org/show_bug.cgi?id=193121)). Its original author and licence are unknown; see [data/wifi/README.md](data/wifi/README.md) and [LEGAL.md](LEGAL.md#the-wi-fi-board-file). It is **not** part of Pomona's GPL licence.
+The Wi-Fi fix downloads `brcmfmac43602-pcie.txt`, a board configuration file for the Broadcom BCM43602 Wi-Fi card, shared by the Linux community (for example in [the discussion of kernel bug 193121](https://bugzilla.kernel.org/show_bug.cgi?id=193121)). Its original author and licence are unknown; Pomona does not include it. See [data/wifi/README.md](data/wifi/README.md) and [LEGAL.md](LEGAL.md#the-wi-fi-board-file).
 
 ## Artwork
 

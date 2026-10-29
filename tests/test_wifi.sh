@@ -16,6 +16,11 @@ false_() { if "${@:2}"; then fail "$1"; else ok "$1"; fi; }
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 
+# a stand-in for the board file: the real one is downloaded, never shipped
+BOARD="$TMP/board.txt"
+printf 'boardrev=0x1101\nvendid=0x14e4\ndevid=0x43ba\n\nmacaddr=00:90:4c:0d:f4:3e\n\nxtalfreq=40000\n' > "$BOARD"
+BOARD_SHA=$(sha256sum "$BOARD" | cut -d' ' -f1)
+
 # fake_machine [nocard]: a Mac with the card, no board file and default settings
 fake_machine() {
 	rm -rf "$TMP/sys" "$TMP/etc" "$TMP/fw" "$TMP/state" "$TMP/proc"
@@ -37,7 +42,7 @@ fake_machine() {
 		echo 00:90:4c:0d:f4:3e > "$d/net/wlp3s0/address"
 	fi
 	export POMONA_SYS="$TMP/sys" POMONA_PROC="$TMP/proc" POMONA_ETC="$TMP/etc" POMONA_FIRMWARE_DIR="$TMP/fw" \
-		POMONA_STATE_DIR="$TMP/state" POMONA_WIFI_DATA="$ROOT/data/wifi" POMONA_OS_RELEASE="$TMP/os-release"
+		POMONA_STATE_DIR="$TMP/state" POMONA_WIFI_URL="file://$BOARD" POMONA_WIFI_SHA256="$BOARD_SHA" POMONA_OS_RELEASE="$TMP/os-release"
 	printf 'PRETTY_NAME="Test Linux 1.0"\n' > "$TMP/os-release"
 }
 
@@ -76,16 +81,31 @@ eq "other card: ids" "$(wf_any_attr pci)" "8086:24fd"
 eq "other card: state" "$(wf_any_attr operstate)" "up"
 eq "other card: json" "$(pomona wifi status --json | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["present"], d["any_pci"])')" "False 8086:24fd"
 
-echo "-- the shipped board file"
-fake_machine
-ref=$(wf_data_file)
-eq "board file found" "$(basename "$ref")" "brcmfmac43602-pcie.txt"
-eq "it carries the shared placeholder" "$(wf_file_mac "$ref")" "$WF_PLACEHOLDER_MAC"
-eq "it is for the BCM43602 (devid)" "$(sed -n 's/^devid=//p' "$ref")" "0x43ba"
-false_ "machine-specific data is not in it" grep -qiE 'serial|uuid|ssid' "$ref"
+echo "-- the pinned download"
+true_ "the address is https and pinned to a revision" bash -c "[[ '$WF_BOARD_URL' =~ ^https://[^/]+/.*/raw/[0-9a-f]{40}/ ]]"
+true_ "the checksum is a sha-256" bash -c "[[ '$WF_BOARD_SHA256' =~ ^[0-9a-f]{64}$ ]]"
+false_ "the repository does not contain the board file" test -e "$ROOT/data/wifi/brcmfmac43602-pcie.txt"
+eq "an override is ignored on the real /etc" "$(POMONA_ETC=/etc POMONA_WIFI_URL=http://example.com/x wf_board_url)" "$WF_BOARD_URL"
 
-echo "-- integrity of the shipped file"
-true_ "checksum matches data/wifi/SHA256SUMS" bash -c "cd '$ROOT/data/wifi' && sha256sum -c --quiet SHA256SUMS"
+echo "-- getting the board file"
+fake_machine
+ref=$BOARD
+got=$(wf_board_source 2>/dev/null)
+eq "downloaded into the cache" "$got" "$(wf_cache_file)"
+true_ "and verified" wf_genuine "$got"
+mv "$BOARD" "$BOARD.moved"
+eq "cache is reused without the network" "$(wf_board_source 2>/dev/null)" "$(wf_cache_file)"
+rm -rf "$TMP/state"
+wf_board_source >/dev/null 2>&1; eq "download of a missing file fails" "$?" "1"
+false_ "and leaves nothing in the cache" test -e "$(wf_cache_file)"
+mv "$BOARD.moved" "$BOARD"
+echo tampered >> "$BOARD"
+wf_board_source >/dev/null 2>&1; eq "a file with another checksum is refused" "$?" "1"
+false_ "and not cached" test -e "$(wf_cache_file)"
+printf 'boardrev=0x1101\nvendid=0x14e4\ndevid=0x43ba\n\nmacaddr=00:90:4c:0d:f4:3e\n\nxtalfreq=40000\n' > "$BOARD"
+eq "a local copy is checked and used" "$(wf_board_source "$BOARD" 2>/dev/null)" "$BOARD"
+wf_board_source /etc/hostname >/dev/null 2>&1; eq "a wrong local copy is refused" "$?" "1"
+eq "the stand-in carries the placeholder" "$(wf_file_mac "$ref")" "$WF_PLACEHOLDER_MAC"
 
 echo "-- MAC addresses"
 true_ "valid unicast" wf_valid_mac 02:11:22:33:44:55
@@ -214,9 +234,12 @@ false_ "and writes nothing" test -e "$TMP/fw/brcmfmac43602-pcie.txt"
 wf_fix --force >/dev/null 2>&1; eq "--force installs anyway" "$?" "0"
 true_ "board file installed with --force" test -r "$TMP/fw/brcmfmac43602-pcie.txt"
 
-echo "-- missing shipped board file"
+echo "-- board file cannot be downloaded"
 fake_machine
-POMONA_WIFI_DATA=$TMP/none POMONA_LIBEXEC=$TMP/none wf_fix >/dev/null 2>&1; eq "reported as an error" "$?" "1"
+POMONA_WIFI_URL="file://$TMP/none" wf_fix >/dev/null 2>&1; eq "reported as an error" "$?" "1"
+false_ "and nothing is installed" test -e "$TMP/fw/brcmfmac43602-pcie.txt"
+wf_fix --board-file "$BOARD" >/dev/null 2>&1; eq "offline: a given copy works" "$?" "0"
+true_ "and is installed" wf_nvram_ok
 
 echo "-- pomona wifi (command line)"
 fake_machine

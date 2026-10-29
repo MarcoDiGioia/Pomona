@@ -12,7 +12,7 @@ Certificates contain no serial numbers, ECID or UUIDs. Please don't add certific
 
 - `make test` runs every test against fake sysfs trees; nothing touches the hardware.
 - `make lint` runs `bash -n`, `py_compile` and, if installed, `shellcheck`.
-- `data/wifi/brcmfmac43602-pcie.txt` is checked against `data/wifi/SHA256SUMS`. Please do not change it in a pull request without opening an issue first: it is hardware calibration data and every Mac with the card installs it.
+- The Wi-Fi board file is not in the repository: `lib/wifi.sh` pins its download address and SHA-256. Please do not change either in a pull request without opening an issue first: every Mac with the card installs that file as root.
 - Keep the promise in the README: Pomona never writes to the chip's persistent state, the EFI partition or macOS. A change that needs to is a different project.
 
 ## Translations

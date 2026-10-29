@@ -79,7 +79,6 @@ install -m 755 "$SRC/libexec/pomona-touchbard" "$PREFIX/lib/pomona/pomona-touchb
 install -m 755 "$SRC/libexec/pomona-admin" "$PREFIX/lib/pomona/pomona-admin"
 install -m 644 "$SRC/lib/pomona.sh" "$PREFIX/lib/pomona/pomona.sh"
 install -m 644 "$SRC/lib/wifi.sh" "$PREFIX/lib/pomona/wifi.sh"
-install -D -m 644 "$SRC/data/wifi/brcmfmac43602-pcie.txt" "$PREFIX/share/pomona/wifi/brcmfmac43602-pcie.txt"
 install -m 755 "$SRC/bin/pomona" "$PREFIX/bin/pomona"
 install -m 755 "$SRC/gui/pomona-gui" "$PREFIX/bin/pomona-gui"
 # templates: @PREFIX@ becomes the install prefix

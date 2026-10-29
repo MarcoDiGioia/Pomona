@@ -189,6 +189,7 @@ pomona wifi status [--json]    what is in place and what is missing
 sudo pomona wifi fix           install the board file and settings (backed up first); then restart
       --keep-mac               keep the MAC address already in the board file
       --mac aa:bb:cc:dd:ee:ff  use this MAC address
+      --board-file FILE        use this copy of the board file instead of downloading it
       --force                  install even if the card is not found
 sudo pomona wifi undo          put the files back as they were before the last fix
 pomona wifi certify [DIR]      run the checks and write a compatibility certificate
@@ -223,7 +224,7 @@ wifi_status_json() {
   "driver_option_ok": $(jbool wf_modprobe_ok),
   "restart_pending": $(jbool wf_restart_pending),
   "backup": $(json_str "$(wf_latest_backup || true)"),
-  "bundled_board_file": $(jbool wf_has_data),
+  "board_file_cached": $(jbool wf_cache_ok),
   "installed": $(jbool et1_installed)
 }
 EOF
@@ -241,7 +242,7 @@ wifi_status() {
 Wi-Fi card       BCM43602 [14e4:43ba], subsystem $(wf_subsystem)
 driver           $(wf_driver || true)
 interface        $(wf_iface) ($(wf_operstate)), MAC $(wf_mac)
-board file       $(wf_nvram_ok && echo "installed" || { wf_nvram_installed && echo "installed, but not the one Pomona ships" || echo "missing"; })$(wf_mac_placeholder && echo "  (shared default MAC address: run  sudo pomona wifi fix  to give this Mac its own)")
+board file       $(wf_nvram_ok && echo "installed" || { wf_nvram_installed && echo "installed, but not the expected file" || echo "missing"; })$(wf_mac_placeholder && echo "  (shared default MAC address: run  sudo pomona wifi fix  to give this Mac its own)")
 NetworkManager   $(wf_nm_installed && { wf_nm_ok && echo "keeps the real MAC address" || echo "randomises the MAC address"; } || echo "not used")
 driver option    $(wf_modprobe_ok && echo "feature_disable=$(wf_feature_disable)" || echo "not set")
 state            $state

@@ -20,8 +20,6 @@ rm -f "$PREFIX/lib/pomona/pomona-t1-boot" "$PREFIX/lib/pomona/pomona-touchbard" 
 rm -rf "$PREFIX/lib/pomona/__pycache__"
 rmdir "$PREFIX/lib/pomona" 2>/dev/null || true
 rm -f "$PREFIX"/share/locale/*/LC_MESSAGES/pomona.mo "$PREFIX/share/pomona/pomona-mascot-256.png"
-rm -f "$PREFIX/share/pomona/wifi/brcmfmac43602-pcie.txt"
-rmdir "$PREFIX/share/pomona/wifi" 2>/dev/null || true
 rmdir "$PREFIX/share/pomona" 2>/dev/null || true
 rm -f "$PREFIX"/share/icons/hicolor/*/apps/io.github.MarcoDiGioia.Pomona.png
 rm -f /usr/share/polkit-1/actions/io.github.MarcoDiGioia.Pomona.admin.policy /etc/udev/rules.d/60-pomona.rules

@@ -13,7 +13,7 @@
 #   POMONA_ETC          configuration root            (default /etc)
 #   POMONA_FIRMWARE_DIR firmware directory            (default /lib/firmware/brcm)
 #   POMONA_STATE_DIR    where backups are kept        (default /var/lib/pomona)
-#   POMONA_WIFI_DATA    folder holding the board file (default: next to the installed library)
+#   POMONA_WIFI_URL, POMONA_WIFI_SHA256   where the board file comes from (only honoured with a fake POMONA_ETC)
 # shellcheck shell=bash
 
 : "${POMONA_ETC:=/etc}"
@@ -116,14 +116,62 @@ wf_any_attr() {
 
 wf_nvram_file() { printf '%s/%s\n' "$POMONA_FIRMWARE_DIR" "$WF_NVRAM_NAME"; }
 
-# wf_data_file -> the board file shipped with Pomona
-wf_data_file() {
-	local d
-	for d in "${POMONA_WIFI_DATA:-}" "$POMONA_LIBEXEC/../data/wifi" "$POMONA_LIBEXEC/../../share/pomona/wifi" \
-		/usr/share/pomona/wifi /usr/local/share/pomona/wifi; do
-		[ -n "$d" ] && [ -r "$d/$WF_NVRAM_NAME" ] && { printf '%s/%s\n' "$d" "$WF_NVRAM_NAME"; return 0; }
-	done
-	return 1
+# The board file is not part of Pomona: it is downloaded when the fix runs, from a fixed address, and
+# only used if its SHA-256 (with the MAC address replaced by the shared placeholder) is the one below.
+WF_BOARD_URL=https://gist.githubusercontent.com/madfatcat88/fb17a3ef6364a48a19ed57c143ddd383/raw/45b81e950597b0d53ba4cc6f79a35ea61e91aedf/brcmfmac43602-pcie.txt
+WF_BOARD_SHA256=fbce9f8987759eeac12e36d72637d080945157a95c66c29ce82dbc9caa1b18a1
+
+# the tests (fake root only) may point these elsewhere
+wf_board_url() { if [ "$POMONA_ETC" != /etc ] && [ -n "${POMONA_WIFI_URL:-}" ]; then echo "$POMONA_WIFI_URL"; else echo "$WF_BOARD_URL"; fi; }
+wf_board_sha() { if [ "$POMONA_ETC" != /etc ] && [ -n "${POMONA_WIFI_SHA256:-}" ]; then echo "$POMONA_WIFI_SHA256"; else echo "$WF_BOARD_SHA256"; fi; }
+
+wf_cache_file() { printf '%s/wifi-cache/%s\n' "$POMONA_STATE_DIR" "$WF_NVRAM_NAME"; }
+
+# wf_genuine FILE: it is the expected board file, whatever MAC address it carries
+wf_genuine() {
+	[ -r "$1" ] && [ "$(sed "s/^macaddr=.*/macaddr=$WF_PLACEHOLDER_MAC/" "$1" | sha256sum | cut -d' ' -f1)" = "$(wf_board_sha)" ]
+}
+
+# wf_board_source [FILE] -> path of a verified copy of the board file. With FILE (offline use) that
+# file is checked and used; otherwise the cached copy, or a fresh download over https.
+wf_board_source() {
+	local given=${1:-} cache tmp url
+	if [ -n "$given" ]; then
+		wf_genuine "$given" || { et1_err "$given is not the expected board file (checksum differs)"; return 1; }
+		printf '%s\n' "$given"
+		return 0
+	fi
+	cache=$(wf_cache_file)
+	if wf_genuine "$cache"; then printf '%s\n' "$cache"; return 0; fi
+	url=$(wf_board_url)
+	install -d -m 755 "$(dirname "$cache")" || return 1
+	tmp=$(mktemp "$cache.XXXXXX") || return 1
+	et1_err "downloading the Wi-Fi board file from $(printf '%s' "$url" | cut -d/ -f1-3)"
+	if ! python3 -I - "$url" "$tmp" "$POMONA_ETC" <<'PY' >&2
+import shutil, sys, urllib.request
+url, dst, etc = sys.argv[1:4]
+if not (url.startswith("https://") or (etc != "/etc" and url.startswith("file://"))):
+    sys.exit("refusing a non-https address")
+try:
+    with urllib.request.urlopen(url, timeout=30) as r, open(dst, "wb") as f:
+        data = r.read(65537)
+        if len(data) > 65536:
+            sys.exit("the download is too large")
+        f.write(data)
+except Exception as e:
+    sys.exit("download failed: %s" % e)
+PY
+	then
+		rm -f "$tmp"
+		et1_err "could not download the board file: check the connection, or save it yourself and use  --board-file FILE  (see docs/wifi.md)"
+		return 1
+	fi
+	if ! wf_genuine "$tmp"; then
+		rm -f "$tmp"
+		et1_err "the downloaded file does not match the expected checksum: not used"
+		return 1
+	fi
+	chmod 644 "$tmp" && mv -f "$tmp" "$cache" && printf '%s\n' "$cache"
 }
 
 # wf_file_mac FILE -> the macaddr= value of a board file, lower case
@@ -131,20 +179,11 @@ wf_file_mac() { sed -n 's/^macaddr=//p' "$1" 2>/dev/null | head -n1 | tr 'A-F' '
 
 wf_nvram_mac() { wf_file_mac "$(wf_nvram_file)"; }
 
-# wf_same_board A B: the two board files are equal apart from the MAC address
-wf_same_board() {
-	[ -r "$1" ] && [ -r "$2" ] && [ "$(grep -v '^macaddr=' "$1")" = "$(grep -v '^macaddr=' "$2")" ]
-}
-
 wf_nvram_installed() { [ -r "$(wf_nvram_file)" ]; }
-wf_has_data() { wf_data_file >/dev/null; }
+wf_cache_ok() { wf_genuine "$(wf_cache_file)"; }
 
-# the installed board file is the one Pomona ships
-wf_nvram_ok() {
-	local ref
-	ref=$(wf_data_file) || return 1
-	wf_same_board "$(wf_nvram_file)" "$ref"
-}
+# the installed board file is the expected one
+wf_nvram_ok() { wf_genuine "$(wf_nvram_file)"; }
 
 wf_mac_placeholder() { [ "$(wf_nvram_mac)" = "$WF_PLACEHOLDER_MAC" ]; }
 
@@ -266,16 +305,18 @@ wf_refresh_initramfs() {
 }
 
 # wf_fix [--mac MAC | --keep-mac] [--force]
+#   [--board-file FILE: use this copy of the board file instead of downloading it]
 #   board file, NetworkManager setting and driver option, each only when missing; backed up first.
 #   MAC: the one given, else the one already in the board file (unless it is the shared placeholder),
 #   else one derived from this machine.
 wf_fix() {
-	local mac="" keep=0 force=0 a
+	local mac="" keep=0 force=0 a board=""
 	while [ $# -gt 0 ]; do
 		case "$1" in
 			--mac) shift; mac=${1:-}; wf_valid_mac "$mac" || { et1_err "invalid MAC address (use lower-case aa:bb:cc:dd:ee:ff, unicast)"; return 2; };;
 			--keep-mac) keep=1;;
 			--force) force=1;;
+			--board-file) shift; board=${1:-}; [ -r "$board" ] || { et1_err "cannot read the board file"; return 2; };;
 			*) et1_err "unknown option $1"; return 2;;
 		esac
 		shift
@@ -285,8 +326,7 @@ wf_fix() {
 		et1_err "no Broadcom BCM43602 Wi-Fi card found on this machine (use --force to install anyway)"
 		return 3
 	fi
-	local ref cur
-	ref=$(wf_data_file) || { et1_err "the board file shipped with Pomona is missing: reinstall Pomona"; return 1; }
+	local ref="" cur
 	cur=$(wf_nvram_mac)
 	if [ -z "$mac" ]; then
 		if [ -n "$cur" ] && wf_valid_mac "$cur" && { [ "$keep" = 1 ] || [ "$cur" != "$WF_PLACEHOLDER_MAC" ]; }; then mac=$cur
@@ -297,8 +337,11 @@ wf_fix() {
 	local work files=() dests=() n=0 tmp
 	work=$(mktemp -d) || return 1
 	# 1. the board file, with this machine's address
-	sed "s/^macaddr=.*/macaddr=$mac/" "$ref" > "$work/nvram"
-	if ! cmp -s "$work/nvram" "$(wf_nvram_file)"; then files+=("$work/nvram"); dests+=("$(wf_nvram_file)"); fi
+	if ! { wf_nvram_ok && [ "$mac" = "$cur" ]; }; then
+		ref=$(wf_board_source "$board") || { rm -rf "$work"; return 1; }
+		sed "s/^macaddr=.*/macaddr=$mac/" "$ref" > "$work/nvram"
+		if ! cmp -s "$work/nvram" "$(wf_nvram_file)"; then files+=("$work/nvram"); dests+=("$(wf_nvram_file)"); fi
+	fi
 	# 2. NetworkManager keeps the card's own address
 	if wf_nm_installed && ! wf_nm_ok; then
 		printf '[device]\nwifi.scan-rand-mac-address=no\n\n[connection]\nwifi.cloned-mac-address=permanent\n' > "$work/nm"
