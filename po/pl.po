@@ -494,3 +494,24 @@ msgstr "Kodek"
 
 msgid "Wait for the current operation to finish"
 msgstr "Poczekaj na zakończenie bieżącej operacji"
+
+msgid "Is Pomona wrong?"
+msgstr "Pomona się myli?"
+
+msgid "Send a diagnostic report if this page does not match what you see"
+msgstr "Wyślij raport diagnostyczny, jeśli ta strona nie zgadza się z tym, co widzisz"
+
+msgid "Report…"
+msgstr "Zgłoś…"
+
+msgid "Send a diagnostic report"
+msgstr "Wyślij raport diagnostyczny"
+
+msgid "Pomona will collect what it checked on this page (chips, drivers, kernel, distribution), never serial numbers, MAC addresses or network names. Your browser opens a GitHub page with the report filled in: nothing is sent until you press “Submit new issue”."
+msgstr "Pomona zbierze to, co sprawdził na tej stronie (układy, sterowniki, jądro, dystrybucja), nigdy numerów seryjnych, adresów MAC ani nazw sieci. Przeglądarka otworzy stronę GitHuba z wypełnionym raportem: nic nie zostanie wysłane, dopóki nie naciśniesz „Submit new issue”."
+
+msgid "It says something is wrong, but it works"
+msgstr "Mówi, że coś nie działa, ale działa"
+
+msgid "It says everything works, but something is wrong"
+msgstr "Mówi, że wszystko działa, ale coś jest nie tak"

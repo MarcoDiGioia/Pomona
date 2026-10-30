@@ -28,6 +28,7 @@ PAGES = {
     "docs/troubleshooting.md": "Troubleshooting",
     "docs/compatibility.md": "Compatibility",
     "docs/certificates.md": "Certificates",
+    "docs/diagnostics.md": "Diagnostics",
     "docs/maintaining.md": "Maintaining",
     "CONTRIBUTING.md": "Contributing",
     "LEGAL.md": "Legal",

@@ -9,6 +9,7 @@
 #   pomona share      open your latest certificate as a pre-filled GitHub report
 #   pomona wifi       Broadcom Wi-Fi: status | fix | undo | certify  (pomona wifi help)
 #   pomona audio      Cirrus Logic sound: status | fix | undo | certify  (pomona audio help)
+#   pomona diagnose   Pomona got it wrong? MODULE (t1|wifi|audio) works|broken: a report to share
 #   pomona version
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
@@ -505,6 +506,76 @@ cmd_audio() {
 	esac
 }
 
+# ------------------------------------------------------------------ diagnose
+
+# cmd_diagnose MODULE works|broken [DIR]: Pomona's verdict on this page is wrong. Writes
+# pomona-diagnostic-MODULE-*.json with what the module checked (whitelisted, see
+# tools/diagnostics.py) and, unless --no-share, opens it as a pre-filled GitHub report.
+#   works:  Pomona says something is wrong, but it works
+#   broken: Pomona says everything works, but something is wrong
+cmd_diagnose() {
+	local module=${1:-} verdict=${2:-} out_dir=$PWD share=1 a json base
+	shift 2 2>/dev/null || true
+	for a in "$@"; do
+		case "$a" in
+			--no-share) share=0;;
+			-*) et1_err "unknown option $a"; return 2;;
+			*) out_dir=$a;;
+		esac
+	done
+	case "$module" in t1|wifi|audio) ;; *) et1_err "usage: pomona diagnose t1|wifi|audio works|broken [DIR] [--no-share]"; return 2;; esac
+	case "$verdict" in works|broken) ;; *) et1_err "usage: pomona diagnose t1|wifi|audio works|broken [DIR] [--no-share]"; return 2;; esac
+	case "$module" in
+		t1) json=$(cmd_status_json);;
+		wifi) json=$(wifi_status_json);;
+		audio) json=$(audio_status_json);;
+	esac
+	local dkms=""
+	if [ "$module" = audio ] && command -v dkms >/dev/null; then
+		dkms=$(dkms status 2>/dev/null | grep -E "^($AU_PKG|snd_hda_macbookpro)" | head -n 3 | tr '\n' ';')
+	fi
+	base="$out_dir/pomona-diagnostic-$module-$(et1_model | tr ',' '_')-$(date -u +%Y%m%d-%H%M%S)"
+	python3 -I - "$base.json" "$module" "$verdict" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+		"$POMONA_VERSION" "$(et1_model)" "$(et1_dmi board_name)" "$(et1_dmi bios_version)" \
+		"$(et1_os_field PRETTY_NAME)" "$(uname -r)" "${XDG_CURRENT_DESKTOP:-}" "$dkms" "$json" <<'PYEOF' || return 1
+import json, re, sys
+out, module, verdict, date, pomona, model, board, fw, distro, kernel, desktop, dkms, status = sys.argv[1:14]
+status = json.loads(status)
+# what each module may report: the facts its page is built from. Never MAC addresses, network
+# names, paths in the home folder or serial numbers. Keep in step with tools/diagnostics.py.
+FACTS = {
+    "t1": ["model_class", "compat", "t1_state", "t1_product", "usb_config", "firmware_version", "firmware_images",
+           "touchbar_bound", "touchbar_driver_available", "camera", "light_sensor", "boot_service",
+           "touchbar_service", "installed"],
+    "wifi": ["state", "present", "subsystem", "driver", "any_driver", "any_pci", "any_operstate", "operstate",
+             "board_file_installed", "board_file_ok", "mac_is_placeholder", "networkmanager", "networkmanager_ok",
+             "driver_option_ok", "restart_pending", "board_file_cached", "installed"],
+    "audio": ["state", "present", "supported", "subsystem", "chip_name", "driver", "active", "package_version",
+              "module_built", "foreign", "missing_tools", "restart_pending", "installed"],
+}
+SAFE = re.compile(r"[A-Za-z0-9 ._:/+,()=;-]{0,120}")
+def clean(v):
+    if isinstance(v, bool) or isinstance(v, int):
+        return v
+    v = str(v)
+    return v if SAFE.fullmatch(v) else re.sub(r"[^A-Za-z0-9 ._:/+,()=;-]", "?", v)[:120]
+facts = {k: clean(status.get(k, "")) for k in FACTS[module]}
+if module == "audio":
+    facts["dkms"] = clean(dkms)
+diag = {"schema": 1, "kind": "diagnostic", "module": module, "verdict": verdict, "date": date, "pomona": pomona,
+        "model": clean(model), "board": clean(board), "mac_firmware": clean(fw), "distribution": clean(distro)[:60],
+        "kernel": clean(kernel)[:60], "desktop": clean(desktop)[:40], "facts": facts}
+with open(out, "w", encoding="utf-8") as f:
+    json.dump(diag, f, indent=2)
+    f.write("\n")
+PYEOF
+	cat "$base.json"
+	echo
+	echo "written: $base.json"
+	if [ "$share" = 1 ]; then cmd_share "$base.json"; fi
+	return 0
+}
+
 case "${1:-status}" in
 	start) et1_start;;
 	stop) et1_stop;;
@@ -513,7 +584,8 @@ case "${1:-status}" in
 	share) shift; cmd_share "$@";;
 	wifi) shift; cmd_wifi "$@";;
 	audio) shift; cmd_audio "$@";;
+	diagnose) shift; cmd_diagnose "$@";;
 	version|--version|-V) echo "Pomona $POMONA_VERSION";;
-	help|-h|--help) sed -n '2,11p' "$_self" | sed 's/^# \{0,1\}//';;
+	help|-h|--help) sed -n '2,12p' "$_self" | sed 's/^# \{0,1\}//';;
 	*) echo "pomona: unknown command $1 (try: pomona help)" >&2; exit 2;;
 esac

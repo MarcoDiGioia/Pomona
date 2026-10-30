@@ -172,6 +172,17 @@ json=$(ls "$TMP"/cert/pomona-certificate-audio-*.json)
 eq "the certificate is valid" "$(python3 -I "$ROOT/tools/certificates.py" validate "$json")" "valid"
 true_ "the subsystem is written as 106b:3900" grep -q '"subsystem": "106b:3900"' "$json"
 
+echo "-- diagnostic"
+fake_machine
+mkdir -p "$TMP/diag"
+pomona diagnose audio works "$TMP/diag" --no-share >/dev/null; eq "diagnose writes a report" "$?" "0"
+json=$(ls "$TMP"/diag/pomona-diagnostic-audio-*.json)
+eq "the diagnostic is valid" "$(python3 -I "$ROOT/tools/diagnostics.py" validate "$json")" "valid"
+true_ "it says what Pomona saw" grep -q '"chip_name": "CS8409"' "$json"
+true_ "it says what the user chose" grep -q '"verdict": "works"' "$json"
+true_ "the share link uses the diagnostic form" grep -q 'template=diagnostic-report.yml' <<< "$(pomona share --url "$json")"
+pomona diagnose audio maybe "$TMP/diag" --no-share >/dev/null 2>&1; eq "an unknown verdict is refused" "$?" "2"
+
 echo
 echo "audio: $PASS passed, $FAIL failed"
 [ "$FAIL" = 0 ]

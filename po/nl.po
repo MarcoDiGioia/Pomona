@@ -494,3 +494,24 @@ msgstr "Codec"
 
 msgid "Wait for the current operation to finish"
 msgstr "Wacht tot de huidige bewerking klaar is"
+
+msgid "Is Pomona wrong?"
+msgstr "Heeft Pomona het mis?"
+
+msgid "Send a diagnostic report if this page does not match what you see"
+msgstr "Stuur een diagnoserapport als deze pagina niet klopt met wat je ziet"
+
+msgid "Report…"
+msgstr "Melden…"
+
+msgid "Send a diagnostic report"
+msgstr "Diagnoserapport versturen"
+
+msgid "Pomona will collect what it checked on this page (chips, drivers, kernel, distribution), never serial numbers, MAC addresses or network names. Your browser opens a GitHub page with the report filled in: nothing is sent until you press “Submit new issue”."
+msgstr "Pomona verzamelt wat het op deze pagina heeft gecontroleerd (chips, stuurprogramma’s, kernel, distributie), nooit serienummers, MAC-adressen of netwerknamen. Je browser opent een GitHub-pagina met het rapport al ingevuld: er wordt niets verzonden voordat je op “Submit new issue” drukt."
+
+msgid "It says something is wrong, but it works"
+msgstr "Het zegt dat er iets mis is, maar het werkt"
+
+msgid "It says everything works, but something is wrong"
+msgstr "Het zegt dat alles werkt, maar er is iets mis"

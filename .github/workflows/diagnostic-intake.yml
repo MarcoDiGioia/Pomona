@@ -1,0 +1,70 @@
+# Turns a "Pomona got it wrong" issue into a pull request that adds the diagnostic.
+#
+# The issue text is untrusted. It is never put in a shell command: the Python script
+# reads it from the event file, validates it against a strict schema and writes only
+# values rebuilt from the validated fields. Nothing runs from the issue.
+#
+# One-time setup: Settings > Actions > General > Workflow permissions: "Read and write
+# permissions" and "Allow GitHub Actions to create and approve pull requests".
+name: Diagnostic intake
+
+on:
+  issues:
+    types: [opened]
+
+permissions: {}
+
+concurrency:
+  group: diagnostic-intake
+  cancel-in-progress: false
+
+jobs:
+  intake:
+    if: contains(github.event.issue.labels.*.name, 'diagnostic') || startsWith(github.event.issue.title, 'Diagnostic')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE_NUMBER: ${{ github.event.issue.number }}
+      ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Validate the diagnostic
+        run: python3 -I tools/diagnostics.py intake "$GITHUB_EVENT_PATH" "$RUNNER_TEMP/intake"
+
+      - name: Open the pull request
+        run: |
+          set -eu
+          out="$RUNNER_TEMP/intake"
+          status=$(cat "$out/status")
+          if [ "$status" = ok ]; then
+            # flood protection: at most 30 diagnostic pull requests waiting, and 5 open reports per person
+            waiting=$(gh pr list --label diagnostic --state open --json number --jq length)
+            mine=$(gh issue list --author "$ISSUE_AUTHOR" --label diagnostic --state open --json number --jq length)
+            if [ "$waiting" -ge 30 ] || [ "$mine" -gt 5 ]; then
+              printf '%s\n' "Thanks! Many diagnostics are already waiting for review (or you have several open reports), so this one was not turned into a pull request automatically. A maintainer will look at it." > "$out/comment.md"
+              gh issue comment "$ISSUE_NUMBER" --body-file "$out/comment.md"
+              exit 0
+            fi
+            branch=$(cat "$out/branch")
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git checkout -b "$branch"
+            git add diagnostics docs/diagnostics.md
+            git commit -m "$(cat "$out/title")"
+            git push origin "$branch"
+            gh pr create --base main --head "$branch" --title "$(cat "$out/title")" --body-file "$out/pr-body.md" --label diagnostic
+          elif [ "$status" = duplicate ]; then
+            gh issue comment "$ISSUE_NUMBER" --body-file "$out/comment.md"
+            gh issue close "$ISSUE_NUMBER" --reason "not planned"
+            exit 0
+          else
+            gh issue edit "$ISSUE_NUMBER" --add-label invalid-diagnostic || true
+          fi
+          gh issue comment "$ISSUE_NUMBER" --body-file "$out/comment.md"
