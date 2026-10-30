@@ -491,3 +491,6 @@ msgstr ""
 
 msgid "Codec"
 msgstr ""
+
+msgid "Wait for the current operation to finish"
+msgstr ""

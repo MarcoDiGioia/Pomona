@@ -491,3 +491,6 @@ msgstr "Het bouwen van het stuurprogramma duurt een paar minuten."
 
 msgid "Codec"
 msgstr "Codec"
+
+msgid "Wait for the current operation to finish"
+msgstr "Wacht tot de huidige bewerking klaar is"
