@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-- `sudo pomona sleep disable` turns suspend off (masks the systemd sleep units), for Macs that do not wake up from it: the lid, the power button and automatic suspend then do nothing instead of hanging the Mac. `sudo pomona sleep enable` turns it back on; `pomona sleep status`. On the MacBookPro14,3 neither deep nor s2idle sleep resumes yet; see docs/troubleshooting.md.
+- `sudo pomona sleep disable` turns suspend off (masks the systemd sleep units), for Macs that do not wake up from it: the lid, the power button and automatic suspend then do nothing instead of hanging the Mac. `sudo pomona sleep enable` turns it back on; `pomona sleep status` (also `--json`).
+- The Setup page has a **Sleep** step. Pomona reads the system journal (it never suspends the Mac to find out): when earlier boots ended while the Mac was asleep, because it never woke up and was switched off with the power button, the step says how many times and offers *Turn off*. When sleep is off, *Turn on* brings it back. On the MacBookPro14,3 neither deep nor s2idle sleep resumes yet; see docs/troubleshooting.md.
 
 ## 0.10.0 - 2026-10-30
 

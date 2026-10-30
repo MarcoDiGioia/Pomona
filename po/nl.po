@@ -515,3 +515,21 @@ msgstr "Het zegt dat er iets mis is, maar het werkt"
 
 msgid "It says everything works, but something is wrong"
 msgstr "Het zegt dat alles werkt, maar er is iets mis"
+
+msgid "Sleep"
+msgstr "Slaapstand"
+
+msgid "Turned off: closing the lid or pressing the power button does nothing"
+msgstr "Uitgeschakeld: het deksel sluiten of op de aan/uit-knop drukken doet niets"
+
+msgid "Turn on"
+msgstr "Inschakelen"
+
+msgid "The Mac did not wake up %d time(s): turn sleep off so that it does not hang"
+msgstr "De Mac is %d keer niet ontwaakt: schakel de slaapstand uit zodat hij niet vastloopt"
+
+msgid "Turn off"
+msgstr "Uitschakelen"
+
+msgid "No failed wake-up found"
+msgstr "Geen mislukt ontwaken gevonden"

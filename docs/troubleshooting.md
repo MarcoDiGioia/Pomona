@@ -67,4 +67,6 @@ On the MacBookPro14,3 tested so far, neither deep sleep (S3) nor s2idle resumes:
 sudo pomona sleep disable    # sudo pomona sleep enable to turn it back on
 ```
 
+Or, in the app, the **Sleep** step of the Setup page. It counts the earlier boots that ended while the Mac was asleep, read from the system journal, so the Mac is never put to sleep to find out. When it finds any, it offers *Turn off*.
+
 In GNOME, also set *Settings → Power → Automatic Suspend* to off.
