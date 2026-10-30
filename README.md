@@ -101,6 +101,7 @@ From the terminal:
 | `sudo pomona audio undo` | removes it: the kernel's own driver is used again |
 | `pomona audio certify` | creates the audio compatibility certificate |
 | `pomona share` | opens your certificate as a pre-filled GitHub report, to add your Mac to the table |
+| `sudo pomona sleep disable` | turns suspend off on a Mac that does not wake up from it (`enable` turns it back on) |
 | `pomona diagnose MODULE works\|broken` | Pomona got it wrong? Sends what it checked as a pre-filled GitHub report |
 | `sudo pomona start` | turns everything on again (for example after unplugging something) |
 

@@ -9,6 +9,7 @@
 #   pomona share      open your latest certificate as a pre-filled GitHub report
 #   pomona wifi       Broadcom Wi-Fi: status | fix | undo | certify  (pomona wifi help)
 #   pomona audio      Cirrus Logic sound: status | fix | undo | certify  (pomona audio help)
+#   pomona sleep      suspend: status | disable | enable  (for Macs that do not wake up)
 #   pomona diagnose   Pomona got it wrong? MODULE (t1|wifi|audio) works|broken: a report to share
 #   pomona version
 #
@@ -506,6 +507,17 @@ cmd_audio() {
 	esac
 }
 
+# ------------------------------------------------------------------ sleep
+
+cmd_sleep() {
+	case "${1:-status}" in
+		status) echo "suspend          $(sl_state)  ($(sl_masked_count) of $(echo $SL_UNITS | wc -w) sleep units masked)";;
+		disable) sl_disable;;
+		enable) sl_enable;;
+		*) et1_err "usage: pomona sleep status | sudo pomona sleep disable | sudo pomona sleep enable"; return 2;;
+	esac
+}
+
 # ------------------------------------------------------------------ diagnose
 
 # cmd_diagnose MODULE works|broken [DIR]: Pomona's verdict on this page is wrong. Writes
@@ -585,7 +597,8 @@ case "${1:-status}" in
 	wifi) shift; cmd_wifi "$@";;
 	audio) shift; cmd_audio "$@";;
 	diagnose) shift; cmd_diagnose "$@";;
+	sleep) shift; cmd_sleep "$@";;
 	version|--version|-V) echo "Pomona $POMONA_VERSION";;
-	help|-h|--help) sed -n '2,12p' "$_self" | sed 's/^# \{0,1\}//';;
+	help|-h|--help) sed -n '2,13p' "$_self" | sed 's/^# \{0,1\}//';;
 	*) echo "pomona: unknown command $1 (try: pomona help)" >&2; exit 2;;
 esac

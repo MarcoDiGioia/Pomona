@@ -30,6 +30,7 @@ install -m 755 "$ROOT/libexec/pomona-admin"    "$PKG/usr/lib/pomona/pomona-admin
 install -m 644 "$ROOT/lib/pomona.sh"           "$PKG/usr/lib/pomona/pomona.sh"
 install -m 644 "$ROOT/lib/wifi.sh"             "$PKG/usr/lib/pomona/wifi.sh"
 install -m 644 "$ROOT/lib/audio.sh"            "$PKG/usr/lib/pomona/audio.sh"
+install -m 644 "$ROOT/lib/sleep.sh"            "$PKG/usr/lib/pomona/sleep.sh"
 install -D -m 755 "$ROOT/data/audio/dkms/pomona-cs8409-prepare" "$PKG/usr/share/pomona/audio/dkms/pomona-cs8409-prepare"
 install -D -m 644 "$ROOT/data/audio/dkms/Makefile" "$PKG/usr/share/pomona/audio/dkms/Makefile"
 install -m 755 "$ROOT/bin/pomona"              "$PKG/usr/bin/pomona"

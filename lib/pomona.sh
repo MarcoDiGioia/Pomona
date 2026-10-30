@@ -338,3 +338,8 @@ PYEOF
 
 # shellcheck source=audio.sh
 [ -r "$POMONA_LIBEXEC/audio.sh" ] && . "$POMONA_LIBEXEC/audio.sh"
+
+# ------------------------------------------------------------------ sleep module
+
+# shellcheck source=sleep.sh
+[ -r "$POMONA_LIBEXEC/sleep.sh" ] && . "$POMONA_LIBEXEC/sleep.sh"
