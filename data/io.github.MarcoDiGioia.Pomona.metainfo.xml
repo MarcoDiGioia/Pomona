@@ -148,14 +148,14 @@
   <releases>
     <release version="0.10.0" date="2026-10-30">
       <description>
-        <p>New: the speakers work. The new Audio page installs the Mac driver for the Cirrus Logic sound chip, rebuilt automatically at every kernel update.</p>
-        <p xml:lang="it">Novità: gli altoparlanti funzionano. La nuova pagina Audio installa il driver per Mac del chip audio Cirrus Logic, ricompilato da solo a ogni aggiornamento del kernel.</p>
-        <p xml:lang="de">Neu: Die Lautsprecher funktionieren. Die neue Audio-Seite installiert den Mac-Treiber für den Cirrus-Logic-Soundchip, der bei jedem Kernel-Update automatisch neu gebaut wird.</p>
-        <p xml:lang="fr">Nouveau : les haut-parleurs fonctionnent. La nouvelle page Audio installe le pilote pour Mac de la puce audio Cirrus Logic, recompilé automatiquement à chaque mise à jour du noyau.</p>
-        <p xml:lang="es">Novedad: los altavoces funcionan. La nueva página Audio instala el controlador para Mac del chip de sonido Cirrus Logic, que se recompila solo en cada actualización del kernel.</p>
-        <p xml:lang="pt">Novo: os altifalantes funcionam. A nova página Áudio instala o controlador para Mac do chip de som Cirrus Logic, recompilado automaticamente em cada atualização do kernel.</p>
-        <p xml:lang="nl">Nieuw: de luidsprekers werken. De nieuwe Audio-pagina installeert het Mac-stuurprogramma voor de Cirrus Logic-geluidschip, dat bij elke kernelupdate automatisch opnieuw wordt gebouwd.</p>
-        <p xml:lang="pl">Nowość: głośniki działają. Nowa strona Dźwięk instaluje sterownik dla Maca do układu dźwiękowego Cirrus Logic, przebudowywany automatycznie przy każdej aktualizacji jądra.</p>
+        <p>New: the speakers work. The new Audio page installs the Mac driver for the Cirrus Logic sound chip, rebuilt automatically at every kernel update. If a page gets your Mac wrong, “Is Pomona wrong?” sends a diagnostic report.</p>
+        <p xml:lang="it">Novità: gli altoparlanti funzionano. La nuova pagina Audio installa il driver per Mac del chip audio Cirrus Logic, ricompilato da solo a ogni aggiornamento del kernel. Se una pagina sbaglia sul tuo Mac, “Pomona si sbaglia?” invia un rapporto di diagnostica.</p>
+        <p xml:lang="de">Neu: Die Lautsprecher funktionieren. Die neue Audio-Seite installiert den Mac-Treiber für den Cirrus-Logic-Soundchip, der bei jedem Kernel-Update automatisch neu gebaut wird. Wenn eine Seite deinen Mac falsch einschätzt, sendet „Liegt Pomona falsch?“ einen Diagnosebericht.</p>
+        <p xml:lang="fr">Nouveau : les haut-parleurs fonctionnent. La nouvelle page Audio installe le pilote pour Mac de la puce audio Cirrus Logic, recompilé automatiquement à chaque mise à jour du noyau. Si une page se trompe sur votre Mac, « Pomona se trompe ? » envoie un rapport de diagnostic.</p>
+        <p xml:lang="es">Novedad: los altavoces funcionan. La nueva página Audio instala el controlador para Mac del chip de sonido Cirrus Logic, que se recompila solo en cada actualización del kernel. Si una página se equivoca con tu Mac, «¿Pomona se equivoca?» envía un informe de diagnóstico.</p>
+        <p xml:lang="pt">Novo: os altifalantes funcionam. A nova página Áudio instala o controlador para Mac do chip de som Cirrus Logic, recompilado automaticamente em cada atualização do kernel. Se uma página se enganar sobre o seu Mac, «O Pomona está errado?» envia um relatório de diagnóstico.</p>
+        <p xml:lang="nl">Nieuw: de luidsprekers werken. De nieuwe Audio-pagina installeert het Mac-stuurprogramma voor de Cirrus Logic-geluidschip, dat bij elke kernelupdate automatisch opnieuw wordt gebouwd. Als een pagina je Mac verkeerd beoordeelt, stuurt “Heeft Pomona het mis?” een diagnoserapport.</p>
+        <p xml:lang="pl">Nowość: głośniki działają. Nowa strona Dźwięk instaluje sterownik dla Maca do układu dźwiękowego Cirrus Logic, przebudowywany automatycznie przy każdej aktualizacji jądra. Jeśli strona źle ocenia twojego Maca, „Pomona się myli?” wysyła raport diagnostyczny.</p>
       </description>
     </release>
     <release version="0.9.1" date="2026-10-29">

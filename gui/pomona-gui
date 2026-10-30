@@ -555,6 +555,10 @@ class Window(Adw.ApplicationWindow):
             done.add(done_banner(_("Everything works"), _("Touch Bar, camera and light sensor are up."), mascot_texture()))
             self.add_group(page, done)
 
+        wrong = Adw.PreferencesGroup()
+        wrong.add(self.diagnose_row("t1"))
+        self.add_group(page, wrong)
+
         t1_line = " · ".join(x for x in (s.get("t1_product"), "05ac:8600" if t1 == "booted" else
                                          ("05ac:1281" if t1 == "recovery" else ""),
                                          "%s %s" % (_("USB configuration"), s.get("usb_config")) if s.get("usb_config") else "") if x)
@@ -717,6 +721,7 @@ class Window(Adw.ApplicationWindow):
         cert.connect("clicked", lambda *_a: self.certify(["wifi", "certify"]))
         cert_row.add_suffix(cert)
         tools.add(cert_row)
+        tools.add(self.diagnose_row("wifi"))
         self.add_group(page, tools)
         self.set_hardware(page, hardware)
 
@@ -825,6 +830,7 @@ class Window(Adw.ApplicationWindow):
         cert.connect("clicked", lambda *_a: self.certify(["audio", "certify"]))
         cert_row.add_suffix(cert)
         tools.add(cert_row)
+        tools.add(self.diagnose_row("audio"))
         self.add_group(page, tools)
         self.set_hardware(page, hardware)
 
@@ -1030,6 +1036,53 @@ class Window(Adw.ApplicationWindow):
                 self.toast(_("Could not open the browser"))
 
         run_async(pomona_cmd() + ["share", "--url", path], done)
+
+    # -------------------------------------------------------------- diagnostics
+
+    def diagnose_row(self, module):
+        row = Adw.ActionRow(title=_("Is Pomona wrong?"),
+                            subtitle=_("Send a diagnostic report if this page does not match what you see"))
+        b = Gtk.Button(label=_("Report…"), valign=Gtk.Align.CENTER)
+        b.connect("clicked", lambda *_a: self.diagnose(module))
+        row.add_suffix(b)
+        return row
+
+    def diagnose(self, module):
+        close = [None]
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
+                      margin_top=12, margin_bottom=12, margin_start=12, margin_end=12)
+        box.append(Gtk.Label(wrap=True, xalign=0, label=_(
+            "Pomona will collect what it checked on this page (chips, drivers, kernel, distribution), never serial "
+            "numbers, MAC addresses or network names. Your browser opens a GitHub page with the report filled in: "
+            "nothing is sent until you press “Submit new issue”.")))
+        for verdict, text in (("works", _("It says something is wrong, but it works")),
+                              ("broken", _("It says everything works, but something is wrong"))):
+            b = Gtk.Button(label=text)
+            b.connect("clicked", lambda *_a, v=verdict: (close[0](), self.send_diagnostic(module, v)))
+            box.append(b)
+        cancel = Gtk.Button(label=_("Cancel"), halign=Gtk.Align.END)
+        cancel.connect("clicked", lambda *_a: close[0]())
+        box.append(cancel)
+        close[0] = present_dialog(self, _("Send a diagnostic report"), box)
+
+    def send_diagnostic(self, module, verdict):
+        def opened(ok, out):
+            url = out.strip()
+            try:
+                if not ok or not url.startswith("https://"):
+                    raise GLib.Error("no url")
+                Gio.AppInfo.launch_default_for_uri(url, None)
+            except GLib.Error:
+                self.toast(_("Could not open the browser"))
+
+        def written(ok, out):
+            lines = [l for l in out.splitlines() if l.startswith("written: ")]
+            if not ok or not lines:
+                self.toast("%s: %s" % (_("Failed"), (out.strip().splitlines() or [""])[-1]))
+                return
+            run_async(pomona_cmd() + ["share", "--url", lines[-1][len("written: "):]], opened)
+
+        run_async(pomona_cmd() + ["diagnose", module, verdict, self.cert_dir(), "--no-share"], written)
 
     def certify(self, command=("certify",)):
         def done(_ok, out):

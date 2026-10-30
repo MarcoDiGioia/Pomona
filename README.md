@@ -101,6 +101,7 @@ From the terminal:
 | `sudo pomona audio undo` | removes it: the kernel's own driver is used again |
 | `pomona audio certify` | creates the audio compatibility certificate |
 | `pomona share` | opens your certificate as a pre-filled GitHub report, to add your Mac to the table |
+| `pomona diagnose MODULE works\|broken` | Pomona got it wrong? Sends what it checked as a pre-filled GitHub report |
 | `sudo pomona start` | turns everything on again (for example after unplugging something) |
 
 The app is available in English, Italian, German, French, Spanish, Portuguese, Dutch and Polish.
@@ -126,6 +127,7 @@ The app is available in English, Italian, German, French, Spanish, Portuguese, D
 - [Troubleshooting](docs/troubleshooting.md)
 - [Compatibility](docs/compatibility.md)
 - [Compatibility certificates](docs/certificates.md)
+- [Diagnostics](docs/diagnostics.md): when Pomona says something is broken and it works, or the other way round.
 - [Contributing and translations](CONTRIBUTING.md)
 
 ## Credits

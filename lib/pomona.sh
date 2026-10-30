@@ -317,12 +317,14 @@ except (OSError, ValueError):
     sys.exit("not a Pomona certificate")
 if not isinstance(cert, dict) or "model" not in cert:
     sys.exit("not a Pomona certificate")
-title = "Compatibility%s: %s on %s" % ({"wifi": " (Wi-Fi)", "audio": " (audio)"}.get(cert.get("module"), ""), cert.get("model", "?"), cert.get("distribution", "?"))
-query = urllib.parse.urlencode({
-    "template": "compatibility-report.yml",
-    "title": title,
-    "certificate": json.dumps(cert, indent=2),
-}, quote_via=urllib.parse.quote)
+if cert.get("kind") == "diagnostic":
+    says = {"works": "says it is broken, but it works", "broken": "says it works, but it is broken"}.get(cert.get("verdict"), "?")
+    title = "Diagnostic (%s): Pomona %s on %s" % (cert.get("module", "?"), says, cert.get("model", "?"))
+    fields = {"template": "diagnostic-report.yml", "title": title, "diagnostic": json.dumps(cert, indent=2)}
+else:
+    title = "Compatibility%s: %s on %s" % ({"wifi": " (Wi-Fi)", "audio": " (audio)"}.get(cert.get("module"), ""), cert.get("model", "?"), cert.get("distribution", "?"))
+    fields = {"template": "compatibility-report.yml", "title": title, "certificate": json.dumps(cert, indent=2)}
+query = urllib.parse.urlencode(fields, quote_via=urllib.parse.quote)
 print("%s/issues/new?%s" % (repo, query))
 PYEOF
 }
