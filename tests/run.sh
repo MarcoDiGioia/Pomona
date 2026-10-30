@@ -6,7 +6,7 @@ ROOT=$(cd -- "$HERE/.." && pwd -P)
 rc=0
 
 echo "== shell syntax"
-bash -n "$ROOT/bin/pomona" "$ROOT/lib/pomona.sh" "$ROOT/lib/wifi.sh" "$ROOT/lib/audio.sh" "$ROOT/data/audio/dkms/pomona-cs8409-prepare" "$ROOT/install.sh" "$ROOT/uninstall.sh" "$ROOT/libexec/pomona-admin" || rc=1
+bash -n "$ROOT/bin/pomona" "$ROOT/lib/pomona.sh" "$ROOT/lib/wifi.sh" "$ROOT/lib/audio.sh" "$ROOT/lib/sleep.sh" "$ROOT/data/audio/dkms/pomona-cs8409-prepare" "$ROOT/install.sh" "$ROOT/uninstall.sh" "$ROOT/libexec/pomona-admin" || rc=1
 
 echo "== lib/pomona.sh and bin/pomona"
 bash "$HERE/test_lib.sh" || rc=1
@@ -16,6 +16,9 @@ bash "$HERE/test_wifi.sh" || rc=1
 
 echo "== lib/audio.sh and pomona audio"
 bash "$HERE/test_audio.sh" || rc=1
+
+echo "== lib/sleep.sh and pomona sleep"
+bash "$HERE/test_sleep.sh" || rc=1
 
 echo "== libexec/pomona-touchbard, gui"
 python3 -I -m unittest discover -s "$HERE" -p 'test_*.py' -v 2>&1 | tail -n 3 || rc=1

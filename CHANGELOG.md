@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `sudo pomona sleep disable` turns suspend off (masks the systemd sleep units), for Macs that do not wake up from it: the lid, the power button and automatic suspend then do nothing instead of hanging the Mac. `sudo pomona sleep enable` turns it back on; `pomona sleep status`. On the MacBookPro14,3 neither deep nor s2idle sleep resumes yet; see docs/troubleshooting.md.
+
 ## 0.10.0 - 2026-10-30
 
 - **Is Pomona wrong?** At the end of the Setup, Wi-Fi and Audio pages, a diagnostic report for when the page says something is broken and it works, or the other way round. It holds only what the page checked (chips, drivers, kernel, distribution); your browser opens it as a pre-filled GitHub issue and a robot adds it to `diagnostics/`, to fix the checks that misjudge. Also `pomona diagnose MODULE works|broken`. See docs/diagnostics.md.
