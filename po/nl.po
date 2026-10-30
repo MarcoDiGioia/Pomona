@@ -44,8 +44,6 @@ msgstr "Alle stappen worden getoond; stappen die nog open staan hebben een knop.
 msgid "Waits for the T1 chip"
 msgstr "Wacht op de T1-chip"
 
-msgid "Customize"
-msgstr "Aanpassen"
 
 msgid "T1 firmware on the EFI partition"
 msgstr "T1-firmware op de EFI-partitie"

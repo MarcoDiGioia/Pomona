@@ -44,8 +44,6 @@ msgstr ""
 msgid "Waits for the T1 chip"
 msgstr ""
 
-msgid "Customize"
-msgstr ""
 
 msgid "T1 firmware on the EFI partition"
 msgstr ""

@@ -44,8 +44,6 @@ msgstr "Se muestran todos los pasos; los pendientes tienen un botón."
 msgid "Waits for the T1 chip"
 msgstr "Esperando al chip T1"
 
-msgid "Customize"
-msgstr "Personalización"
 
 msgid "T1 firmware on the EFI partition"
 msgstr "Firmware del T1 en la partición EFI"

@@ -72,19 +72,19 @@ Removing Pomona does not undo the Wi-Fi fix, so the Wi-Fi keeps working. To go b
 
 ## Using Pomona
 
-Open **Pomona** from the applications menu.
+Open **Pomona** from the applications menu. The pages are listed in the sidebar on the left.
 
 | Page | What you do there |
 | --- | --- |
 | **Setup** | See every step, from the Mac model to the start at boot. Steps already done are marked as done; anything missing has a button that fixes it. |
-| **Customize** | Choose what the Touch Bar shows (Esc only, F1–F12 or special keys), whether holding Fn swaps them, when it dims, and a different set for each application. |
 | **Wi-Fi** | The state of your Wi-Fi first; on Macs with the Broadcom card, also what is missing, a button to fix it, undo and a Wi-Fi certificate. |
 | **Audio** | Whether the speakers work; on Macs with the Cirrus Logic CS8409, a button that installs the Mac sound driver, undo and an audio certificate. |
 | **Report** | Create a compatibility certificate for your Mac and share it. |
+| **Touch Bar** | Choose what the Touch Bar shows (Esc only, F1–F12 or special keys), whether holding Fn swaps them, when it dims, and a different set for each application. |
 
 Every page ends with a **Hardware** group that lists the components it is about (model, firmware, chip, driver, kernel).
 
-Per-application key sets work on GNOME: after installing, log out and back in once, then enable the extension from the **Customize** page.
+Per-application key sets work on GNOME: after installing, log out and back in once, then enable the extension from the **Touch Bar** page.
 
 From the terminal:
 

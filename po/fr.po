@@ -44,8 +44,6 @@ msgstr "Toutes les étapes sont affichées ; celles qui restent à faire ont un 
 msgid "Waits for the T1 chip"
 msgstr "En attente de la puce T1"
 
-msgid "Customize"
-msgstr "Personnalisation"
 
 msgid "T1 firmware on the EFI partition"
 msgstr "Firmware du T1 sur la partition EFI"

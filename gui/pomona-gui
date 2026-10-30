@@ -1,10 +1,12 @@
 #!/usr/bin/python3 -I
 """Pomona - graphical assistant for the Apple T1 on Linux.
 
-Three things in one window:
+One window, its pages listed in a sidebar:
   Setup      every step of the fix, each marked done or with a button
-  Customize  after installation: default key set, Fn, dimming, per-application key sets
+  Wi-Fi      the Broadcom card: what is missing, fix, undo, certificate
+  Audio      the Cirrus Logic sound chip: the Mac driver, fix, undo, certificate
   Report     writes the compatibility certificate
+  Touch Bar  after installation: default key set, Fn, dimming, per-application key sets
 
 Everything that needs root goes through pkexec and pomona-admin.
 SPDX-License-Identifier: GPL-3.0-or-later
@@ -288,36 +290,68 @@ class Window(Adw.ApplicationWindow):
 
         self.toasts = Adw.ToastOverlay()
         header = Adw.HeaderBar()
-        self.stack = Adw.ViewStack()
-        switcher = Adw.ViewSwitcher(stack=self.stack, policy=Adw.ViewSwitcherPolicy.WIDE)
-        header.set_title_widget(switcher)
+        self.stack = Adw.ViewStack(hexpand=True)
         refresh = Gtk.Button(icon_name="view-refresh-symbolic", tooltip_text=_("Refresh"))
         refresh.connect("clicked", lambda *_a: self.refresh())
         header.pack_end(refresh)
         about = Gtk.Button(icon_name="help-about-symbolic", tooltip_text=_("About Pomona"))
         about.connect("clicked", lambda *_a: self.show_about())
         header.pack_start(about)
-        self.toasts.set_child(toolbar(header, self.stack))
+        # the pages are listed in a sidebar on the left, so new modules never run out of room
+        self.sidebar = Gtk.ListBox(selection_mode=Gtk.SelectionMode.BROWSE)
+        self.sidebar.add_css_class("navigation-sidebar")
+        self.sidebar.connect("row-selected", self.on_sidebar_row)
+        side = Gtk.ScrolledWindow(hscrollbar_policy=Gtk.PolicyType.NEVER, child=self.sidebar, width_request=190)
+        body = Gtk.Box()
+        body.append(side)
+        body.append(Gtk.Separator(orientation=Gtk.Orientation.VERTICAL))
+        body.append(self.stack)
+        self.stack.connect("notify::visible-child-name", lambda *_a: self.sync_sidebar())
+        self.toasts.set_child(toolbar(header, body))
         self.set_content(self.toasts)
 
         self.setup_page = Adw.PreferencesPage()
-        self.stack.add_titled_with_icon(self.setup_page, "setup", _("Setup"), "emblem-system-symbolic")
-        self.touchbar_page = Adw.PreferencesPage()
-        self.stack.add_titled_with_icon(self.touchbar_page, "customize", _("Customize"), "input-keyboard-symbolic")
+        self.add_page(self.setup_page, "setup", _("Setup"), "emblem-system-symbolic")
         self.wifi = {}
         self.wifi_page = Adw.PreferencesPage()
-        self.wifi_tab = self.stack.add_titled_with_icon(self.wifi_page, "wifi", _("Wi-Fi"), "network-wireless-symbolic")
+        self.add_page(self.wifi_page, "wifi", _("Wi-Fi"), "network-wireless-symbolic")
         self.audio = {}
         self.audio_page = Adw.PreferencesPage()
-        self.stack.add_titled_with_icon(self.audio_page, "audio", _("Audio"), "audio-speakers-symbolic")
+        self.add_page(self.audio_page, "audio", _("Audio"), "audio-speakers-symbolic")
         self.report_page = Adw.PreferencesPage()
-        self.stack.add_titled_with_icon(self.report_page, "report", _("Report"), "emblem-documents-symbolic")
+        self.add_page(self.report_page, "report", _("Report"), "emblem-documents-symbolic")
+        self.touchbar_page = Adw.PreferencesPage()
+        self.add_page(self.touchbar_page, "touchbar", _("Touch Bar"), "input-keyboard-symbolic")
+        self.sync_sidebar()
 
         self.build_touchbar_page()
         self.build_report_page()
         self.refresh()
 
     # -------------------------------------------------------------- common
+
+    def add_page(self, page, name, title, icon):
+        self.stack.add_titled_with_icon(page, name, title, icon)
+        box = Gtk.Box(spacing=12, margin_top=6, margin_bottom=6, margin_start=6, margin_end=6)
+        box.append(Gtk.Image.new_from_icon_name(icon))
+        box.append(Gtk.Label(label=title, xalign=0, hexpand=True))
+        row = Gtk.ListBoxRow(child=box)
+        row.page_name = name
+        self.sidebar.append(row)
+
+    def on_sidebar_row(self, _box, row):
+        if row is not None and self.stack.get_visible_child_name() != row.page_name:
+            self.stack.set_visible_child_name(row.page_name)
+
+    def sync_sidebar(self):
+        name = self.stack.get_visible_child_name()
+        row = self.sidebar.get_first_child()
+        while row is not None:
+            if getattr(row, "page_name", None) == name:
+                if self.sidebar.get_selected_row() is not row:
+                    self.sidebar.select_row(row)
+                return
+            row = row.get_next_sibling()
 
     def toast(self, text):
         self.toasts.add_toast(Adw.Toast(title=text, timeout=3))
