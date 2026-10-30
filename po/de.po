@@ -491,3 +491,6 @@ msgstr "Das Bauen des Treibers dauert einige Minuten."
 
 msgid "Codec"
 msgstr "Codec"
+
+msgid "Wait for the current operation to finish"
+msgstr "Warte, bis der laufende Vorgang abgeschlossen ist"

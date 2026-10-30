@@ -306,6 +306,9 @@ class Window(Adw.ApplicationWindow):
         super().__init__(application=app, title="Pomona", default_width=720, default_height=760)
         self.status = {}
         self.cfg = read_config()
+        # the root operation in progress (pomona-admin), if any: its buttons wait until it ends
+        self.busy = None
+        self.busy_toast = None
 
         self.toasts = Adw.ToastOverlay()
         header = Adw.HeaderBar()
@@ -394,16 +397,34 @@ class Window(Adw.ApplicationWindow):
         page._groups = getattr(page, "_groups", []) + [group]
 
     def admin(self, args, label, then=None):
+        if self.busy:
+            self.toast(_("Wait for the current operation to finish"))
+            return
         admin = installed_admin() or os.path.join(REPO, "libexec", "pomona-admin")
-        self.toast(_("Working…"))
+        # a fix can take minutes (the audio driver is compiled): say so until it ends, and
+        # disable every button that would start another one
+        self.busy = label
+        self.busy_toast = Adw.Toast(title=_("Working…"), timeout=0)
+        self.toasts.add_toast(self.busy_toast)
+        self.rebuild_pages()
 
         def done(ok, out):
+            self.busy = None
+            if self.busy_toast is not None:
+                self.busy_toast.dismiss()
+                self.busy_toast = None
             self.toast(_("Done") if ok else "%s: %s" % (_("Failed"), (out.strip().splitlines() or [""])[-1]))
             if then:
                 then(ok, out)
             self.refresh()
 
         run_async(["pkexec", admin] + args, done)
+
+    def rebuild_pages(self):
+        """Redraw the pages with buttons from the data already read (no new status run)."""
+        self.build_setup_page()
+        self.build_wifi_page()
+        self.build_audio_page()
 
     def refresh(self):
         def done(ok, out):
@@ -466,7 +487,10 @@ class Window(Adw.ApplicationWindow):
         icon.add_css_class("success" if ok else "warning")
         row.add_prefix(icon)
         if button and not ok and action:
-            b = Gtk.Button(label=button, valign=Gtk.Align.CENTER)
+            if self.busy:
+                spinner = Gtk.Spinner(spinning=True, valign=Gtk.Align.CENTER, tooltip_text=_("Working…"))
+                row.add_suffix(spinner)
+            b = Gtk.Button(label=button, valign=Gtk.Align.CENTER, sensitive=not self.busy)
             b.add_css_class("suggested-action")
             b.connect("clicked", lambda *_a: action())
             row.add_suffix(b)
@@ -682,7 +706,7 @@ class Window(Adw.ApplicationWindow):
         tools = Adw.PreferencesGroup()
         undo_row = Adw.ActionRow(title=_("Undo the changes"),
                                  subtitle=_("Puts every file back as it was before the last fix"))
-        undo = Gtk.Button(label=_("Undo"), valign=Gtk.Align.CENTER, sensitive=installed and bool(w.get("backup")))
+        undo = Gtk.Button(label=_("Undo"), valign=Gtk.Align.CENTER, sensitive=installed and bool(w.get("backup")) and not self.busy)
         undo.connect("clicked", lambda *_a: self.admin(
             ["wifi-undo"], "wifi-undo", then=lambda ok, _out: ok and self.toast(_("Restart the computer to finish"))))
         undo_row.add_suffix(undo)
@@ -790,7 +814,7 @@ class Window(Adw.ApplicationWindow):
         tools = Adw.PreferencesGroup()
         undo_row = Adw.ActionRow(title=_("Undo the changes"),
                                  subtitle=_("Removes the Mac sound driver: the kernel’s own one is used after a restart"))
-        undo = Gtk.Button(label=_("Undo"), valign=Gtk.Align.CENTER, sensitive=installed and added)
+        undo = Gtk.Button(label=_("Undo"), valign=Gtk.Align.CENTER, sensitive=installed and added and not self.busy)
         undo.connect("clicked", lambda *_a: self.admin(
             ["audio-undo"], "audio-undo", then=lambda ok, _out: ok and self.toast(_("Restart the computer to finish"))))
         undo_row.add_suffix(undo)

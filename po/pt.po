@@ -491,3 +491,6 @@ msgstr "Compilar o controlador demora alguns minutos."
 
 msgid "Codec"
 msgstr "Codec"
+
+msgid "Wait for the current operation to finish"
+msgstr "Aguarde que a operação em curso termine"

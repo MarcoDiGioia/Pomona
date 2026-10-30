@@ -82,7 +82,7 @@ msgid "USB configuration"
 msgstr "Configurazione USB"
 
 msgid "Fix"
-msgstr "Sistema"
+msgstr "Correggi"
 
 msgid "Touch Bar driver"
 msgstr "Driver della Touch Bar"
@@ -491,3 +491,6 @@ msgstr "La compilazione del driver richiede qualche minuto."
 
 msgid "Codec"
 msgstr "Codec"
+
+msgid "Wait for the current operation to finish"
+msgstr "Attendi che finisca l’operazione in corso"
