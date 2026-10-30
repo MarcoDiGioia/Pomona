@@ -515,3 +515,21 @@ msgstr "Il dit que quelque chose ne va pas, mais ça fonctionne"
 
 msgid "It says everything works, but something is wrong"
 msgstr "Il dit que tout fonctionne, mais quelque chose ne va pas"
+
+msgid "Sleep"
+msgstr "Veille"
+
+msgid "Turned off: closing the lid or pressing the power button does nothing"
+msgstr "Désactivée : fermer le capot ou appuyer sur le bouton d’alimentation ne fait rien"
+
+msgid "Turn on"
+msgstr "Activer"
+
+msgid "The Mac did not wake up %d time(s): turn sleep off so that it does not hang"
+msgstr "Le Mac ne s’est pas réveillé %d fois : désactivez la veille pour qu’il ne se bloque pas"
+
+msgid "Turn off"
+msgstr "Désactiver"
+
+msgid "No failed wake-up found"
+msgstr "Aucun réveil raté trouvé"

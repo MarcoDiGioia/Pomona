@@ -515,3 +515,21 @@ msgstr "Es sagt, etwas stimmt nicht, aber es funktioniert"
 
 msgid "It says everything works, but something is wrong"
 msgstr "Es sagt, alles funktioniert, aber etwas stimmt nicht"
+
+msgid "Sleep"
+msgstr "Ruhezustand"
+
+msgid "Turned off: closing the lid or pressing the power button does nothing"
+msgstr "Ausgeschaltet: Das Schließen des Deckels oder der Ein-/Ausschalter bewirkt nichts"
+
+msgid "Turn on"
+msgstr "Einschalten"
+
+msgid "The Mac did not wake up %d time(s): turn sleep off so that it does not hang"
+msgstr "Der Mac ist %d Mal nicht aufgewacht: Schalte den Ruhezustand aus, damit er nicht hängen bleibt"
+
+msgid "Turn off"
+msgstr "Ausschalten"
+
+msgid "No failed wake-up found"
+msgstr "Kein fehlgeschlagenes Aufwachen gefunden"

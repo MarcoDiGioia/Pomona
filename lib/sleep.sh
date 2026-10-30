@@ -30,6 +30,20 @@ sl_state() {
 	if [ "$n" = "$total" ]; then echo disabled; elif [ "$n" = 0 ]; then echo enabled; else echo partial; fi
 }
 
+# sl_failed_resumes -> how many earlier boots ended while the Mac was asleep: their kernel log
+# ends with "PM: suspend entry" and no "PM: suspend exit" after it, so the Mac never woke up and
+# was switched off with the power button. Read from the journal; nothing is suspended to find out.
+sl_failed_resumes() {
+	command -v journalctl >/dev/null || { echo 0; return; }
+	local b n=0
+	for b in $(journalctl --list-boots --no-pager 2>/dev/null | awk 'NR > 1 && $2 ~ /^[0-9a-f]{32}$/ {print $2}' | head -n -1); do
+		case "$(journalctl -b "$b" -k -o cat --no-pager -g '^PM: suspend (entry|exit)' 2>/dev/null | tail -n1)" in
+			"PM: suspend entry"*) n=$((n + 1));;
+		esac
+	done
+	echo "$n"
+}
+
 sl_can_write() { [ "$(id -u)" = 0 ] || [ "$POMONA_SYSTEMD_DIR" != /etc/systemd/system ]; }
 
 sl_reload() { [ "$POMONA_SYSTEMD_DIR" = /etc/systemd/system ] && systemctl daemon-reload 2>/dev/null; return 0; }

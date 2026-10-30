@@ -511,7 +511,14 @@ cmd_audio() {
 
 cmd_sleep() {
 	case "${1:-status}" in
-		status) echo "suspend          $(sl_state)  ($(sl_masked_count) of $(echo $SL_UNITS | wc -w) sleep units masked)";;
+		status)
+			if [ "${2:-}" = --json ]; then
+				printf '{\n  "state": %s,\n  "masked": %s,\n  "failed_resumes": %s\n}\n' \
+					"$(json_str "$(sl_state)")" "$(sl_masked_count)" "$(sl_failed_resumes)"
+			else
+				echo "suspend          $(sl_state)  ($(sl_masked_count) of $(echo $SL_UNITS | wc -w) sleep units masked)"
+				echo "failed wake-ups  $(sl_failed_resumes) earlier boot(s) ended while the Mac was asleep"
+			fi;;
 		disable) sl_disable;;
 		enable) sl_enable;;
 		*) et1_err "usage: pomona sleep status | sudo pomona sleep disable | sudo pomona sleep enable"; return 2;;
