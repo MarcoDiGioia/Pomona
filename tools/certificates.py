@@ -77,6 +77,20 @@ WIFI_CHECKS = [
     "Connected to a network",
     "No restart pending",
 ]
+# the checks `pomona audio certify` runs
+AUDIO_CHECKS = [
+    "Supported MacBook Pro model",
+    "Cirrus Logic CS8409 sound chip (10138409)",
+    "Amplifiers known to the driver",
+    "DKMS package installed",
+    "Driver built for the running kernel",
+    "No other copy of the driver",
+    "Mac driver in use (CS8409/CS42L83)",
+    "No restart pending",
+]
+AUDIO_CHIP = "Cirrus Logic CS8409 sound chip (10138409)"
+AUDIO_KNOWN = "Amplifiers known to the driver"
+AUDIO_ACTIVE = "Mac driver in use (CS8409/CS42L83)"
 WIFI_MODEL = "Supported MacBook Pro model"
 WIFI_CHIP = "Broadcom BCM43602 Wi-Fi chip (14e4:43ba)"
 WIFI_DRIVER = "brcmfmac driver bound"
@@ -102,7 +116,12 @@ MODULES = {
            "title": "Pomona compatibility certificate"},
     "wifi": {"schema": 2, "fields": WIFI_FIELDS, "checks": WIFI_CHECKS, "main": WIFI_IFACE, "prefix": "wifi-",
              "title": "Pomona Wi-Fi compatibility certificate"},
+    "audio": {"schema": 2, "fields": WIFI_FIELDS, "checks": AUDIO_CHECKS, "main": AUDIO_ACTIVE, "prefix": "audio-",
+              "title": "Pomona audio compatibility certificate"},
 }
+# what each module calls its `subsystem` field, and who else the disclaimer names
+SUBSYSTEM_LABEL = {"wifi": ("Wi-Fi card subsystem", "Wi-Fi card"), "audio": ("Sound chip subsystem", "Sound chip")}
+VENDOR = {"wifi": " or Broadcom Inc.", "audio": " or Cirrus Logic, Inc."}
 
 # text fields: plain characters only, no markdown, HTML or shell metacharacters
 PATTERNS = {
@@ -213,7 +232,12 @@ def validate(raw, now=None, stored=False):
 def check_consistency(cert, releases=None):
     """Reject certificates that are plainly impossible. `releases` is {version: release date}."""
     c = cert["checks"]
-    if module_of(cert) == "wifi":
+    if module_of(cert) == "audio":
+        if not c[WIFI_MODEL]:
+            raise Invalid("the certificate says this is not a supported MacBook Pro, but the model is one")
+        if not c[AUDIO_CHIP] and (c[AUDIO_KNOWN] or c[AUDIO_ACTIVE]):
+            raise Invalid("the sound chip is reported missing although it is described or in use")
+    elif module_of(cert) == "wifi":
         if not c[WIFI_MODEL]:
             raise Invalid("the certificate says this is not a supported MacBook Pro, but the model is one")
         if not c[WIFI_CHIP] and any(c[k] for k in (WIFI_DRIVER, WIFI_IFACE, WIFI_CONNECTED)):
@@ -316,7 +340,7 @@ def render_markdown(cert):
     module = module_of(cert)
     spec = MODULES[module]
     check_names = spec["checks"]
-    extra = ("Wi-Fi card subsystem", cert["subsystem"] or "n/a") if module == "wifi" else \
+    extra = (SUBSYSTEM_LABEL[module][0], cert["subsystem"] or "n/a") if module in SUBSYSTEM_LABEL else \
         ("T1 EmbeddedOS on ESP", cert["embeddedos"] or "n/a")
     rows = [
         ("Date (UTC)", cert["date"]), ("Pomona", cert["pomona"]), ("Model", cert["model"]),
@@ -334,7 +358,7 @@ def render_markdown(cert):
     out += ["", "| Check | Result |", "| --- | --- |"]
     out += ["| %s | %s |" % (c, "PASS" if cert["checks"][c] else "FAIL") for c in check_names]
     out += ["", "Pomona is provided as is, without warranty, and is not affiliated with Apple Inc."
-            + (" or Broadcom Inc." if module == "wifi" else ""), ""]
+            + VENDOR.get(module, ""), ""]
     return "\n".join(out)
 
 
@@ -413,14 +437,14 @@ def model_table(certs, verified_ids=frozenset(), module="t1"):
 
 def report_table(certs, verified_ids=frozenset(), module="t1"):
     certs = [(p, c) for p, c in certs if module_of(c) == module]
-    third = "Wi-Fi card" if module == "wifi" else "EmbeddedOS"
+    third = SUBSYSTEM_LABEL[module][1] if module in SUBSYSTEM_LABEL else "EmbeddedOS"
     out = ["| Date | Model | Distribution | Kernel | Desktop | Mac firmware | %s | Pomona | Reported by | Result |" % third,
            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     icon = {"WORKING": "✅ Working", "PARTIAL": "🟡 Partial", "NOT-WORKING": "❌ Not working"}
     for path, c in sorted(certs, key=lambda x: (x[1]["date"], x[1]["model"]), reverse=True):
         who = "@" + c[STORED_EXTRA] if c.get(STORED_EXTRA) else "n/a"
         result = icon[c["result"]] + (" · verified" if cert_id(path) in verified_ids else "")
-        detail = (c["subsystem"] or "n/a") if module == "wifi" else (c["embeddedos"] or "n/a")
+        detail = (c["subsystem"] or "n/a") if module in SUBSYSTEM_LABEL else (c["embeddedos"] or "n/a")
         out.append("| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |" % (
             c["date"][:10], c["model"], md_escape(c["distribution"]), c["kernel"], md_escape(c["desktop"] or "n/a"),
             c["mac_firmware"], detail, c["pomona"], who, result))
@@ -443,7 +467,7 @@ def update_doc(certs, doc_path=None, verified_ids=None):
     with open(path, encoding="utf-8") as f:
         text = f.read()
     new = text
-    for module, prefix in (("t1", ""), ("wifi", "wifi-")):
+    for module, prefix in (("t1", ""), ("wifi", "wifi-"), ("audio", "audio-")):
         new = replace_block(new, prefix + "models", model_table(certs, verified, module))
         new = replace_block(new, prefix + "reports", report_table(certs, verified, module))
     if new != text:
@@ -493,7 +517,7 @@ def intake(event, outdir, cert_dir=None, doc_path=None, now=None, account_create
         return "duplicate"
     update_doc(load_all(cert_dir), doc_path, verified_ids)
     label = {"WORKING": "working", "PARTIAL": "partially working", "NOT-WORKING": "not working"}[cert["result"]]
-    title = "Add %scompatibility certificate: %s on %s" % ("Wi-Fi " if module_of(cert) == "wifi" else "",
+    title = "Add %scompatibility certificate: %s on %s" % ({"wifi": "Wi-Fi ", "audio": "audio "}.get(module_of(cert), ""),
                                                           cert["model"], cert["distribution"])
     body = ("Adds the certificate sent in #%d: **%s**, %s, kernel %s, Pomona %s (%s)%s.\n\n"
             "The certificate was checked against the schema and rebuilt from the validated values; "

@@ -10,6 +10,8 @@ open-source projects below, which are credited here.
 | [t1bridge](https://github.com/standardagents/t1bridge) | MIT, kernel parts GPL-2.0 | the T1's USB configurations and the need to disable runtime autosuspend |
 | Linux `hid-appletb-kbd` driver | GPL-2.0 | used as is, from the running kernel; Pomona only binds it to the T1 |
 | Linux `brcmfmac` driver | GPL-2.0 / ISC | used as is, from the running kernel; Pomona only supplies the board file and settings it needs |
+| Linux `snd-hda-codec-cs8409` driver | GPL-2.0 | the audio fix downloads its source from the exact tag of your kernel and builds it with the patch below; nothing is distributed |
+| [snd_hda_macbookpro](https://github.com/davidjo/snd_hda_macbookpro) | GPL-2.0 | the Mac support for the CS8409 sound chip: downloaded by the audio fix at a pinned commit and built on your computer; Pomona contains only the DKMS glue around it |
 | [t2linux](https://wiki.t2linux.org) | documentation, nothing copied | the `feature_disable=0x82000` driver option for Broadcom Wi-Fi on Macs |
 
 ## Wi-Fi board file

@@ -44,8 +44,6 @@ msgstr "Alle stappen worden getoond; stappen die nog open staan hebben een knop.
 msgid "Waits for the T1 chip"
 msgstr "Wacht op de T1-chip"
 
-msgid "Customize"
-msgstr "Aanpassen"
 
 msgid "T1 firmware on the EFI partition"
 msgstr "T1-firmware op de EFI-partitie"
@@ -406,3 +404,114 @@ msgstr "Het configuratiebestand kiezen"
 
 msgid "No connection? Connect the Mac temporarily with a cable (a phone’s USB tethering works too), or on another computer save the file from this address, copy it here and choose “I have the file…”."
 msgstr "Geen verbinding? Verbind de Mac tijdelijk met een kabel (USB-tethering van een telefoon werkt ook), of sla het bestand op een andere computer op vanaf dit adres, kopieer het hierheen en kies “Ik heb het bestand…”."
+
+msgid "Audio"
+msgstr "Audio"
+
+msgid "Audio status"
+msgstr "Audiostatus"
+
+msgid "No Cirrus Logic CS8409 sound chip found"
+msgstr "Geen Cirrus Logic CS8409-geluidschip gevonden"
+
+msgid "Pomona has no fix for this Mac’s sound: it is not needed or not supported yet"
+msgstr "Pomona heeft geen oplossing voor het geluid van deze Mac: die is niet nodig of nog niet ondersteund"
+
+msgid "Speakers and headphones"
+msgstr "Luidsprekers en koptelefoon"
+
+msgid "Working"
+msgstr "Werken"
+
+msgid "Silent: the kernel’s own driver does not switch on the Mac’s amplifiers"
+msgstr "Stil: het stuurprogramma van de kernel zet de versterkers van de Mac niet aan"
+
+msgid "The kernel’s driver for this sound chip does not switch on the Mac’s amplifiers: the speakers stay silent until the Mac driver is installed."
+msgstr "Het kernelstuurprogramma voor deze geluidschip zet de versterkers van de Mac niet aan: de luidsprekers blijven stil tot het Mac-stuurprogramma is geïnstalleerd."
+
+msgid "Not supported yet"
+msgstr "Nog niet ondersteund"
+
+msgid "The driver does not know this Mac’s amplifiers yet"
+msgstr "Het stuurprogramma kent de versterkers van deze Mac nog niet"
+
+msgid "Build tools"
+msgstr "Bouwgereedschap"
+
+msgid "Missing: %s"
+msgstr "Ontbreekt: %s"
+
+msgid "Another driver is installed"
+msgstr "Er is een ander stuurprogramma geïnstalleerd"
+
+msgid "Remove it first: %s"
+msgstr "Verwijder het eerst: %s"
+
+msgid "Mac sound driver"
+msgstr "Mac-geluidsstuurprogramma"
+
+msgid "Installed, rebuilt at every kernel update"
+msgstr "Geïnstalleerd, opnieuw gebouwd bij elke kernelupdate"
+
+msgid "Not installed"
+msgstr "Niet geïnstalleerd"
+
+msgid "Built for this kernel"
+msgstr "Gebouwd voor deze kernel"
+
+msgid "Built"
+msgstr "Gebouwd"
+
+msgid "Not built: run the fix again with a connection"
+msgstr "Niet gebouwd: voer de oplossing opnieuw uit met een verbinding"
+
+msgid "Restart the computer to load the new driver"
+msgstr "Herstart de computer om het nieuwe stuurprogramma te laden"
+
+msgid "Sound is set up"
+msgstr "Het geluid is ingesteld"
+
+msgid "The Mac driver is in use."
+msgstr "Het Mac-stuurprogramma is in gebruik."
+
+msgid "Removes the Mac sound driver: the kernel’s own one is used after a restart"
+msgstr "Verwijdert het Mac-geluidsstuurprogramma: na een herstart wordt dat van de kernel gebruikt"
+
+msgid "Runs the audio checks and writes a report you can share"
+msgstr "Voert de audiocontroles uit en schrijft een rapport dat je kunt delen"
+
+msgid "Download the sound driver?"
+msgstr "Geluidsstuurprogramma downloaden?"
+
+msgid "The sound driver for Macs is not part of Pomona. It will be downloaded from the snd_hda_macbookpro project on GitHub (GPL-2.0) and checked against known SHA-256 sums. To build it, the source of your kernel is downloaded too, now and at every kernel update. Nothing about you is sent."
+msgstr "Het geluidsstuurprogramma voor Macs maakt geen deel uit van Pomona. Het wordt gedownload van het project snd_hda_macbookpro op GitHub (GPL-2.0) en gecontroleerd met bekende SHA-256-sommen. Om het te bouwen wordt ook de broncode van je kernel gedownload, nu en bij elke kernelupdate. Er wordt niets over jou verzonden."
+
+msgid "Building the driver takes a few minutes."
+msgstr "Het bouwen van het stuurprogramma duurt een paar minuten."
+
+msgid "Codec"
+msgstr "Codec"
+
+msgid "Wait for the current operation to finish"
+msgstr "Wacht tot de huidige bewerking klaar is"
+
+msgid "Is Pomona wrong?"
+msgstr "Heeft Pomona het mis?"
+
+msgid "Send a diagnostic report if this page does not match what you see"
+msgstr "Stuur een diagnoserapport als deze pagina niet klopt met wat je ziet"
+
+msgid "Report…"
+msgstr "Melden…"
+
+msgid "Send a diagnostic report"
+msgstr "Diagnoserapport versturen"
+
+msgid "Pomona will collect what it checked on this page (chips, drivers, kernel, distribution), never serial numbers, MAC addresses or network names. Your browser opens a GitHub page with the report filled in: nothing is sent until you press “Submit new issue”."
+msgstr "Pomona verzamelt wat het op deze pagina heeft gecontroleerd (chips, stuurprogramma’s, kernel, distributie), nooit serienummers, MAC-adressen of netwerknamen. Je browser opent een GitHub-pagina met het rapport al ingevuld: er wordt niets verzonden voordat je op “Submit new issue” drukt."
+
+msgid "It says something is wrong, but it works"
+msgstr "Het zegt dat er iets mis is, maar het werkt"
+
+msgid "It says everything works, but something is wrong"
+msgstr "Het zegt dat alles werkt, maar er is iets mis"

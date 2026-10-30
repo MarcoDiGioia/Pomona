@@ -44,8 +44,6 @@ msgstr "Toutes les étapes sont affichées ; celles qui restent à faire ont un 
 msgid "Waits for the T1 chip"
 msgstr "En attente de la puce T1"
 
-msgid "Customize"
-msgstr "Personnalisation"
 
 msgid "T1 firmware on the EFI partition"
 msgstr "Firmware du T1 sur la partition EFI"
@@ -406,3 +404,114 @@ msgstr "Choisir le fichier de configuration"
 
 msgid "No connection? Connect the Mac temporarily with a cable (a phone’s USB tethering works too), or on another computer save the file from this address, copy it here and choose “I have the file…”."
 msgstr "Pas de connexion ? Branchez temporairement le Mac avec un câble (le partage de connexion USB d’un téléphone fonctionne aussi), ou, sur un autre ordinateur, enregistrez le fichier depuis cette adresse, copiez-le ici et choisissez « J’ai le fichier… »."
+
+msgid "Audio"
+msgstr "Audio"
+
+msgid "Audio status"
+msgstr "État de l’audio"
+
+msgid "No Cirrus Logic CS8409 sound chip found"
+msgstr "Aucune puce audio Cirrus Logic CS8409 trouvée"
+
+msgid "Pomona has no fix for this Mac’s sound: it is not needed or not supported yet"
+msgstr "Pomona n’a pas de correctif pour le son de ce Mac : il n’est pas nécessaire ou pas encore pris en charge"
+
+msgid "Speakers and headphones"
+msgstr "Haut-parleurs et casque"
+
+msgid "Working"
+msgstr "Fonctionnent"
+
+msgid "Silent: the kernel’s own driver does not switch on the Mac’s amplifiers"
+msgstr "Muets : le pilote du noyau n’allume pas les amplificateurs du Mac"
+
+msgid "The kernel’s driver for this sound chip does not switch on the Mac’s amplifiers: the speakers stay silent until the Mac driver is installed."
+msgstr "Le pilote du noyau pour cette puce audio n’allume pas les amplificateurs du Mac : les haut-parleurs restent muets tant que le pilote pour Mac n’est pas installé."
+
+msgid "Not supported yet"
+msgstr "Pas encore pris en charge"
+
+msgid "The driver does not know this Mac’s amplifiers yet"
+msgstr "Le pilote ne connaît pas encore les amplificateurs de ce Mac"
+
+msgid "Build tools"
+msgstr "Outils de compilation"
+
+msgid "Missing: %s"
+msgstr "Manquant : %s"
+
+msgid "Another driver is installed"
+msgstr "Un autre pilote est installé"
+
+msgid "Remove it first: %s"
+msgstr "Supprimez-le d’abord : %s"
+
+msgid "Mac sound driver"
+msgstr "Pilote audio pour Mac"
+
+msgid "Installed, rebuilt at every kernel update"
+msgstr "Installé, recompilé à chaque mise à jour du noyau"
+
+msgid "Not installed"
+msgstr "Non installé"
+
+msgid "Built for this kernel"
+msgstr "Compilé pour ce noyau"
+
+msgid "Built"
+msgstr "Compilé"
+
+msgid "Not built: run the fix again with a connection"
+msgstr "Non compilé : relancez le correctif avec une connexion"
+
+msgid "Restart the computer to load the new driver"
+msgstr "Redémarrez l’ordinateur pour charger le nouveau pilote"
+
+msgid "Sound is set up"
+msgstr "Le son est configuré"
+
+msgid "The Mac driver is in use."
+msgstr "Le pilote pour Mac est utilisé."
+
+msgid "Removes the Mac sound driver: the kernel’s own one is used after a restart"
+msgstr "Supprime le pilote audio pour Mac : celui du noyau est utilisé après un redémarrage"
+
+msgid "Runs the audio checks and writes a report you can share"
+msgstr "Lance les vérifications audio et rédige un rapport que vous pouvez partager"
+
+msgid "Download the sound driver?"
+msgstr "Télécharger le pilote audio ?"
+
+msgid "The sound driver for Macs is not part of Pomona. It will be downloaded from the snd_hda_macbookpro project on GitHub (GPL-2.0) and checked against known SHA-256 sums. To build it, the source of your kernel is downloaded too, now and at every kernel update. Nothing about you is sent."
+msgstr "Le pilote audio pour Mac ne fait pas partie de Pomona. Il sera téléchargé depuis le projet snd_hda_macbookpro sur GitHub (GPL-2.0) et vérifié avec des sommes SHA-256 connues. Pour le compiler, la source de votre noyau est aussi téléchargée, maintenant et à chaque mise à jour du noyau. Rien vous concernant n’est envoyé."
+
+msgid "Building the driver takes a few minutes."
+msgstr "La compilation du pilote prend quelques minutes."
+
+msgid "Codec"
+msgstr "Codec"
+
+msgid "Wait for the current operation to finish"
+msgstr "Attendez la fin de l’opération en cours"
+
+msgid "Is Pomona wrong?"
+msgstr "Pomona se trompe ?"
+
+msgid "Send a diagnostic report if this page does not match what you see"
+msgstr "Envoyez un rapport de diagnostic si cette page ne correspond pas à ce que vous constatez"
+
+msgid "Report…"
+msgstr "Signaler…"
+
+msgid "Send a diagnostic report"
+msgstr "Envoyer un rapport de diagnostic"
+
+msgid "Pomona will collect what it checked on this page (chips, drivers, kernel, distribution), never serial numbers, MAC addresses or network names. Your browser opens a GitHub page with the report filled in: nothing is sent until you press “Submit new issue”."
+msgstr "Pomona va rassembler ce qu’il a vérifié sur cette page (puces, pilotes, noyau, distribution), jamais de numéros de série, d’adresses MAC ou de noms de réseau. Votre navigateur ouvre une page GitHub avec le rapport déjà rempli : rien n’est envoyé avant que vous appuyiez sur « Submit new issue »."
+
+msgid "It says something is wrong, but it works"
+msgstr "Il dit que quelque chose ne va pas, mais ça fonctionne"
+
+msgid "It says everything works, but something is wrong"
+msgstr "Il dit que tout fonctionne, mais quelque chose ne va pas"

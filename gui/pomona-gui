@@ -1,10 +1,12 @@
 #!/usr/bin/python3 -I
 """Pomona - graphical assistant for the Apple T1 on Linux.
 
-Three things in one window:
+One window, its pages listed in a sidebar:
   Setup      every step of the fix, each marked done or with a button
-  Customize  after installation: default key set, Fn, dimming, per-application key sets
+  Wi-Fi      the Broadcom card: what is missing, fix, undo, certificate
+  Audio      the Cirrus Logic sound chip: the Mac driver, fix, undo, certificate
   Report     writes the compatibility certificate
+  Touch Bar  after installation: default key set, Fn, dimming, per-application key sets
 
 Everything that needs root goes through pkexec and pomona-admin.
 SPDX-License-Identifier: GPL-3.0-or-later
@@ -41,6 +43,8 @@ def installed_admin():
 MODE_NAMES = ["Esc only", "F1–F12", "Special keys"]
 # where the community shares the Wi-Fi board file (the same address lib/wifi.sh downloads from)
 BOARD_FILE_URL = "https://gist.github.com/madfatcat88/fb17a3ef6364a48a19ed57c143ddd383"
+# the sound driver lib/audio.sh downloads (at a pinned commit)
+AUDIO_DRIVER_URL = "https://github.com/davidjo/snd_hda_macbookpro"
 
 DISCLAIMER = ("Provided as is, without any warranty: use at your own risk. "
               "Not affiliated with Apple Inc. or Broadcom Inc.; Apple, MacBook and Touch Bar are trademarks of Apple Inc., "
@@ -265,6 +269,25 @@ def present_dialog(parent, title, content):
     return win.close
 
 
+def done_banner(title, description, paintable=None):
+    """The "all done" box at the end of a page. Not an Adw.StatusPage: that one scrolls inside
+    itself, and in a page that already scrolls it shows up empty."""
+    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, margin_top=18, margin_bottom=18)
+    if paintable is not None:
+        box.append(Gtk.Picture(paintable=paintable, can_shrink=True, height_request=128, content_fit=Gtk.ContentFit.CONTAIN))
+    else:
+        icon = Gtk.Image(icon_name="emblem-ok-symbolic", pixel_size=64)
+        icon.add_css_class("success")
+        box.append(icon)
+    heading = Gtk.Label(label=title, wrap=True, justify=Gtk.Justification.CENTER)
+    heading.add_css_class("title-2")
+    box.append(heading)
+    text = Gtk.Label(label=description, wrap=True, justify=Gtk.Justification.CENTER)
+    text.add_css_class("dim-label")
+    box.append(text)
+    return box
+
+
 def hardware_group(rows):
     """A 'Hardware' group: (title, value) rows, the empty values left out."""
     group = Adw.PreferencesGroup(title=_("Hardware"))
@@ -283,36 +306,74 @@ class Window(Adw.ApplicationWindow):
         super().__init__(application=app, title="Pomona", default_width=720, default_height=760)
         self.status = {}
         self.cfg = read_config()
+        # the root operation in progress (pomona-admin), if any: its buttons wait until it ends
+        self.busy = None
+        self.busy_toast = None
 
         self.toasts = Adw.ToastOverlay()
         header = Adw.HeaderBar()
-        self.stack = Adw.ViewStack()
-        switcher = Adw.ViewSwitcher(stack=self.stack, policy=Adw.ViewSwitcherPolicy.WIDE)
-        header.set_title_widget(switcher)
+        self.stack = Adw.ViewStack(hexpand=True)
         refresh = Gtk.Button(icon_name="view-refresh-symbolic", tooltip_text=_("Refresh"))
         refresh.connect("clicked", lambda *_a: self.refresh())
         header.pack_end(refresh)
         about = Gtk.Button(icon_name="help-about-symbolic", tooltip_text=_("About Pomona"))
         about.connect("clicked", lambda *_a: self.show_about())
         header.pack_start(about)
-        self.toasts.set_child(toolbar(header, self.stack))
+        # the pages are listed in a sidebar on the left, so new modules never run out of room
+        self.sidebar = Gtk.ListBox(selection_mode=Gtk.SelectionMode.BROWSE)
+        self.sidebar.add_css_class("navigation-sidebar")
+        self.sidebar.connect("row-selected", self.on_sidebar_row)
+        side = Gtk.ScrolledWindow(hscrollbar_policy=Gtk.PolicyType.NEVER, child=self.sidebar, width_request=190)
+        body = Gtk.Box()
+        body.append(side)
+        body.append(Gtk.Separator(orientation=Gtk.Orientation.VERTICAL))
+        body.append(self.stack)
+        self.stack.connect("notify::visible-child-name", lambda *_a: self.sync_sidebar())
+        self.toasts.set_child(toolbar(header, body))
         self.set_content(self.toasts)
 
         self.setup_page = Adw.PreferencesPage()
-        self.stack.add_titled_with_icon(self.setup_page, "setup", _("Setup"), "emblem-system-symbolic")
-        self.touchbar_page = Adw.PreferencesPage()
-        self.stack.add_titled_with_icon(self.touchbar_page, "customize", _("Customize"), "input-keyboard-symbolic")
+        self.add_page(self.setup_page, "setup", _("Setup"), "emblem-system-symbolic")
         self.wifi = {}
         self.wifi_page = Adw.PreferencesPage()
-        self.wifi_tab = self.stack.add_titled_with_icon(self.wifi_page, "wifi", _("Wi-Fi"), "network-wireless-symbolic")
+        self.add_page(self.wifi_page, "wifi", _("Wi-Fi"), "network-wireless-symbolic")
+        self.audio = {}
+        self.audio_page = Adw.PreferencesPage()
+        self.add_page(self.audio_page, "audio", _("Audio"), "audio-speakers-symbolic")
         self.report_page = Adw.PreferencesPage()
-        self.stack.add_titled_with_icon(self.report_page, "report", _("Report"), "emblem-documents-symbolic")
+        self.add_page(self.report_page, "report", _("Report"), "emblem-documents-symbolic")
+        self.touchbar_page = Adw.PreferencesPage()
+        self.add_page(self.touchbar_page, "touchbar", _("Touch Bar"), "input-keyboard-symbolic")
+        self.sync_sidebar()
 
         self.build_touchbar_page()
         self.build_report_page()
         self.refresh()
 
     # -------------------------------------------------------------- common
+
+    def add_page(self, page, name, title, icon):
+        self.stack.add_titled_with_icon(page, name, title, icon)
+        box = Gtk.Box(spacing=12, margin_top=6, margin_bottom=6, margin_start=6, margin_end=6)
+        box.append(Gtk.Image.new_from_icon_name(icon))
+        box.append(Gtk.Label(label=title, xalign=0, hexpand=True))
+        row = Gtk.ListBoxRow(child=box)
+        row.page_name = name
+        self.sidebar.append(row)
+
+    def on_sidebar_row(self, _box, row):
+        if row is not None and self.stack.get_visible_child_name() != row.page_name:
+            self.stack.set_visible_child_name(row.page_name)
+
+    def sync_sidebar(self):
+        name = self.stack.get_visible_child_name()
+        row = self.sidebar.get_first_child()
+        while row is not None:
+            if getattr(row, "page_name", None) == name:
+                if self.sidebar.get_selected_row() is not row:
+                    self.sidebar.select_row(row)
+                return
+            row = row.get_next_sibling()
 
     def toast(self, text):
         self.toasts.add_toast(Adw.Toast(title=text, timeout=3))
@@ -336,16 +397,34 @@ class Window(Adw.ApplicationWindow):
         page._groups = getattr(page, "_groups", []) + [group]
 
     def admin(self, args, label, then=None):
+        if self.busy:
+            self.toast(_("Wait for the current operation to finish"))
+            return
         admin = installed_admin() or os.path.join(REPO, "libexec", "pomona-admin")
-        self.toast(_("Working…"))
+        # a fix can take minutes (the audio driver is compiled): say so until it ends, and
+        # disable every button that would start another one
+        self.busy = label
+        self.busy_toast = Adw.Toast(title=_("Working…"), timeout=0)
+        self.toasts.add_toast(self.busy_toast)
+        self.rebuild_pages()
 
         def done(ok, out):
+            self.busy = None
+            if self.busy_toast is not None:
+                self.busy_toast.dismiss()
+                self.busy_toast = None
             self.toast(_("Done") if ok else "%s: %s" % (_("Failed"), (out.strip().splitlines() or [""])[-1]))
             if then:
                 then(ok, out)
             self.refresh()
 
         run_async(["pkexec", admin] + args, done)
+
+    def rebuild_pages(self):
+        """Redraw the pages with buttons from the data already read (no new status run)."""
+        self.build_setup_page()
+        self.build_wifi_page()
+        self.build_audio_page()
 
     def refresh(self):
         def done(ok, out):
@@ -367,6 +446,15 @@ class Window(Adw.ApplicationWindow):
             self.build_wifi_page()
 
         run_async(pomona_cmd() + ["wifi", "status", "--json"], wifi_done)
+
+        def audio_done(ok, out):
+            try:
+                self.audio = json.loads(out) if ok else {}
+            except ValueError:
+                self.audio = {}
+            self.build_audio_page()
+
+        run_async(pomona_cmd() + ["audio", "status", "--json"], audio_done)
 
     def build_hardware_pages(self):
         s = self.status
@@ -399,7 +487,10 @@ class Window(Adw.ApplicationWindow):
         icon.add_css_class("success" if ok else "warning")
         row.add_prefix(icon)
         if button and not ok and action:
-            b = Gtk.Button(label=button, valign=Gtk.Align.CENTER)
+            if self.busy:
+                spinner = Gtk.Spinner(spinning=True, valign=Gtk.Align.CENTER, tooltip_text=_("Working…"))
+                row.add_suffix(spinner)
+            b = Gtk.Button(label=button, valign=Gtk.Align.CENTER, sensitive=not self.busy)
             b.add_css_class("suggested-action")
             b.connect("clicked", lambda *_a: action())
             row.add_suffix(b)
@@ -461,13 +552,12 @@ class Window(Adw.ApplicationWindow):
 
         if is_t1 and all(oks):
             done = Adw.PreferencesGroup()
-            status = Adw.StatusPage(icon_name="emblem-ok-symbolic", title=_("Everything works"),
-                                    description=_("Touch Bar, camera and light sensor are up."))
-            mascot = mascot_texture()
-            if mascot:
-                status.set_paintable(mascot)
-            done.add(status)
+            done.add(done_banner(_("Everything works"), _("Touch Bar, camera and light sensor are up."), mascot_texture()))
             self.add_group(page, done)
+
+        wrong = Adw.PreferencesGroup()
+        wrong.add(self.diagnose_row("t1"))
+        self.add_group(page, wrong)
 
         t1_line = " · ".join(x for x in (s.get("t1_product"), "05ac:8600" if t1 == "booted" else
                                          ("05ac:1281" if t1 == "recovery" else ""),
@@ -614,14 +704,13 @@ class Window(Adw.ApplicationWindow):
 
         if all(oks):
             done = Adw.PreferencesGroup()
-            done.add(Adw.StatusPage(icon_name="emblem-ok-symbolic", title=_("Wi-Fi is set up"),
-                                    description=_("The card is ready and connected.")))
+            done.add(done_banner(_("Wi-Fi is set up"), _("The card is ready and connected.")))
             self.add_group(page, done)
 
         tools = Adw.PreferencesGroup()
         undo_row = Adw.ActionRow(title=_("Undo the changes"),
                                  subtitle=_("Puts every file back as it was before the last fix"))
-        undo = Gtk.Button(label=_("Undo"), valign=Gtk.Align.CENTER, sensitive=installed and bool(w.get("backup")))
+        undo = Gtk.Button(label=_("Undo"), valign=Gtk.Align.CENTER, sensitive=installed and bool(w.get("backup")) and not self.busy)
         undo.connect("clicked", lambda *_a: self.admin(
             ["wifi-undo"], "wifi-undo", then=lambda ok, _out: ok and self.toast(_("Restart the computer to finish"))))
         undo_row.add_suffix(undo)
@@ -632,6 +721,116 @@ class Window(Adw.ApplicationWindow):
         cert.connect("clicked", lambda *_a: self.certify(["wifi", "certify"]))
         cert_row.add_suffix(cert)
         tools.add(cert_row)
+        tools.add(self.diagnose_row("wifi"))
+        self.add_group(page, tools)
+        self.set_hardware(page, hardware)
+
+    # -------------------------------------------------------------- audio
+
+    def audio_fix(self):
+        # the driver is not part of Pomona: ask before downloading it
+        close = [None]
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
+                      margin_top=12, margin_bottom=12, margin_start=12, margin_end=12)
+        box.append(Gtk.Label(wrap=True, xalign=0, label=_(
+            "The sound driver for Macs is not part of Pomona. It will be downloaded from the snd_hda_macbookpro "
+            "project on GitHub (GPL-2.0) and checked against known SHA-256 sums. To build it, the source of your "
+            "kernel is downloaded too, now and at every kernel update. Nothing about you is sent.")))
+        note = Gtk.Label(wrap=True, xalign=0, label=_("Building the driver takes a few minutes."))
+        note.add_css_class("dim-label")
+        box.append(note)
+        address = Gtk.Label(wrap=True, xalign=0, selectable=True, label=AUDIO_DRIVER_URL)
+        address.add_css_class("monospace")
+        box.append(address)
+        buttons = Gtk.Box(spacing=12, halign=Gtk.Align.END)
+        cancel = Gtk.Button(label=_("Cancel"))
+        cancel.connect("clicked", lambda *_a: close[0]())
+        go = Gtk.Button(label=_("Download and fix"))
+        go.add_css_class("suggested-action")
+        go.connect("clicked", lambda *_a: (close[0](), self.admin(
+            ["audio-fix", "--download"], "audio-fix",
+            then=lambda ok, _out: ok and self.toast(_("Restart the computer to finish")))))
+        buttons.append(cancel)
+        buttons.append(go)
+        box.append(buttons)
+        close[0] = present_dialog(self, _("Download the sound driver?"), box)
+
+    def build_audio_page(self):
+        a = self.audio
+        page = self.audio_page
+        self.clear(page)
+        present = bool(a.get("present"))
+        hardware = [(_("Chip"), "Cirrus Logic CS8409 (10138409)" if present else ""),
+                    (_("Subsystem"), a.get("subsystem")), (_("Codec"), a.get("chip_name")),
+                    (_("Driver"), a.get("driver")), (_("Kernel"), a.get("kernel"))]
+
+        status = Adw.PreferencesGroup(title=_("Audio status"))
+        if not present:
+            status.add(Adw.ActionRow(title=_("No Cirrus Logic CS8409 sound chip found"),
+                                     subtitle=_("Pomona has no fix for this Mac’s sound: it is not needed or not supported yet")))
+            self.add_group(page, status)
+            self.set_hardware(page, hardware)
+            return
+        active = bool(a.get("active"))
+        self.step(status, _("Speakers and headphones"), active,
+                  _("Working") if active else _("Silent: the kernel’s own driver does not switch on the Mac’s amplifiers"))
+        self.add_group(page, status)
+
+        card = Adw.PreferencesGroup(
+            title="Cirrus Logic CS8409",
+            description=_("The kernel’s driver for this sound chip does not switch on the Mac’s amplifiers: the speakers stay silent until the Mac driver is installed."))
+        self.add_group(page, card)
+        state = a.get("state")
+        if state == "unsupported":
+            card.add(Adw.ActionRow(title=_("Not supported yet"),
+                                   subtitle=_("The driver does not know this Mac’s amplifiers yet")))
+            self.set_hardware(page, hardware)
+            return
+
+        steps = Adw.PreferencesGroup(title=_("Steps"), description=_("Every step is listed; the ones not done yet have a button."))
+        self.add_group(page, steps)
+        installed = bool(a.get("installed"))
+        missing = a.get("missing_tools") or ""
+        fix = self.audio_fix if installed and not missing and not a.get("foreign") else None
+        oks = []
+        if missing:
+            oks.append(self.step(steps, _("Build tools"), False, _("Missing: %s") % missing))
+        if a.get("foreign"):
+            oks.append(self.step(steps, _("Another driver is installed"), False,
+                                 _("Remove it first: %s") % a.get("foreign")))
+        added = bool(a.get("package"))
+        oks.append(self.step(steps, _("Mac sound driver"), added,
+                             _("Installed, rebuilt at every kernel update") if added else _("Not installed"),
+                             _("Fix"), fix))
+        if added:
+            built = bool(a.get("module_built"))
+            oks.append(self.step(steps, _("Built for this kernel"), built,
+                                 _("Built") if built else _("Not built: run the fix again with a connection"),
+                                 _("Fix"), fix))
+        oks.append(active)
+        if state == "restart":
+            oks.append(self.step(steps, _("Restart needed"), False, _("Restart the computer to load the new driver")))
+
+        if all(oks):
+            done = Adw.PreferencesGroup()
+            done.add(done_banner(_("Sound is set up"), _("The Mac driver is in use.")))
+            self.add_group(page, done)
+
+        tools = Adw.PreferencesGroup()
+        undo_row = Adw.ActionRow(title=_("Undo the changes"),
+                                 subtitle=_("Removes the Mac sound driver: the kernel’s own one is used after a restart"))
+        undo = Gtk.Button(label=_("Undo"), valign=Gtk.Align.CENTER, sensitive=installed and added and not self.busy)
+        undo.connect("clicked", lambda *_a: self.admin(
+            ["audio-undo"], "audio-undo", then=lambda ok, _out: ok and self.toast(_("Restart the computer to finish"))))
+        undo_row.add_suffix(undo)
+        tools.add(undo_row)
+        cert_row = Adw.ActionRow(title=_("Compatibility certificate"),
+                                 subtitle=_("Runs the audio checks and writes a report you can share"))
+        cert = Gtk.Button(label=_("Create certificate"), valign=Gtk.Align.CENTER)
+        cert.connect("clicked", lambda *_a: self.certify(["audio", "certify"]))
+        cert_row.add_suffix(cert)
+        tools.add(cert_row)
+        tools.add(self.diagnose_row("audio"))
         self.add_group(page, tools)
         self.set_hardware(page, hardware)
 
@@ -837,6 +1036,53 @@ class Window(Adw.ApplicationWindow):
                 self.toast(_("Could not open the browser"))
 
         run_async(pomona_cmd() + ["share", "--url", path], done)
+
+    # -------------------------------------------------------------- diagnostics
+
+    def diagnose_row(self, module):
+        row = Adw.ActionRow(title=_("Is Pomona wrong?"),
+                            subtitle=_("Send a diagnostic report if this page does not match what you see"))
+        b = Gtk.Button(label=_("Report…"), valign=Gtk.Align.CENTER)
+        b.connect("clicked", lambda *_a: self.diagnose(module))
+        row.add_suffix(b)
+        return row
+
+    def diagnose(self, module):
+        close = [None]
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
+                      margin_top=12, margin_bottom=12, margin_start=12, margin_end=12)
+        box.append(Gtk.Label(wrap=True, xalign=0, label=_(
+            "Pomona will collect what it checked on this page (chips, drivers, kernel, distribution), never serial "
+            "numbers, MAC addresses or network names. Your browser opens a GitHub page with the report filled in: "
+            "nothing is sent until you press “Submit new issue”.")))
+        for verdict, text in (("works", _("It says something is wrong, but it works")),
+                              ("broken", _("It says everything works, but something is wrong"))):
+            b = Gtk.Button(label=text)
+            b.connect("clicked", lambda *_a, v=verdict: (close[0](), self.send_diagnostic(module, v)))
+            box.append(b)
+        cancel = Gtk.Button(label=_("Cancel"), halign=Gtk.Align.END)
+        cancel.connect("clicked", lambda *_a: close[0]())
+        box.append(cancel)
+        close[0] = present_dialog(self, _("Send a diagnostic report"), box)
+
+    def send_diagnostic(self, module, verdict):
+        def opened(ok, out):
+            url = out.strip()
+            try:
+                if not ok or not url.startswith("https://"):
+                    raise GLib.Error("no url")
+                Gio.AppInfo.launch_default_for_uri(url, None)
+            except GLib.Error:
+                self.toast(_("Could not open the browser"))
+
+        def written(ok, out):
+            lines = [l for l in out.splitlines() if l.startswith("written: ")]
+            if not ok or not lines:
+                self.toast("%s: %s" % (_("Failed"), (out.strip().splitlines() or [""])[-1]))
+                return
+            run_async(pomona_cmd() + ["share", "--url", lines[-1][len("written: "):]], opened)
+
+        run_async(pomona_cmd() + ["diagnose", module, verdict, self.cert_dir(), "--no-share"], written)
 
     def certify(self, command=("certify",)):
         def done(_ok, out):

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.10.0 - 2026-10-30
+
+- **Is Pomona wrong?** At the end of the Setup, Wi-Fi and Audio pages, a diagnostic report for when the page says something is broken and it works, or the other way round. It holds only what the page checked (chips, drivers, kernel, distribution); your browser opens it as a pre-filled GitHub issue and a robot adds it to `diagnostics/`, to fix the checks that misjudge. Also `pomona diagnose MODULE works|broken`. See docs/diagnostics.md.
+- While a fix runs, the app says so until it ends, shows a spinner on the pending steps and disables Fix and Undo; a second request is refused. In Italian, *Fix* is now *Correggi*.
+- The pages of the app are listed in a sidebar on the left; *Customize* is now **Touch Bar**, the last page.
+- **New audio module for the Cirrus Logic CS8409 sound chip**: the kernel's own driver leaves the speakers silent on these Macs. `sudo pomona audio fix` (or the new **Audio** page of the app) installs the community driver [snd_hda_macbookpro](https://github.com/davidjo/snd_hda_macbookpro) as a DKMS package, `pomona-cs8409`, rebuilt at every kernel update. The driver files are downloaded at a pinned commit and checked against SHA-256 sums, only after you agree (the app asks, the terminal asks, or `--download`). `sudo pomona audio undo` removes it.
+- The driver is built from the exact source of each kernel (the Ubuntu kernel git tag of the installed package, or kernel.org), and its structure layout is checked against the running kernel when it exposes BTF: a module built against headers that differ by one field crashes the kernel when the sound chip is probed.
+- `pomona audio status` (also `--json`) and `pomona audio certify`; audio certificates get their own table in the compatibility page.
+
 ## 0.9.1 - 2026-10-29
 
 - The README, the Wi-Fi guide and the download notice say what to do without a connection: a cable or a phone's USB tethering for a minute, or a USB stick prepared on another computer.

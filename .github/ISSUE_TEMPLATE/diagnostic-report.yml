@@ -1,0 +1,26 @@
+name: Pomona got it wrong
+description: Pomona says something is broken and it works, or the other way round
+title: "Diagnostic: "
+labels: ["diagnostic"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you! Reports like this one teach Pomona which situations it misjudges.
+
+        If you came here from the app (*Is Pomona wrong?*) or from `pomona diagnose`, the diagnostic below is already filled in: check it and press **Submit new issue**. A robot will check it and open a pull request that adds it to `diagnostics/`.
+
+        The diagnostic contains only the Mac model, firmware version, distribution, kernel, desktop and what Pomona checked (chips, drivers, the state of each step). It has **no serial numbers, MAC addresses, network names or personal data**.
+  - type: textarea
+    id: diagnostic
+    attributes:
+      label: Diagnostic (JSON)
+      description: The content of the `pomona-diagnostic-*.json` file.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: What do you see? (optional)
+      description: For example "the speakers play sound" or "the Touch Bar stays dark after suspend".

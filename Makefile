@@ -24,9 +24,9 @@ test:
 	bash tests/run.sh
 
 lint:
-	bash -n bin/pomona lib/pomona.sh lib/wifi.sh install.sh uninstall.sh tools/prepare-public.sh tools/sync-wiki.sh tests/*.sh
-	python3 -I -m py_compile libexec/pomona-touchbard gui/pomona-gui tools/wiki.py && bash -n libexec/pomona-admin
-	@command -v shellcheck >/dev/null && shellcheck -x bin/pomona lib/pomona.sh lib/wifi.sh install.sh uninstall.sh || echo "shellcheck not installed, skipped"
+	bash -n bin/pomona lib/pomona.sh lib/wifi.sh lib/audio.sh data/audio/dkms/pomona-cs8409-prepare install.sh uninstall.sh tools/prepare-public.sh tools/sync-wiki.sh tests/*.sh
+	python3 -I -m py_compile libexec/pomona-touchbard gui/pomona-gui tools/wiki.py tools/diagnostics.py && bash -n libexec/pomona-admin
+	@command -v shellcheck >/dev/null && shellcheck -x bin/pomona lib/pomona.sh lib/wifi.sh lib/audio.sh data/audio/dkms/pomona-cs8409-prepare install.sh uninstall.sh || echo "shellcheck not installed, skipped"
 
 deb:
 	bash packaging/deb/build-deb.sh

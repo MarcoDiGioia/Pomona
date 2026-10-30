@@ -72,18 +72,19 @@ Removing Pomona does not undo the Wi-Fi fix, so the Wi-Fi keeps working. To go b
 
 ## Using Pomona
 
-Open **Pomona** from the applications menu.
+Open **Pomona** from the applications menu. The pages are listed in the sidebar on the left.
 
 | Page | What you do there |
 | --- | --- |
 | **Setup** | See every step, from the Mac model to the start at boot. Steps already done are marked as done; anything missing has a button that fixes it. |
-| **Customize** | Choose what the Touch Bar shows (Esc only, F1–F12 or special keys), whether holding Fn swaps them, when it dims, and a different set for each application. |
 | **Wi-Fi** | The state of your Wi-Fi first; on Macs with the Broadcom card, also what is missing, a button to fix it, undo and a Wi-Fi certificate. |
+| **Audio** | Whether the speakers work; on Macs with the Cirrus Logic CS8409, a button that installs the Mac sound driver, undo and an audio certificate. |
 | **Report** | Create a compatibility certificate for your Mac and share it. |
+| **Touch Bar** | Choose what the Touch Bar shows (Esc only, F1–F12 or special keys), whether holding Fn swaps them, when it dims, and a different set for each application. |
 
 Every page ends with a **Hardware** group that lists the components it is about (model, firmware, chip, driver, kernel).
 
-Per-application key sets work on GNOME: after installing, log out and back in once, then enable the extension from the **Customize** page.
+Per-application key sets work on GNOME: after installing, log out and back in once, then enable the extension from the **Touch Bar** page.
 
 From the terminal:
 
@@ -95,7 +96,12 @@ From the terminal:
 | `sudo pomona wifi fix` | installs the Wi-Fi board file and settings (then restart) |
 | `sudo pomona wifi undo` | puts back the files the fix replaced |
 | `pomona wifi certify` | creates the Wi-Fi compatibility certificate |
+| `pomona audio status` | shows whether the Mac sound driver is in use |
+| `sudo pomona audio fix` | downloads and builds the Mac sound driver with DKMS (then restart) |
+| `sudo pomona audio undo` | removes it: the kernel's own driver is used again |
+| `pomona audio certify` | creates the audio compatibility certificate |
 | `pomona share` | opens your certificate as a pre-filled GitHub report, to add your Mac to the table |
+| `pomona diagnose MODULE works\|broken` | Pomona got it wrong? Sends what it checked as a pre-filled GitHub report |
 | `sudo pomona start` | turns everything on again (for example after unplugging something) |
 
 The app is available in English, Italian, German, French, Spanish, Portuguese, Dutch and Polish.
@@ -109,7 +115,7 @@ The app is available in English, Italian, German, French, Spanish, Portuguese, D
 | MacBook Pro 15" 2016 (MacBookPro13,3) | 🟡 Should work |
 | MacBook Pro 13" 2016 with Touch Bar (MacBookPro13,2) | 🟡 Should work |
 
-✅ Verified: tested by the maintainer. 🟢 Tested by the community: a user sent a working certificate. 🟡 Should work: same chip, nobody has reported yet. Verified on Ubuntu 26.04. The same four models carry the Wi-Fi card, with their own table. Details and how to add your Mac: [docs/compatibility.md](docs/compatibility.md).
+✅ Verified: tested by the maintainer. 🟢 Tested by the community: a user sent a working certificate. 🟡 Should work: same chip, nobody has reported yet. Verified on Ubuntu 26.04. The same four models carry the Wi-Fi card and the CS8409 sound chip, each with its own table. Details and how to add your Mac: [docs/compatibility.md](docs/compatibility.md).
 
 **Does it work on your Mac? Tell us.** After a full shutdown and power-on, open the **Report** page, press **Create certificate** and then **Share with the community**. Your browser opens a GitHub page with the certificate already filled in; press *Submit new issue* and your Mac is added to the table. It contains no serial numbers or personal data. How it works: [docs/certificates.md](docs/certificates.md).
 
@@ -117,9 +123,11 @@ The app is available in English, Italian, German, French, Spanish, Portuguese, D
 
 - [How Pomona works](docs/how-it-works.md): the technical details.
 - [Wi-Fi](docs/wifi.md): what the fix changes, the MAC address, undo.
+- [Audio](docs/audio.md): the Mac sound driver, why it is built from the exact kernel source, kernel updates, undo.
 - [Troubleshooting](docs/troubleshooting.md)
 - [Compatibility](docs/compatibility.md)
 - [Compatibility certificates](docs/certificates.md)
+- [Diagnostics](docs/diagnostics.md): when Pomona says something is broken and it works, or the other way round.
 - [Contributing and translations](CONTRIBUTING.md)
 
 ## Credits

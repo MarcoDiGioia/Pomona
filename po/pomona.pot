@@ -44,8 +44,6 @@ msgstr ""
 msgid "Waits for the T1 chip"
 msgstr ""
 
-msgid "Customize"
-msgstr ""
 
 msgid "T1 firmware on the EFI partition"
 msgstr ""
@@ -405,4 +403,115 @@ msgid "Choose the board file"
 msgstr ""
 
 msgid "No connection? Connect the Mac temporarily with a cable (a phone’s USB tethering works too), or on another computer save the file from this address, copy it here and choose “I have the file…”."
+msgstr ""
+
+msgid "Audio"
+msgstr ""
+
+msgid "Audio status"
+msgstr ""
+
+msgid "No Cirrus Logic CS8409 sound chip found"
+msgstr ""
+
+msgid "Pomona has no fix for this Mac’s sound: it is not needed or not supported yet"
+msgstr ""
+
+msgid "Speakers and headphones"
+msgstr ""
+
+msgid "Working"
+msgstr ""
+
+msgid "Silent: the kernel’s own driver does not switch on the Mac’s amplifiers"
+msgstr ""
+
+msgid "The kernel’s driver for this sound chip does not switch on the Mac’s amplifiers: the speakers stay silent until the Mac driver is installed."
+msgstr ""
+
+msgid "Not supported yet"
+msgstr ""
+
+msgid "The driver does not know this Mac’s amplifiers yet"
+msgstr ""
+
+msgid "Build tools"
+msgstr ""
+
+msgid "Missing: %s"
+msgstr ""
+
+msgid "Another driver is installed"
+msgstr ""
+
+msgid "Remove it first: %s"
+msgstr ""
+
+msgid "Mac sound driver"
+msgstr ""
+
+msgid "Installed, rebuilt at every kernel update"
+msgstr ""
+
+msgid "Not installed"
+msgstr ""
+
+msgid "Built for this kernel"
+msgstr ""
+
+msgid "Built"
+msgstr ""
+
+msgid "Not built: run the fix again with a connection"
+msgstr ""
+
+msgid "Restart the computer to load the new driver"
+msgstr ""
+
+msgid "Sound is set up"
+msgstr ""
+
+msgid "The Mac driver is in use."
+msgstr ""
+
+msgid "Removes the Mac sound driver: the kernel’s own one is used after a restart"
+msgstr ""
+
+msgid "Runs the audio checks and writes a report you can share"
+msgstr ""
+
+msgid "Download the sound driver?"
+msgstr ""
+
+msgid "The sound driver for Macs is not part of Pomona. It will be downloaded from the snd_hda_macbookpro project on GitHub (GPL-2.0) and checked against known SHA-256 sums. To build it, the source of your kernel is downloaded too, now and at every kernel update. Nothing about you is sent."
+msgstr ""
+
+msgid "Building the driver takes a few minutes."
+msgstr ""
+
+msgid "Codec"
+msgstr ""
+
+msgid "Wait for the current operation to finish"
+msgstr ""
+
+msgid "Is Pomona wrong?"
+msgstr ""
+
+msgid "Send a diagnostic report if this page does not match what you see"
+msgstr ""
+
+msgid "Report…"
+msgstr ""
+
+msgid "Send a diagnostic report"
+msgstr ""
+
+msgid "Pomona will collect what it checked on this page (chips, drivers, kernel, distribution), never serial numbers, MAC addresses or network names. Your browser opens a GitHub page with the report filled in: nothing is sent until you press “Submit new issue”."
+msgstr ""
+
+msgid "It says something is wrong, but it works"
+msgstr ""
+
+msgid "It says everything works, but something is wrong"
 msgstr ""

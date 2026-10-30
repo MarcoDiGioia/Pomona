@@ -1,0 +1,129 @@
+#!/bin/bash
+# pomona-cs8409-prepare KERNEL - DKMS PRE_BUILD step of the Pomona audio module.
+#
+# Builds, in the current directory (the DKMS build tree), the source of snd-hda-codec-cs8409 for
+# KERNEL: the kernel's own cs8409 driver and the private sound/hda headers it needs, taken from
+# the exact source of that kernel, with the Apple support of snd_hda_macbookpro (upstream/,
+# verified by `pomona audio fix`) applied on top.
+#
+# The private headers must be those of the very kernel the module is loaded into: a structure
+# that differs by one field moves every member after it, and the module then reads the wrong
+# memory (a kernel oops when the codec is probed). So:
+#   - Ubuntu and derivatives: the files come from the Ubuntu kernel git tag of the installed
+#     package (Ubuntu-7.0.0-42.42 for linux-modules-7.0.0-42-generic), and one public header is
+#     compared with the installed linux-headers to be sure the tag is the right one;
+#   - other distributions: from the kernel.org stable tag, and only for the running kernel, whose
+#     structure layout can be checked against its BTF.
+# When the kernel exposes BTF (running kernel, bpftool installed) the layout of the structures
+# the module shares with snd-hda-codec-generic is checked at compile time in every case.
+# Any failure stops the build: the kernel's own driver stays in use.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+set -euo pipefail
+
+KVER=${1:?usage: pomona-cs8409-prepare KERNEL}
+HERE=$PWD
+UP="$HERE/upstream"
+OUT="$HERE/hda"
+KDIR=/lib/modules/$KVER/build
+OS_RELEASE=${POMONA_OS_RELEASE:-/etc/os-release}
+
+die() { echo "pomona-cs8409: $*" >&2; exit 1; }
+say() { echo "pomona-cs8409: $*"; }
+
+[ -d "$UP" ] || die "the snd_hda_macbookpro files are missing (run: sudo pomona audio fix)"
+[ -d "$KDIR" ] || die "no headers for $KVER (install linux-headers-$KVER)"
+
+# the files of sound/hda the module is built from
+FILES="sound/hda/codecs/cirrus/cs8409.c sound/hda/codecs/cirrus/cs8409.h sound/hda/codecs/cirrus/cs8409-tables.c
+sound/hda/codecs/generic.h sound/hda/codecs/side-codecs/hda_component.h
+sound/hda/common/hda_local.h sound/hda/common/hda_auto_parser.h sound/hda/common/hda_jack.h"
+CHECK_HEADER=include/sound/hda_codec.h
+
+osr() { sed -n "s/^$1=//p" "$OS_RELEASE" 2>/dev/null | tr -d '"' | head -n1; }
+
+fetch() { # fetch URL DEST
+	install -d "$(dirname "$2")"
+	curl -fsSL --proto '=https' --max-time 60 --retry 2 -o "$2" "$1"
+}
+
+# ------------------------------------------------------------------ where the source comes from
+
+base_url="" mode=""
+pkg=$(dpkg-query -W -f='${source:Package} ${source:Version}' "linux-modules-$KVER" 2>/dev/null || true)
+if [ -n "$pkg" ] && [ -n "$(osr UBUNTU_CODENAME)$(osr VERSION_CODENAME)" ] && { [ "$(osr ID)" = ubuntu ] || osr ID_LIKE | grep -qw ubuntu; }; then
+	src=${pkg% *}; ver=${pkg#* }
+	series=$(osr UBUNTU_CODENAME); [ -n "$series" ] || series=$(osr VERSION_CODENAME)
+	tag="Ubuntu${src#linux}-${ver//\~/_}"
+	for repo in "linux" "$src"; do
+		url="https://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/$repo/+git/$series/plain"
+		if curl -fsS --proto '=https' --max-time 60 -o /dev/null "$url/Makefile?h=$tag" 2>/dev/null; then base_url=$url; break; fi
+	done
+	[ -n "$base_url" ] || die "cannot reach the Ubuntu kernel source tag $tag (no connection, or a kernel Pomona does not know)"
+	mode=ubuntu
+	say "kernel source: Ubuntu $series, tag $tag"
+else
+	[ "$KVER" = "$(uname -r)" ] || die "on this distribution the module can only be built for the running kernel: restart into $KVER and run  sudo pomona audio fix"
+	up=${KVER%%-*}; up=${up%.0}
+	tag="v$up"
+	base_url="https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/plain"
+	mode=upstream
+	say "kernel source: kernel.org stable, tag $tag"
+fi
+
+rm -rf "$OUT"
+for f in $FILES; do
+	fetch "$base_url/$f?h=$tag" "$OUT/${f#sound/hda/}" || die "could not download $f"
+done
+
+if [ "$mode" = ubuntu ]; then
+	fetch "$base_url/$CHECK_HEADER?h=$tag" "$HERE/check-header" || die "could not download $CHECK_HEADER"
+	cmp -s "$HERE/check-header" "$KDIR/$CHECK_HEADER" || die "the source tag $tag does not match the installed headers of $KVER"
+	rm -f "$HERE/check-header"
+fi
+
+# ------------------------------------------------------------------ Apple support (snd_hda_macbookpro)
+
+C="$OUT/codecs/cirrus"
+cp "$UP"/patch_cirrus/*.h "$C/"
+(cd "$OUT" && patch -s -p1 < "$UP/patch_cs8409.c.diff" && patch -s -p1 < "$UP/patch_cs8409.h.diff") ||
+	die "the snd_hda_macbookpro patches do not apply to $KVER (the kernel driver changed: Pomona needs an update)"
+
+# ------------------------------------------------------------------ structure layout
+
+objs="cs8409.o cs8409-tables.o"
+btf=/sys/kernel/btf/snd_hda_codec_generic
+if [ "$KVER" = "$(uname -r)" ] && [ -r "$btf" ] && command -v bpftool >/dev/null; then
+	dump=$(bpftool btf dump file "$btf" 2>/dev/null || true)
+	# struct NAME size, and bit offsets of some of its members
+	ssize() { printf '%s\n' "$dump" | sed -n "s/^\[[0-9]*\] STRUCT '$1' size=\([0-9]*\) .*/\1/p" | head -n1; }
+	moff() { printf '%s\n' "$dump" | sed -n "/^\[[0-9]*\] STRUCT '$1' /,/^\[/s/^[[:space:]]*'$2' type_id=[0-9]* bits_offset=\([0-9]*\).*/\1/p" | head -n1; }
+	gs=$(ssize hda_gen_spec); pc=$(ssize auto_pin_cfg)
+	a=$(moff hda_gen_spec autocfg); p=$(moff hda_gen_spec paths); m=$(moff hda_gen_spec multiout)
+	if [ -n "$gs" ] && [ -n "$pc" ] && [ -n "$a" ] && [ -n "$p" ] && [ -n "$m" ]; then
+		cat > "$C/pomona-layout.c" <<EOC
+// generated by pomona-cs8409-prepare from the BTF of the running kernel
+#include <linux/stddef.h>
+#include "cs8409.h"
+_Static_assert(sizeof(struct hda_gen_spec) == $gs, "struct hda_gen_spec differs from the running kernel");
+_Static_assert(sizeof(struct auto_pin_cfg) == $pc, "struct auto_pin_cfg differs from the running kernel");
+_Static_assert(offsetof(struct hda_gen_spec, multiout) * 8 == $m, "hda_gen_spec.multiout differs from the running kernel");
+_Static_assert(offsetof(struct hda_gen_spec, autocfg) * 8 == $a, "hda_gen_spec.autocfg differs from the running kernel");
+_Static_assert(offsetof(struct hda_gen_spec, paths) * 8 == $p, "hda_gen_spec.paths differs from the running kernel");
+EOC
+		objs="$objs pomona-layout.o"
+		say "structure layout will be checked against the running kernel"
+	elif [ "$mode" = upstream ]; then
+		die "cannot read the structure layout of the running kernel"
+	fi
+elif [ "$mode" = upstream ]; then
+	die "the structure layout cannot be checked (install bpftool): not building"
+fi
+
+cat > "$C/Kbuild" <<EOK
+ccflags-y += -I\$(src)/../../common -DAPPLE_PINSENSE_FIXUP -DAPPLE_CODECS -Wno-unused-variable -Wno-unused-function
+snd-hda-codec-cs8409-y := $objs
+obj-m += snd-hda-codec-cs8409.o
+EOK
+rm -f "$C/Makefile"
+say "source ready for $KVER"
