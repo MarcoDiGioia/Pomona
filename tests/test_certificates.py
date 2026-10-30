@@ -194,6 +194,14 @@ old
 <!-- wifi-reports:start -->
 old
 <!-- wifi-reports:end -->
+
+<!-- audio-models:start -->
+old
+<!-- audio-models:end -->
+
+<!-- audio-reports:start -->
+old
+<!-- audio-reports:end -->
 """
 
 
@@ -457,7 +465,7 @@ class WifiCertificates(unittest.TestCase):
             C.validate(with_(module="wifi"), now=NOW)
 
     def test_unknown_module_or_schema(self):
-        for bad in (wifi_(module="audio"), wifi_(module=None), wifi_(module=["wifi"]), wifi_(schema=3), wifi_(schema=True)):
+        for bad in (wifi_(module="bluetooth"), wifi_(module=None), wifi_(module=["wifi"]), wifi_(schema=3), wifi_(schema=True)):
             with self.subTest(bad=bad), self.assertRaises(C.Invalid):
                 C.validate(bad, now=NOW)
         no_module = copy.deepcopy(WIFI)
@@ -618,3 +626,64 @@ class Workflow(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+AUDIO = {
+    "schema": 2, "module": "audio", "date": "2026-10-30T09:15:00Z", "pomona": "0.9.0", "result": "WORKING",
+    "model": "MacBookPro14,3", "board": "Mac-551B86E5744E2388", "mac_firmware": "529.140.2.0.0",
+    "subsystem": "106b:3900", "distribution": "Ubuntu 26.04.1 LTS", "kernel": "7.0.0-42-generic",
+    "desktop": "ubuntu:GNOME", "checks": {c: True for c in C.AUDIO_CHECKS},
+}
+
+
+def audio_(**changes):
+    cert = copy.deepcopy(AUDIO)
+    cert.update(changes)
+    return cert
+
+
+class AudioCertificates(unittest.TestCase):
+    def test_good_certificate(self):
+        cert = C.validate(AUDIO, now=NOW)
+        self.assertEqual(C.module_of(cert), "audio")
+        self.assertIn("Sound chip subsystem | 106b:3900", C.render_markdown(cert))
+        self.assertIn("Cirrus Logic, Inc.", C.render_markdown(cert))
+
+    def test_modules_do_not_mix(self):
+        with self.assertRaises(C.Invalid):  # a Wi-Fi certificate dressed as audio
+            C.validate(wifi_(module="audio"), now=NOW)
+        with self.assertRaises(C.Invalid):
+            C.validate(audio_(checks={c: True for c in C.WIFI_CHECKS}), now=NOW)
+
+    def test_result_follows_the_checks(self):
+        checks = dict(AUDIO["checks"], **{"No restart pending": False})
+        C.validate(audio_(result="PARTIAL", checks=checks), now=NOW)
+        silent = dict(AUDIO["checks"], **{C.AUDIO_ACTIVE: False})
+        C.validate(audio_(result="NOT-WORKING", checks=silent), now=NOW)
+        with self.assertRaises(C.Invalid):
+            C.validate(audio_(result="PARTIAL", checks=silent), now=NOW)
+
+    def test_consistency(self):
+        def consistent(**off):
+            checks = dict(AUDIO["checks"], **off)
+            C.check_consistency(C.validate(audio_(checks=checks, result=C.derive_result(checks, "audio")), now=NOW), RELEASES)
+        consistent()
+        consistent(**{"DKMS package installed": False})
+        with self.assertRaises(C.Invalid):
+            consistent(**{C.AUDIO_CHIP: False})
+        consistent(**{c: False for c in C.AUDIO_CHECKS if c != C.WIFI_MODEL})
+
+
+class AudioIntake(unittest.TestCase):
+    setUp, tearDown, run_intake, read = Intake.setUp, Intake.tearDown, Intake.run_intake, Intake.read
+
+    def test_audio_certificate_is_added(self):
+        self.assertEqual(self.run_intake(issue_body(json.dumps(AUDIO, indent=2))), "ok")
+        self.assertIn("audio compatibility certificate", self.read("title"))
+        files = os.listdir(os.path.join(self.certs, "MacBookPro14_3"))
+        self.assertTrue(all(f.startswith("audio-") for f in files))
+        doc = read_text(self.doc)
+        top, bottom = doc.split("<!-- audio-models:start -->")
+        self.assertNotIn("@jane-doe", top)
+        self.assertIn("MacBookPro14,3 | 15\", 2017 | 🟢 Tested by the community | 1 | 1 |", bottom)
+        self.assertIn("| 106b:3900 |", bottom)

@@ -48,6 +48,10 @@ The Wi-Fi module installs `brcmfmac43602-pcie.txt`, a board configuration file f
 - Downloading it and installing it on your own computer, to make your own card work, is your own use; whether that is lawful in your jurisdiction is your responsibility. If in doubt, ask a lawyer.
 - If the address stops working, or a rights holder has the file removed, the fix reports it and you can supply a copy yourself with `--board-file`. Pomona will then be changed to obtain the file in another way. Contact: marco.digioia.dev@gmail.com.
 
+## The Mac sound driver
+
+The audio module builds [snd_hda_macbookpro](https://github.com/davidjo/snd_hda_macbookpro) (David Johnston, GPL-2.0), a patch to the kernel's own CS8409 driver, on your computer. **Pomona does not contain or distribute it**: after a notice and your agreement, your computer downloads its files from GitHub at one pinned commit, checks their SHA-256, downloads the matching kernel source and builds the module with DKMS. Pomona contains only the build script around it (GPL-3.0-or-later, a separate program that is not linked with the driver). The module is a GPL-2.0 work like the rest of the kernel. It programs the Mac's amplifiers over I²C; as with any driver, a fault could make noise or misbehave, at your own risk (see the warranty section above).
+
 ## Interoperability, no circumvention
 
 Pomona exists to let the owner of a computer use its built-in hardware (Touch Bar, camera,

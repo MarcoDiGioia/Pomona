@@ -16,10 +16,12 @@ systemctl disable --now pomona.service 2>/dev/null || true
 rm -f /etc/systemd/system/pomona.service /etc/systemd/system/pomona-touchbard.service /usr/lib/systemd/system-sleep/pomona
 rm -f "$PREFIX/bin/pomona" "$PREFIX/bin/pomona-gui"
 rm -f "$PREFIX/lib/pomona/pomona-t1-boot" "$PREFIX/lib/pomona/pomona-touchbard" \
-      "$PREFIX/lib/pomona/pomona-admin" "$PREFIX/lib/pomona/pomona.sh" "$PREFIX/lib/pomona/wifi.sh"
+      "$PREFIX/lib/pomona/pomona-admin" "$PREFIX/lib/pomona/pomona.sh" "$PREFIX/lib/pomona/wifi.sh" "$PREFIX/lib/pomona/audio.sh"
 rm -rf "$PREFIX/lib/pomona/__pycache__"
 rmdir "$PREFIX/lib/pomona" 2>/dev/null || true
 rm -f "$PREFIX"/share/locale/*/LC_MESSAGES/pomona.mo "$PREFIX/share/pomona/pomona-mascot-256.png"
+rm -f "$PREFIX/share/pomona/audio/dkms/pomona-cs8409-prepare" "$PREFIX/share/pomona/audio/dkms/Makefile"
+rmdir "$PREFIX/share/pomona/audio/dkms" "$PREFIX/share/pomona/audio" 2>/dev/null || true
 rmdir "$PREFIX/share/pomona" 2>/dev/null || true
 rm -f "$PREFIX"/share/icons/hicolor/*/apps/io.github.MarcoDiGioia.Pomona.png
 rm -f /usr/share/polkit-1/actions/io.github.MarcoDiGioia.Pomona.admin.policy /etc/udev/rules.d/60-pomona.rules
@@ -32,3 +34,9 @@ if [ "${1:-}" = --purge ]; then
 fi
 systemctl daemon-reload
 echo "Pomona removed. From the next power-on the T1 stays in recovery mode, as before."
+# the Mac sound driver keeps working without Pomona: say how to remove it too
+for s in /usr/src/pomona-cs8409-*; do
+	[ -d "$s" ] || continue
+	echo "The Mac sound driver is still installed (it works without Pomona). To remove it too:"
+	echo "  sudo dkms remove pomona-cs8409/${s#/usr/src/pomona-cs8409-} --all && sudo rm -rf $s"
+done

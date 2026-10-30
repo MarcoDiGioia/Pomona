@@ -23,6 +23,7 @@ BRANCH = "main"
 PAGES = {
     "README.md": "Home",
     "docs/wifi.md": "Wi-Fi",
+    "docs/audio.md": "Audio",
     "docs/how-it-works.md": "How-it-works",
     "docs/troubleshooting.md": "Troubleshooting",
     "docs/compatibility.md": "Compatibility",

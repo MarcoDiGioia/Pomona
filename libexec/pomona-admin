@@ -6,6 +6,8 @@
 #   pomona-admin enable | disable      the boot and Touch Bar services
 #   pomona-admin wifi-fix [--download | --board-file FILE] [--keep-mac | --mac aa:bb:cc:dd:ee:ff]   install the Wi-Fi board file and settings
 #   pomona-admin wifi-undo             put back the files the last Wi-Fi fix replaced
+#   pomona-admin audio-fix [--download]  download and build the Mac sound driver (DKMS)
+#   pomona-admin audio-undo            remove the Mac sound driver
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 set -uo pipefail
@@ -79,6 +81,22 @@ EOF
 	wifi-undo)
 		exec "$LIBEXEC/../../bin/pomona" wifi undo
 		;;
+	audio-fix)
+		shift
+		args=()
+		while [ $# -gt 0 ]; do
+			case "$1" in
+				--download) args+=(--download);;
+				*) echo "pomona-admin: unknown option" >&2; exit 2;;
+			esac
+			shift
+		done
+		"$LIBEXEC/../../bin/pomona" audio fix ${args[@]+"${args[@]}"}
+		exit $?
+		;;
+	audio-undo)
+		exec "$LIBEXEC/../../bin/pomona" audio undo
+		;;
 	enable)
 		systemctl enable --now $UNITS
 		;;
@@ -86,7 +104,7 @@ EOF
 		systemctl disable --now $UNITS
 		;;
 	*)
-		sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'
+		sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'
 		exit 2
 		;;
 esac

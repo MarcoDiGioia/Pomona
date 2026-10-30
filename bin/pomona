@@ -8,6 +8,7 @@
 #   pomona certify    run the checks and write a compatibility certificate
 #   pomona share      open your latest certificate as a pre-filled GitHub report
 #   pomona wifi       Broadcom Wi-Fi: status | fix | undo | certify  (pomona wifi help)
+#   pomona audio      Cirrus Logic sound: status | fix | undo | certify  (pomona audio help)
 #   pomona version
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
@@ -352,6 +353,158 @@ cmd_wifi() {
 	esac
 }
 
+# ------------------------------------------------------------------ audio
+
+audio_help() {
+	cat <<'EOF'
+pomona audio status [--json]   what is in place and what is missing
+sudo pomona audio fix          download and build the Mac sound driver (DKMS); then restart
+      --download               agree to download the driver and the kernel source (otherwise you are asked)
+      --force                  install even if the sound chip is not found
+sudo pomona audio undo         remove the driver: the kernel's own one is used again after a restart
+pomona audio certify [DIR]     run the checks and write a compatibility certificate
+EOF
+}
+
+audio_status_json() {
+	local model
+	model=$(et1_model)
+	cat <<EOF
+{
+  "version": $(json_str "$POMONA_VERSION"),
+  "model": $(json_str "$model"),
+  "model_class": $(json_str "$(et1_model_class "$model")"),
+  "state": $(json_str "$(au_state)"),
+  "kernel": $(json_str "$(uname -r)"),
+  "present": $(jbool au_present),
+  "supported": $(jbool au_supported),
+  "subsystem": $(json_str "$(au_subsystem)"),
+  "chip_name": $(json_str "$(au_chip_name)"),
+  "driver": $(json_str "$(au_driver)"),
+  "active": $(jbool au_active),
+  "package": $(json_str "$(au_installed_sources | head -n1)"),
+  "package_version": $(json_str "$AU_PKG_VERSION"),
+  "module_built": $(jbool au_module_built),
+  "foreign": $(json_str "$(au_foreign || true)"),
+  "missing_tools": $(json_str "$(au_missing_tools)"),
+  "restart_pending": $(jbool au_restart_pending),
+  "installed": $(jbool et1_installed)
+}
+EOF
+}
+
+audio_status() {
+	[ "${1:-}" = --json ] && { audio_status_json; return; }
+	if ! au_present; then
+		echo "No Cirrus Logic CS8409 sound chip found on this machine."
+		return 0
+	fi
+	local state other
+	state=$(au_state)
+	cat <<EOF
+sound chip       Cirrus Logic CS8409 [$AU_VENDOR_ID], subsystem $(au_subsystem)$(au_supported || echo "  (not one the driver knows)")
+codec name       $(au_chip_name)  ($(au_active && echo "Mac driver in use" || echo "kernel's own driver: speakers silent"))
+DKMS package     $(au_package_added && echo "$AU_PKG/$AU_PKG_VERSION, module $(au_module_built && echo "built for $(uname -r)" || echo "NOT built for $(uname -r)")" || echo "not installed")
+state            $state
+EOF
+	case "$state" in
+		needs-fix) echo; echo "Run  sudo pomona audio fix  and restart.";;
+		restart) echo; echo "Restart the computer to load the new driver.";;
+		failed) echo; echo "The driver could not be built for this kernel (no connection during the update?). Run  sudo pomona audio fix  again.";;
+		foreign) other=$(au_foreign); echo; echo "Another copy of the driver is installed ($other): see docs/audio.md.";;
+		unsupported) echo; echo "The driver does not know this Mac's amplifiers yet.";;
+	esac
+}
+
+cmd_audio_certify() {
+	local out_dir=${1:-$PWD} model class stamp base sub pass=0 total=0 verdict checks=() name ok c i
+	model=$(et1_model); class=$(et1_model_class "$model")
+	stamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+	# 0x106b3900 -> 106b:3900, the form certificates use for every subsystem id
+	sub=$(au_subsystem); sub=${sub#0x}; [ -n "$sub" ] && sub="${sub:0:4}:${sub:4:4}"
+
+	check() { total=$((total + 1)); if [ "$2" = yes ]; then pass=$((pass + 1)); fi; checks+=("$1|$2"); }
+	check "Supported MacBook Pro model" "$([ "$class" = t1 ] && echo yes || echo no)"
+	check "Cirrus Logic CS8409 sound chip (10138409)" "$(yesno au_present)"
+	check "Amplifiers known to the driver" "$(yesno au_supported)"
+	check "DKMS package installed" "$(yesno au_package_added)"
+	check "Driver built for the running kernel" "$(yesno au_module_built)"
+	check "No other copy of the driver" "$(if au_foreign >/dev/null; then echo no; else echo yes; fi)"
+	check "Mac driver in use (CS8409/CS42L83)" "$(yesno au_active)"
+	check "No restart pending" "$(if [ "$(au_state)" = restart ]; then echo no; else echo yes; fi)"
+
+	if [ "$pass" = "$total" ]; then verdict=WORKING
+	elif au_active; then verdict=PARTIAL
+	else verdict=NOT-WORKING; fi
+
+	base="$out_dir/pomona-certificate-audio-${model:-unknown}-$(date -u +%Y%m%d-%H%M%S)"
+	base=${base//,/_}
+	{
+		echo "# Pomona audio compatibility certificate"
+		echo
+		echo "**Result: $verdict** ($pass/$total checks passed)"
+		echo
+		echo "| Field | Value |"
+		echo "| --- | --- |"
+		echo "| Date (UTC) | $stamp |"
+		echo "| Pomona | $POMONA_VERSION |"
+		echo "| Model | ${model:-unknown} |"
+		echo "| Board | $(et1_dmi board_name) |"
+		echo "| Mac firmware | $(et1_dmi bios_version) ($(et1_dmi bios_date)) |"
+		echo "| Sound chip subsystem | ${sub:-n/a} |"
+		echo "| Distribution | $(et1_os_field PRETTY_NAME) |"
+		echo "| Kernel | $(uname -r) |"
+		echo "| Desktop | ${XDG_CURRENT_DESKTOP:-n/a} (${XDG_SESSION_TYPE:-n/a}) |"
+		echo
+		echo "| Check | Result |"
+		echo "| --- | --- |"
+		for c in "${checks[@]}"; do name=${c%|*}; ok=${c##*|}; echo "| $name | $([ "$ok" = yes ] && echo PASS || echo FAIL) |"; done
+		echo
+		echo "Pomona is provided as is, without warranty, and is not affiliated with Apple Inc. or Cirrus Logic, Inc."
+		echo
+		echo "No serial numbers or UUIDs are included. To add your Mac to the compatibility table, run: pomona share"
+	} > "$base.md"
+	{
+		echo "{"
+		echo "  \"schema\": 2,"
+		echo "  \"module\": \"audio\","
+		echo "  \"date\": $(json_str "$stamp"),"
+		echo "  \"pomona\": $(json_str "$POMONA_VERSION"),"
+		echo "  \"result\": $(json_str "$verdict"),"
+		echo "  \"model\": $(json_str "$model"),"
+		echo "  \"board\": $(json_str "$(et1_dmi board_name)"),"
+		echo "  \"mac_firmware\": $(json_str "$(et1_dmi bios_version)"),"
+		echo "  \"subsystem\": $(json_str "$sub"),"
+		echo "  \"distribution\": $(json_str "$(et1_os_field PRETTY_NAME)"),"
+		echo "  \"kernel\": $(json_str "$(uname -r)"),"
+		echo "  \"desktop\": $(json_str "${XDG_CURRENT_DESKTOP:-}"),"
+		echo "  \"checks\": {"
+		i=0
+		for c in "${checks[@]}"; do
+			i=$((i + 1)); name=${c%|*}; ok=${c##*|}
+			printf '    %s: %s%s\n' "$(json_str "$name")" "$([ "$ok" = yes ] && echo true || echo false)" "$([ "$i" -lt "${#checks[@]}" ] && echo ,)"
+		done
+		echo "  }"
+		echo "}"
+	} > "$base.json"
+	cat "$base.md"
+	echo
+	echo "written: $base.md"
+	echo "         $base.json"
+	[ "$verdict" = WORKING ]
+}
+
+cmd_audio() {
+	case "${1:-status}" in
+		status) shift; audio_status "$@";;
+		fix) shift; au_fix "$@";;
+		undo) shift; au_undo "$@";;
+		certify) shift; cmd_audio_certify "$@";;
+		help|-h|--help) audio_help;;
+		*) et1_err "unknown audio command $1 (try: pomona audio help)"; return 2;;
+	esac
+}
+
 case "${1:-status}" in
 	start) et1_start;;
 	stop) et1_stop;;
@@ -359,7 +512,8 @@ case "${1:-status}" in
 	certify) shift; cmd_certify "$@";;
 	share) shift; cmd_share "$@";;
 	wifi) shift; cmd_wifi "$@";;
+	audio) shift; cmd_audio "$@";;
 	version|--version|-V) echo "Pomona $POMONA_VERSION";;
-	help|-h|--help) sed -n '2,10p' "$_self" | sed 's/^# \{0,1\}//';;
+	help|-h|--help) sed -n '2,11p' "$_self" | sed 's/^# \{0,1\}//';;
 	*) echo "pomona: unknown command $1 (try: pomona help)" >&2; exit 2;;
 esac

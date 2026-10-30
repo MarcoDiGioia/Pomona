@@ -44,8 +44,6 @@ msgstr "Alle Schritte werden angezeigt; offene Schritte haben eine Schaltfläche
 msgid "Waits for the T1 chip"
 msgstr "Wartet auf den T1-Chip"
 
-msgid "Customize"
-msgstr "Anpassen"
 
 msgid "T1 firmware on the EFI partition"
 msgstr "T1-Firmware auf der EFI-Partition"
@@ -406,3 +404,90 @@ msgstr "Konfigurationsdatei auswählen"
 
 msgid "No connection? Connect the Mac temporarily with a cable (a phone’s USB tethering works too), or on another computer save the file from this address, copy it here and choose “I have the file…”."
 msgstr "Keine Verbindung? Verbinde den Mac vorübergehend per Kabel (das USB-Tethering eines Telefons funktioniert auch) oder speichere die Datei auf einem anderen Computer von dieser Adresse, kopiere sie hierher und wähle „Ich habe die Datei…“."
+
+msgid "Audio"
+msgstr "Audio"
+
+msgid "Audio status"
+msgstr "Audiostatus"
+
+msgid "No Cirrus Logic CS8409 sound chip found"
+msgstr "Kein Cirrus-Logic-CS8409-Soundchip gefunden"
+
+msgid "Pomona has no fix for this Mac’s sound: it is not needed or not supported yet"
+msgstr "Pomona hat keine Korrektur für den Ton dieses Macs: Sie wird nicht benötigt oder noch nicht unterstützt"
+
+msgid "Speakers and headphones"
+msgstr "Lautsprecher und Kopfhörer"
+
+msgid "Working"
+msgstr "Funktionieren"
+
+msgid "Silent: the kernel’s own driver does not switch on the Mac’s amplifiers"
+msgstr "Stumm: Der Treiber des Kernels schaltet die Verstärker des Macs nicht ein"
+
+msgid "The kernel’s driver for this sound chip does not switch on the Mac’s amplifiers: the speakers stay silent until the Mac driver is installed."
+msgstr "Der Kernel-Treiber für diesen Soundchip schaltet die Verstärker des Macs nicht ein: Die Lautsprecher bleiben stumm, bis der Mac-Treiber installiert ist."
+
+msgid "Not supported yet"
+msgstr "Noch nicht unterstützt"
+
+msgid "The driver does not know this Mac’s amplifiers yet"
+msgstr "Der Treiber kennt die Verstärker dieses Macs noch nicht"
+
+msgid "Build tools"
+msgstr "Build-Werkzeuge"
+
+msgid "Missing: %s"
+msgstr "Fehlt: %s"
+
+msgid "Another driver is installed"
+msgstr "Ein anderer Treiber ist installiert"
+
+msgid "Remove it first: %s"
+msgstr "Zuerst entfernen: %s"
+
+msgid "Mac sound driver"
+msgstr "Mac-Soundtreiber"
+
+msgid "Installed, rebuilt at every kernel update"
+msgstr "Installiert, wird bei jedem Kernel-Update neu gebaut"
+
+msgid "Not installed"
+msgstr "Nicht installiert"
+
+msgid "Built for this kernel"
+msgstr "Für diesen Kernel gebaut"
+
+msgid "Built"
+msgstr "Gebaut"
+
+msgid "Not built: run the fix again with a connection"
+msgstr "Nicht gebaut: Korrektur mit Internetverbindung erneut ausführen"
+
+msgid "Restart the computer to load the new driver"
+msgstr "Starte den Computer neu, um den neuen Treiber zu laden"
+
+msgid "Sound is set up"
+msgstr "Der Ton ist eingerichtet"
+
+msgid "The Mac driver is in use."
+msgstr "Der Mac-Treiber ist in Verwendung."
+
+msgid "Removes the Mac sound driver: the kernel’s own one is used after a restart"
+msgstr "Entfernt den Mac-Soundtreiber: Nach einem Neustart wird der Treiber des Kernels verwendet"
+
+msgid "Runs the audio checks and writes a report you can share"
+msgstr "Führt die Audioprüfungen aus und schreibt einen Bericht, den du teilen kannst"
+
+msgid "Download the sound driver?"
+msgstr "Soundtreiber herunterladen?"
+
+msgid "The sound driver for Macs is not part of Pomona. It will be downloaded from the snd_hda_macbookpro project on GitHub (GPL-2.0) and checked against known SHA-256 sums. To build it, the source of your kernel is downloaded too, now and at every kernel update. Nothing about you is sent."
+msgstr "Der Soundtreiber für Macs ist nicht Teil von Pomona. Er wird vom Projekt snd_hda_macbookpro auf GitHub (GPL-2.0) heruntergeladen und mit bekannten SHA-256-Summen geprüft. Um ihn zu bauen, wird auch der Quellcode deines Kernels heruntergeladen, jetzt und bei jedem Kernel-Update. Es wird nichts über dich gesendet."
+
+msgid "Building the driver takes a few minutes."
+msgstr "Das Bauen des Treibers dauert einige Minuten."
+
+msgid "Codec"
+msgstr "Codec"

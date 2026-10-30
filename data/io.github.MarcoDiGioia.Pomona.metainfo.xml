@@ -146,6 +146,18 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="0.10.0" date="2026-10-30">
+      <description>
+        <p>New: the speakers work. The new Audio page installs the Mac driver for the Cirrus Logic sound chip, rebuilt automatically at every kernel update.</p>
+        <p xml:lang="it">Novità: gli altoparlanti funzionano. La nuova pagina Audio installa il driver per Mac del chip audio Cirrus Logic, ricompilato da solo a ogni aggiornamento del kernel.</p>
+        <p xml:lang="de">Neu: Die Lautsprecher funktionieren. Die neue Audio-Seite installiert den Mac-Treiber für den Cirrus-Logic-Soundchip, der bei jedem Kernel-Update automatisch neu gebaut wird.</p>
+        <p xml:lang="fr">Nouveau : les haut-parleurs fonctionnent. La nouvelle page Audio installe le pilote pour Mac de la puce audio Cirrus Logic, recompilé automatiquement à chaque mise à jour du noyau.</p>
+        <p xml:lang="es">Novedad: los altavoces funcionan. La nueva página Audio instala el controlador para Mac del chip de sonido Cirrus Logic, que se recompila solo en cada actualización del kernel.</p>
+        <p xml:lang="pt">Novo: os altifalantes funcionam. A nova página Áudio instala o controlador para Mac do chip de som Cirrus Logic, recompilado automaticamente em cada atualização do kernel.</p>
+        <p xml:lang="nl">Nieuw: de luidsprekers werken. De nieuwe Audio-pagina installeert het Mac-stuurprogramma voor de Cirrus Logic-geluidschip, dat bij elke kernelupdate automatisch opnieuw wordt gebouwd.</p>
+        <p xml:lang="pl">Nowość: głośniki działają. Nowa strona Dźwięk instaluje sterownik dla Maca do układu dźwiękowego Cirrus Logic, przebudowywany automatycznie przy każdej aktualizacji jądra.</p>
+      </description>
+    </release>
     <release version="0.9.1" date="2026-10-29">
       <description>
         <p>New: the Wi-Fi fix also works without a connection, with a file saved from another computer, and the app says what to do (a cable or a phone’s USB tethering for a minute, or a prepared USB stick).</p>
