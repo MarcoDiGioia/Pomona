@@ -317,7 +317,7 @@ except (OSError, ValueError):
     sys.exit("not a Pomona certificate")
 if not isinstance(cert, dict) or "model" not in cert:
     sys.exit("not a Pomona certificate")
-title = "Compatibility%s: %s on %s" % (" (Wi-Fi)" if cert.get("module") == "wifi" else "", cert.get("model", "?"), cert.get("distribution", "?"))
+title = "Compatibility%s: %s on %s" % ({"wifi": " (Wi-Fi)", "audio": " (audio)"}.get(cert.get("module"), ""), cert.get("model", "?"), cert.get("distribution", "?"))
 query = urllib.parse.urlencode({
     "template": "compatibility-report.yml",
     "title": title,
@@ -331,3 +331,8 @@ PYEOF
 
 # shellcheck source=wifi.sh
 [ -r "$POMONA_LIBEXEC/wifi.sh" ] && . "$POMONA_LIBEXEC/wifi.sh"
+
+# ------------------------------------------------------------------ audio module
+
+# shellcheck source=audio.sh
+[ -r "$POMONA_LIBEXEC/audio.sh" ] && . "$POMONA_LIBEXEC/audio.sh"

@@ -70,12 +70,33 @@ Wi-Fi certificates received, newest first:
 | 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 106b:0173 | 0.9.0 | @MarcoDiGioia | ✅ Working · verified |
 <!-- wifi-reports:end -->
 
+## Audio (Cirrus Logic CS8409)
+
+The same four models have a Cirrus Logic CS8409 sound chip (`10138409`). The kernel's own driver leaves the speakers silent; `pomona audio fix` installs the community driver [snd_hda_macbookpro](https://github.com/davidjo/snd_hda_macbookpro) through DKMS. **Verified** and **Tested by the community** mean the same as above, for the audio module (`pomona audio certify`). **Should work** means the driver knows the model's amplifiers but nobody has sent an audio certificate yet. See [audio.md](audio.md).
+
+<!-- audio-models:start -->
+| Model | Machine | Status | Reports | People |
+| --- | --- | --- | --- | --- |
+| MacBookPro13,2 | 13", 2016, four Thunderbolt ports | 🟡 Should work | 0 | 0 |
+| MacBookPro13,3 | 15", 2016 | 🟡 Should work | 0 | 0 |
+| MacBookPro14,2 | 13", 2017, four Thunderbolt ports | 🟡 Should work | 0 | 0 |
+| MacBookPro14,3 | 15", 2017 | 🟡 Should work | 0 | 0 |
+<!-- audio-models:end -->
+
+Audio certificates received, newest first:
+
+<!-- audio-reports:start -->
+| Date | Model | Distribution | Kernel | Desktop | Mac firmware | Sound chip | Pomona | Reported by | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| | | | | | | | | | |
+<!-- audio-reports:end -->
+
 ## Adding your Mac
 
 1. Install Pomona and **shut down** (a restart does not reset the T1), then power on into Linux.
-2. Open Pomona, go to the **Report** page (Touch Bar) or the **Wi-Fi** page, press **Create certificate**, then **Share with the community**.
+2. Open Pomona, go to the **Report** page (Touch Bar), the **Wi-Fi** page or the **Audio** page, press **Create certificate**, then **Share with the community**.
 3. Your browser opens a GitHub issue with the certificate already filled in. Check it and press **Submit new issue** (you need a GitHub account).
 
-A robot checks the certificate and opens a pull request that adds it to the table; once it is merged, your Mac appears here. From a terminal: `pomona certify` (Touch Bar) or `pomona wifi certify` (Wi-Fi), then `pomona share`.
+A robot checks the certificate and opens a pull request that adds it to the table; once it is merged, your Mac appears here. From a terminal: `pomona certify` (Touch Bar), `pomona wifi certify` (Wi-Fi) or `pomona audio certify` (audio), then `pomona share`.
 
 A certificate that fails is just as useful: it says which step breaks on which machine. Certificates contain only the Mac model, firmware versions, distribution, kernel, desktop and the result of each check, never serial numbers, MAC addresses or network names.

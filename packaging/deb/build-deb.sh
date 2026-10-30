@@ -29,6 +29,9 @@ install -m 755 "$ROOT/libexec/pomona-touchbard" "$PKG/usr/lib/pomona/pomona-touc
 install -m 755 "$ROOT/libexec/pomona-admin"    "$PKG/usr/lib/pomona/pomona-admin"
 install -m 644 "$ROOT/lib/pomona.sh"           "$PKG/usr/lib/pomona/pomona.sh"
 install -m 644 "$ROOT/lib/wifi.sh"             "$PKG/usr/lib/pomona/wifi.sh"
+install -m 644 "$ROOT/lib/audio.sh"            "$PKG/usr/lib/pomona/audio.sh"
+install -D -m 755 "$ROOT/data/audio/dkms/pomona-cs8409-prepare" "$PKG/usr/share/pomona/audio/dkms/pomona-cs8409-prepare"
+install -D -m 644 "$ROOT/data/audio/dkms/Makefile" "$PKG/usr/share/pomona/audio/dkms/Makefile"
 install -m 755 "$ROOT/bin/pomona"              "$PKG/usr/bin/pomona"
 install -m 755 "$ROOT/gui/pomona-gui"          "$PKG/usr/bin/pomona-gui"
 tmpl "$ROOT/systemd/pomona.service"            "$PKG/usr/lib/systemd/system/pomona.service"
@@ -64,13 +67,14 @@ Maintainer: Marco Di Gioia <marco.digioia.dev@gmail.com>
 Installed-Size: $SIZE
 Depends: libusb-1.0-0, python3 (>= 3.8), python3-gi, gir1.2-gtk-4.0, gir1.2-adw-1, systemd, polkitd | policykit-1, pkexec | policykit-1
 Recommends: gnome-shell
+Suggests: dkms, curl, patch, build-essential, linux-headers-generic
 Conflicts: easy-t1
 Replaces: easy-t1
 Provides: easy-t1
 Homepage: https://github.com/MarcoDiGioia/Pomona
 Section: utils
 Priority: optional
-Description: Linux grows well on your Mac: Touch Bar, camera, light sensor and Wi-Fi for 2016-2017 MacBook Pro
+Description: Linux grows well on your Mac: Touch Bar, camera, light sensor, Wi-Fi and sound for 2016-2017 MacBook Pro
  Pomona fixes the hardware problems of Linux on Mac computers. Its first
  module boots the Apple T1 coprocessor of 2016-2017 MacBook Pro with Touch Bar
  from the EmbeddedOS image macOS keeps on the EFI partition, at every
@@ -83,6 +87,10 @@ Description: Linux grows well on your Mac: Touch Bar, camera, light sensor and W
  A second module fixes the Broadcom BCM43602 Wi-Fi card of the same Macs,
  which sees networks but rejects every connection until its board file is
  installed. Every file it changes is backed up first and can be restored.
+ .
+ A third module makes the speakers work: it builds the community driver
+ for the Cirrus Logic CS8409 sound chip through DKMS, from the exact source
+ of each kernel.
 EOF
 
 cat > "$PKG/DEBIAN/postinst" <<'EOF'

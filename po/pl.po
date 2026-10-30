@@ -406,3 +406,90 @@ msgstr "Wybierz plik konfiguracyjny"
 
 msgid "No connection? Connect the Mac temporarily with a cable (a phone’s USB tethering works too), or on another computer save the file from this address, copy it here and choose “I have the file…”."
 msgstr "Brak połączenia? Podłącz Maca tymczasowo kablem (działa też tethering USB z telefonu) albo na innym komputerze zapisz plik z tego adresu, skopiuj go tutaj i wybierz „Mam już plik…”."
+
+msgid "Audio"
+msgstr "Dźwięk"
+
+msgid "Audio status"
+msgstr "Stan dźwięku"
+
+msgid "No Cirrus Logic CS8409 sound chip found"
+msgstr "Nie znaleziono układu dźwiękowego Cirrus Logic CS8409"
+
+msgid "Pomona has no fix for this Mac’s sound: it is not needed or not supported yet"
+msgstr "Pomona nie ma poprawki dla dźwięku tego Maca: nie jest potrzebna albo nie jest jeszcze obsługiwana"
+
+msgid "Speakers and headphones"
+msgstr "Głośniki i słuchawki"
+
+msgid "Working"
+msgstr "Działają"
+
+msgid "Silent: the kernel’s own driver does not switch on the Mac’s amplifiers"
+msgstr "Cisza: sterownik jądra nie włącza wzmacniaczy Maca"
+
+msgid "The kernel’s driver for this sound chip does not switch on the Mac’s amplifiers: the speakers stay silent until the Mac driver is installed."
+msgstr "Sterownik jądra dla tego układu dźwiękowego nie włącza wzmacniaczy Maca: głośniki milczą, dopóki nie zostanie zainstalowany sterownik dla Maca."
+
+msgid "Not supported yet"
+msgstr "Jeszcze nieobsługiwane"
+
+msgid "The driver does not know this Mac’s amplifiers yet"
+msgstr "Sterownik nie zna jeszcze wzmacniaczy tego Maca"
+
+msgid "Build tools"
+msgstr "Narzędzia kompilacji"
+
+msgid "Missing: %s"
+msgstr "Brakuje: %s"
+
+msgid "Another driver is installed"
+msgstr "Zainstalowany jest inny sterownik"
+
+msgid "Remove it first: %s"
+msgstr "Najpierw go usuń: %s"
+
+msgid "Mac sound driver"
+msgstr "Sterownik dźwięku dla Maca"
+
+msgid "Installed, rebuilt at every kernel update"
+msgstr "Zainstalowany, przebudowywany przy każdej aktualizacji jądra"
+
+msgid "Not installed"
+msgstr "Niezainstalowany"
+
+msgid "Built for this kernel"
+msgstr "Zbudowany dla tego jądra"
+
+msgid "Built"
+msgstr "Zbudowany"
+
+msgid "Not built: run the fix again with a connection"
+msgstr "Niezbudowany: uruchom poprawkę ponownie z połączeniem"
+
+msgid "Restart the computer to load the new driver"
+msgstr "Uruchom ponownie komputer, aby załadować nowy sterownik"
+
+msgid "Sound is set up"
+msgstr "Dźwięk jest skonfigurowany"
+
+msgid "The Mac driver is in use."
+msgstr "Sterownik dla Maca jest używany."
+
+msgid "Removes the Mac sound driver: the kernel’s own one is used after a restart"
+msgstr "Usuwa sterownik dźwięku dla Maca: po ponownym uruchomieniu używany jest sterownik jądra"
+
+msgid "Runs the audio checks and writes a report you can share"
+msgstr "Uruchamia testy dźwięku i zapisuje raport, który możesz udostępnić"
+
+msgid "Download the sound driver?"
+msgstr "Pobrać sterownik dźwięku?"
+
+msgid "The sound driver for Macs is not part of Pomona. It will be downloaded from the snd_hda_macbookpro project on GitHub (GPL-2.0) and checked against known SHA-256 sums. To build it, the source of your kernel is downloaded too, now and at every kernel update. Nothing about you is sent."
+msgstr "Sterownik dźwięku dla Maców nie jest częścią Pomony. Zostanie pobrany z projektu snd_hda_macbookpro na GitHubie (GPL-2.0) i sprawdzony znanymi sumami SHA-256. Aby go zbudować, pobierany jest też kod źródłowy twojego jądra, teraz i przy każdej aktualizacji jądra. Nic o tobie nie jest wysyłane."
+
+msgid "Building the driver takes a few minutes."
+msgstr "Budowanie sterownika trwa kilka minut."
+
+msgid "Codec"
+msgstr "Kodek"

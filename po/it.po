@@ -406,3 +406,90 @@ msgstr "Scegli il file di configurazione"
 
 msgid "No connection? Connect the Mac temporarily with a cable (a phone’s USB tethering works too), or on another computer save the file from this address, copy it here and choose “I have the file…”."
 msgstr "Nessuna connessione? Collega il Mac temporaneamente con un cavo (va bene anche il tethering USB del telefono), oppure su un altro computer salva il file da questo indirizzo, copialo qui e scegli “Ho già il file…”."
+
+msgid "Audio"
+msgstr "Audio"
+
+msgid "Audio status"
+msgstr "Stato dell’audio"
+
+msgid "No Cirrus Logic CS8409 sound chip found"
+msgstr "Nessun chip audio Cirrus Logic CS8409 trovato"
+
+msgid "Pomona has no fix for this Mac’s sound: it is not needed or not supported yet"
+msgstr "Pomona non ha una correzione per l’audio di questo Mac: non serve o non è ancora supportato"
+
+msgid "Speakers and headphones"
+msgstr "Altoparlanti e cuffie"
+
+msgid "Working"
+msgstr "Funzionano"
+
+msgid "Silent: the kernel’s own driver does not switch on the Mac’s amplifiers"
+msgstr "Muti: il driver del kernel non accende gli amplificatori del Mac"
+
+msgid "The kernel’s driver for this sound chip does not switch on the Mac’s amplifiers: the speakers stay silent until the Mac driver is installed."
+msgstr "Il driver del kernel per questo chip audio non accende gli amplificatori del Mac: gli altoparlanti restano muti finché non si installa il driver per Mac."
+
+msgid "Not supported yet"
+msgstr "Non ancora supportato"
+
+msgid "The driver does not know this Mac’s amplifiers yet"
+msgstr "Il driver non conosce ancora gli amplificatori di questo Mac"
+
+msgid "Build tools"
+msgstr "Strumenti di compilazione"
+
+msgid "Missing: %s"
+msgstr "Mancano: %s"
+
+msgid "Another driver is installed"
+msgstr "È installato un altro driver"
+
+msgid "Remove it first: %s"
+msgstr "Rimuovilo prima: %s"
+
+msgid "Mac sound driver"
+msgstr "Driver audio per Mac"
+
+msgid "Installed, rebuilt at every kernel update"
+msgstr "Installato, ricompilato a ogni aggiornamento del kernel"
+
+msgid "Not installed"
+msgstr "Non installato"
+
+msgid "Built for this kernel"
+msgstr "Compilato per questo kernel"
+
+msgid "Built"
+msgstr "Compilato"
+
+msgid "Not built: run the fix again with a connection"
+msgstr "Non compilato: esegui di nuovo la correzione con una connessione"
+
+msgid "Restart the computer to load the new driver"
+msgstr "Riavvia il computer per caricare il nuovo driver"
+
+msgid "Sound is set up"
+msgstr "L’audio è configurato"
+
+msgid "The Mac driver is in use."
+msgstr "Il driver per Mac è in uso."
+
+msgid "Removes the Mac sound driver: the kernel’s own one is used after a restart"
+msgstr "Rimuove il driver audio per Mac: dopo un riavvio si usa quello del kernel"
+
+msgid "Runs the audio checks and writes a report you can share"
+msgstr "Esegue i controlli dell’audio e scrive un rapporto che puoi condividere"
+
+msgid "Download the sound driver?"
+msgstr "Scaricare il driver audio?"
+
+msgid "The sound driver for Macs is not part of Pomona. It will be downloaded from the snd_hda_macbookpro project on GitHub (GPL-2.0) and checked against known SHA-256 sums. To build it, the source of your kernel is downloaded too, now and at every kernel update. Nothing about you is sent."
+msgstr "Il driver audio per Mac non fa parte di Pomona. Verrà scaricato dal progetto snd_hda_macbookpro su GitHub (GPL-2.0) e controllato con somme SHA-256 note. Per compilarlo si scarica anche il sorgente del tuo kernel, ora e a ogni aggiornamento del kernel. Non viene inviato nulla che ti riguardi."
+
+msgid "Building the driver takes a few minutes."
+msgstr "La compilazione del driver richiede qualche minuto."
+
+msgid "Codec"
+msgstr "Codec"

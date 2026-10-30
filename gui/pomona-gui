@@ -41,6 +41,8 @@ def installed_admin():
 MODE_NAMES = ["Esc only", "F1–F12", "Special keys"]
 # where the community shares the Wi-Fi board file (the same address lib/wifi.sh downloads from)
 BOARD_FILE_URL = "https://gist.github.com/madfatcat88/fb17a3ef6364a48a19ed57c143ddd383"
+# the sound driver lib/audio.sh downloads (at a pinned commit)
+AUDIO_DRIVER_URL = "https://github.com/davidjo/snd_hda_macbookpro"
 
 DISCLAIMER = ("Provided as is, without any warranty: use at your own risk. "
               "Not affiliated with Apple Inc. or Broadcom Inc.; Apple, MacBook and Touch Bar are trademarks of Apple Inc., "
@@ -305,6 +307,9 @@ class Window(Adw.ApplicationWindow):
         self.wifi = {}
         self.wifi_page = Adw.PreferencesPage()
         self.wifi_tab = self.stack.add_titled_with_icon(self.wifi_page, "wifi", _("Wi-Fi"), "network-wireless-symbolic")
+        self.audio = {}
+        self.audio_page = Adw.PreferencesPage()
+        self.stack.add_titled_with_icon(self.audio_page, "audio", _("Audio"), "audio-speakers-symbolic")
         self.report_page = Adw.PreferencesPage()
         self.stack.add_titled_with_icon(self.report_page, "report", _("Report"), "emblem-documents-symbolic")
 
@@ -367,6 +372,15 @@ class Window(Adw.ApplicationWindow):
             self.build_wifi_page()
 
         run_async(pomona_cmd() + ["wifi", "status", "--json"], wifi_done)
+
+        def audio_done(ok, out):
+            try:
+                self.audio = json.loads(out) if ok else {}
+            except ValueError:
+                self.audio = {}
+            self.build_audio_page()
+
+        run_async(pomona_cmd() + ["audio", "status", "--json"], audio_done)
 
     def build_hardware_pages(self):
         s = self.status
@@ -630,6 +644,115 @@ class Window(Adw.ApplicationWindow):
                                  subtitle=_("Runs the Wi-Fi checks and writes a report you can share"))
         cert = Gtk.Button(label=_("Create certificate"), valign=Gtk.Align.CENTER)
         cert.connect("clicked", lambda *_a: self.certify(["wifi", "certify"]))
+        cert_row.add_suffix(cert)
+        tools.add(cert_row)
+        self.add_group(page, tools)
+        self.set_hardware(page, hardware)
+
+    # -------------------------------------------------------------- audio
+
+    def audio_fix(self):
+        # the driver is not part of Pomona: ask before downloading it
+        close = [None]
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
+                      margin_top=12, margin_bottom=12, margin_start=12, margin_end=12)
+        box.append(Gtk.Label(wrap=True, xalign=0, label=_(
+            "The sound driver for Macs is not part of Pomona. It will be downloaded from the snd_hda_macbookpro "
+            "project on GitHub (GPL-2.0) and checked against known SHA-256 sums. To build it, the source of your "
+            "kernel is downloaded too, now and at every kernel update. Nothing about you is sent.")))
+        note = Gtk.Label(wrap=True, xalign=0, label=_("Building the driver takes a few minutes."))
+        note.add_css_class("dim-label")
+        box.append(note)
+        address = Gtk.Label(wrap=True, xalign=0, selectable=True, label=AUDIO_DRIVER_URL)
+        address.add_css_class("monospace")
+        box.append(address)
+        buttons = Gtk.Box(spacing=12, halign=Gtk.Align.END)
+        cancel = Gtk.Button(label=_("Cancel"))
+        cancel.connect("clicked", lambda *_a: close[0]())
+        go = Gtk.Button(label=_("Download and fix"))
+        go.add_css_class("suggested-action")
+        go.connect("clicked", lambda *_a: (close[0](), self.admin(
+            ["audio-fix", "--download"], "audio-fix",
+            then=lambda ok, _out: ok and self.toast(_("Restart the computer to finish")))))
+        buttons.append(cancel)
+        buttons.append(go)
+        box.append(buttons)
+        close[0] = present_dialog(self, _("Download the sound driver?"), box)
+
+    def build_audio_page(self):
+        a = self.audio
+        page = self.audio_page
+        self.clear(page)
+        present = bool(a.get("present"))
+        hardware = [(_("Chip"), "Cirrus Logic CS8409 (10138409)" if present else ""),
+                    (_("Subsystem"), a.get("subsystem")), (_("Codec"), a.get("chip_name")),
+                    (_("Driver"), a.get("driver")), (_("Kernel"), a.get("kernel"))]
+
+        status = Adw.PreferencesGroup(title=_("Audio status"))
+        if not present:
+            status.add(Adw.ActionRow(title=_("No Cirrus Logic CS8409 sound chip found"),
+                                     subtitle=_("Pomona has no fix for this Mac’s sound: it is not needed or not supported yet")))
+            self.add_group(page, status)
+            self.set_hardware(page, hardware)
+            return
+        active = bool(a.get("active"))
+        self.step(status, _("Speakers and headphones"), active,
+                  _("Working") if active else _("Silent: the kernel’s own driver does not switch on the Mac’s amplifiers"))
+        self.add_group(page, status)
+
+        card = Adw.PreferencesGroup(
+            title="Cirrus Logic CS8409",
+            description=_("The kernel’s driver for this sound chip does not switch on the Mac’s amplifiers: the speakers stay silent until the Mac driver is installed."))
+        self.add_group(page, card)
+        state = a.get("state")
+        if state == "unsupported":
+            card.add(Adw.ActionRow(title=_("Not supported yet"),
+                                   subtitle=_("The driver does not know this Mac’s amplifiers yet")))
+            self.set_hardware(page, hardware)
+            return
+
+        steps = Adw.PreferencesGroup(title=_("Steps"), description=_("Every step is listed; the ones not done yet have a button."))
+        self.add_group(page, steps)
+        installed = bool(a.get("installed"))
+        missing = a.get("missing_tools") or ""
+        fix = self.audio_fix if installed and not missing and not a.get("foreign") else None
+        oks = []
+        if missing:
+            oks.append(self.step(steps, _("Build tools"), False, _("Missing: %s") % missing))
+        if a.get("foreign"):
+            oks.append(self.step(steps, _("Another driver is installed"), False,
+                                 _("Remove it first: %s") % a.get("foreign")))
+        added = bool(a.get("package"))
+        oks.append(self.step(steps, _("Mac sound driver"), added,
+                             _("Installed, rebuilt at every kernel update") if added else _("Not installed"),
+                             _("Fix"), fix))
+        if added:
+            built = bool(a.get("module_built"))
+            oks.append(self.step(steps, _("Built for this kernel"), built,
+                                 _("Built") if built else _("Not built: run the fix again with a connection"),
+                                 _("Fix"), fix))
+        oks.append(active)
+        if state == "restart":
+            oks.append(self.step(steps, _("Restart needed"), False, _("Restart the computer to load the new driver")))
+
+        if all(oks):
+            done = Adw.PreferencesGroup()
+            done.add(Adw.StatusPage(icon_name="emblem-ok-symbolic", title=_("Sound is set up"),
+                                    description=_("The Mac driver is in use.")))
+            self.add_group(page, done)
+
+        tools = Adw.PreferencesGroup()
+        undo_row = Adw.ActionRow(title=_("Undo the changes"),
+                                 subtitle=_("Removes the Mac sound driver: the kernel’s own one is used after a restart"))
+        undo = Gtk.Button(label=_("Undo"), valign=Gtk.Align.CENTER, sensitive=installed and added)
+        undo.connect("clicked", lambda *_a: self.admin(
+            ["audio-undo"], "audio-undo", then=lambda ok, _out: ok and self.toast(_("Restart the computer to finish"))))
+        undo_row.add_suffix(undo)
+        tools.add(undo_row)
+        cert_row = Adw.ActionRow(title=_("Compatibility certificate"),
+                                 subtitle=_("Runs the audio checks and writes a report you can share"))
+        cert = Gtk.Button(label=_("Create certificate"), valign=Gtk.Align.CENTER)
+        cert.connect("clicked", lambda *_a: self.certify(["audio", "certify"]))
         cert_row.add_suffix(cert)
         tools.add(cert_row)
         self.add_group(page, tools)
