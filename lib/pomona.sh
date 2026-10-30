@@ -8,7 +8,7 @@
 #   POMONA_OS_RELEASE                   (default /etc/os-release)
 # shellcheck shell=bash
 
-POMONA_VERSION=0.9.1
+POMONA_VERSION=0.10.0
 POMONA_REPO_URL=https://github.com/MarcoDiGioia/Pomona
 
 : "${POMONA_SYS:=/sys}"

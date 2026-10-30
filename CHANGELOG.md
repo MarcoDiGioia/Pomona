@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.10.0 - 2026-10-30
 
 - **New audio module for the Cirrus Logic CS8409 sound chip**: the kernel's own driver leaves the speakers silent on these Macs. `sudo pomona audio fix` (or the new **Audio** page of the app) installs the community driver [snd_hda_macbookpro](https://github.com/davidjo/snd_hda_macbookpro) as a DKMS package, `pomona-cs8409`, rebuilt at every kernel update. The driver files are downloaded at a pinned commit and checked against SHA-256 sums, only after you agree (the app asks, the terminal asks, or `--download`). `sudo pomona audio undo` removes it.
 - The driver is built from the exact source of each kernel (the Ubuntu kernel git tag of the installed package, or kernel.org), and its structure layout is checked against the running kernel when it exposes BTF: a module built against headers that differ by one field crashes the kernel when the sound chip is probed.
