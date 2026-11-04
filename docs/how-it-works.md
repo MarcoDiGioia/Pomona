@@ -1,5 +1,7 @@
 # How Pomona works
 
+Pomona is a set of modules that share one command (`pomona`), one app and one certificate format. The **T1 module** is described first because it is the core: it starts the Apple T1 chip and with it the Touch Bar, the camera and the light sensor. The **Wi-Fi**, **audio** and **sleep** modules and the **history** that certificates carry follow at the end.
+
 ## The T1 and its operating system
 
 The Apple T1 (`iBridge1,1`, board `x619ap`, CPID `0x8002`) is an ARM coprocessor on the 2016–2017 MacBook Pro with Touch Bar. It drives the Touch Bar, the FaceTime HD camera, Touch ID and the ambient light sensor, and shows up on the internal USB bus.
@@ -23,12 +25,7 @@ macOS writes and refreshes these files. Because every image carries its own sign
 
 ## Why it stays in recovery on Linux
 
-On healthy machines the Mac's firmware hands the image to the T1 about a second after power-on, so Linux only ever sees `8600`. On the machines Pomona is for, that never happens. Two observations on the verified MacBookPro14,3 show it:
-
-- after a cold boot straight into Linux, the T1's first and only enumeration is `05ac:1281`;
-- in macOS the Touch Bar is dark at the FileVault login screen and lights up only after login, so it is macOS that boots the T1.
-
-The T1's own `auto-boot` variable was `false` on that machine. Setting it to `true` did not change anything, which rules out iBoot as the blocker: the image simply never arrives. Why the firmware skips it is not known; the same symptom is tracked in [t1-revive issue #7](https://github.com/niconistal/t1-revive/issues/7).
+On healthy machines the Mac's firmware hands the image to the T1 about a second after power-on, so Linux only ever sees `8600`. On the Macs Pomona is for, that hand-over does not happen under Linux: after a cold boot straight into Linux the T1's first and only enumeration is `05ac:1281`. In macOS the Touch Bar is dark at the FileVault login screen and lights up only after login, so it is macOS that boots the T1. The image itself is never the problem (it is on the EFI partition and valid), and the T1's own `auto-boot` variable makes no difference, so Pomona does the missing step from Linux. Why the firmware skips it is not known; the same symptom is tracked in [t1-revive issue #7](https://github.com/niconistal/t1-revive/issues/7).
 
 ## The boot sequence
 
@@ -60,11 +57,30 @@ It reads Fn from the `Apple SPI Keyboard` input device, and the application in t
 
 ## The app and root
 
-The app runs as the user. It reads `pomona status --json` and `/etc/pomona/config.json`, and does the few root actions through `pkexec /usr/lib/pomona/pomona-admin` (`start`, `set-config`, `enable`, `disable`, `wifi-fix`, `wifi-undo`). `set-config` re-serialises the file through the daemon's own validator, so only known keys with sane values reach `/etc`.
+The app runs as the user. It reads `pomona status --json` and `/etc/pomona/config.json`, and does the few root actions through `pkexec /usr/lib/pomona/pomona-admin`: `start`, `set-config`, `enable`, `disable`, `wifi-fix`, `wifi-undo`, `audio-fix`, `audio-undo`, `sleep-disable` and `sleep-enable`. Each accepts only the options it needs. `set-config` re-serialises the file through the daemon's own validator, so only known keys with sane values reach `/etc`.
 
 ## The Wi-Fi module
 
-A separate part of Pomona, described in [wifi.md](wifi.md): it installs a board file and two settings for the Broadcom Wi-Fi card, with backups. Unlike the T1 module it does write files outside Pomona's folders, only when you ask (`pomona wifi fix`), and `pomona wifi undo` puts them back.
+Described in [wifi.md](wifi.md): it installs a board file and two settings for the Broadcom Wi-Fi card, with backups. Unlike the T1 module it writes files outside Pomona's folders, only when you ask (`pomona wifi fix`), and `pomona wifi undo` puts them back.
+
+## The audio module
+
+Described in [audio.md](audio.md): it builds the community sound driver for the Cirrus Logic CS8409 with DKMS, from the exact source of the running kernel, and `pomona audio undo` removes it.
+
+## The sleep module
+
+Described in [sleep.md](sleep.md): it detects boots that ended asleep and masks the systemd sleep units on request.
+
+## What Pomona remembers
+
+Every fix and the certificates need to know what the Mac was like before Pomona touched it. Pomona keeps two small files per module in `/var/lib/pomona/history/`, written by root and readable by everyone:
+
+| File | Holds |
+| --- | --- |
+| `<module>.before` | the module's checks as they were before Pomona changed anything, recorded once, when Pomona is installed or before the first fix; or the word `unknown` when Pomona had already made changes before this record existed |
+| `<module>.log` | one line for each fix or undo that ran: `fix ok`, `fix failed`, `undo ok` or `undo failed`, nothing else |
+
+`pomona certify`, `pomona wifi certify` and `pomona audio certify` combine them with the current checks to say what worked before Pomona, what Pomona made work and what still fails ([certificates.md](certificates.md)). Nothing here leaves the Mac unless you share a certificate.
 
 ## What is never touched
 

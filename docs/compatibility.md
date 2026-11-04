@@ -1,6 +1,6 @@
 # Compatibility
 
-**Verified** means a certificate with every check passing after a cold boot is in [`certificates/`](../certificates). **Probable** means the model has the same T1 (`iBridge1,1`, CPID `0x8002`) and the same boot path, and the T1 itself has been booted from Linux on it by [t1-revive](https://github.com/niconistal/t1-revive), but Pomona has not been reported on it yet.
+**Verified** means a certificate with every check passing after a cold boot is in [`certificates/`](../certificates). **Should work** means the model has the same T1 (`iBridge1,1`, CPID `0x8002`) and the same boot path, and the T1 itself has been booted from Linux on it by [t1-revive](https://github.com/niconistal/t1-revive), but Pomona has not been reported on it yet.
 
 ## Models
 
@@ -43,10 +43,10 @@ Camera and light sensor need nothing beyond the T1 boot, so they are expected to
 Generated from [`certificates/`](../certificates), newest first.
 
 <!-- reports:start -->
-| Date | Model | Distribution | Kernel | Desktop | Mac firmware | EmbeddedOS | Pomona | Reported by | Result |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 910 | 0.8.0 | @MarcoDiGioia | ✅ Working · verified |
-| 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 910 | 0.3.0 | @MarcoDiGioia | ✅ Working · verified |
+| Date | Model | Distribution | Kernel | Desktop | Mac firmware | EmbeddedOS | Pomona | Made to work by Pomona | Reported by | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 910 | 0.8.0 | n/a | @MarcoDiGioia | ✅ Working · verified |
+| 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 910 | 0.3.0 | n/a | @MarcoDiGioia | ✅ Working · verified |
 <!-- reports:end -->
 
 ## Wi-Fi (Broadcom BCM43602)
@@ -65,9 +65,9 @@ The same four models carry the Broadcom BCM43602 Wi-Fi card (`14e4:43ba`, driver
 Wi-Fi certificates received, newest first:
 
 <!-- wifi-reports:start -->
-| Date | Model | Distribution | Kernel | Desktop | Mac firmware | Wi-Fi card | Pomona | Reported by | Result |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 106b:0173 | 0.9.0 | @MarcoDiGioia | ✅ Working · verified |
+| Date | Model | Distribution | Kernel | Desktop | Mac firmware | Wi-Fi card | Pomona | Made to work by Pomona | Reported by | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 106b:0173 | 0.9.0 | n/a | @MarcoDiGioia | ✅ Working · verified |
 <!-- wifi-reports:end -->
 
 ## Audio (Cirrus Logic CS8409)
@@ -86,9 +86,9 @@ The same four models have a Cirrus Logic CS8409 sound chip (`10138409`). The ker
 Audio certificates received, newest first:
 
 <!-- audio-reports:start -->
-| Date | Model | Distribution | Kernel | Desktop | Mac firmware | Sound chip | Pomona | Reported by | Result |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| | | | | | | | | | |
+| Date | Model | Distribution | Kernel | Desktop | Mac firmware | Sound chip | Pomona | Made to work by Pomona | Reported by | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| | | | | | | | | | | |
 <!-- audio-reports:end -->
 
 ## Adding your Mac

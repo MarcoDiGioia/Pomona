@@ -20,7 +20,7 @@ It makes three changes, each only when it is missing, and backs up what it repla
 | --- | --- | --- |
 | `/lib/firmware/brcm/brcmfmac43602-pcie.txt` | the board file (downloaded, see below), with this Mac's own MAC address | the card needs it to associate |
 | `/etc/NetworkManager/conf.d/90-pomona-wifi.conf` | `wifi.scan-rand-mac-address=no` and `wifi.cloned-mac-address=permanent` | the card refuses the random addresses NetworkManager uses by default |
-| `/etc/modprobe.d/90-pomona-brcmfmac.conf` | `options brcmfmac feature_disable=0x82000` | the setting the t2linux project gives for Broadcom Wi-Fi on Macs; it was in place on the Mac where the fix was verified |
+| `/etc/modprobe.d/90-pomona-brcmfmac.conf` | `options brcmfmac feature_disable=0x82000` | the setting the t2linux project gives for Broadcom Wi-Fi on Macs |
 
 If a setting is already in place (in any file of `conf.d` or `modprobe.d`), Pomona does not add a second copy. If NetworkManager is not installed, that step is skipped.
 
@@ -33,7 +33,7 @@ Pomona does not contain the board file. `pomona wifi fix` downloads it over http
 **Without a connection** (the usual case when the Wi-Fi is what does not work), you have two ways:
 
 - **Connect the Mac temporarily by another route.** Pomona downloads the file over any connection, so a network cable (with a USB-C adapter if needed) or your phone's USB tethering is enough for the minute it takes; afterwards the Wi-Fi works and you can unplug. On an Android phone: plug it in and turn on *USB tethering*; on an iPhone: plug it in, trust the computer and turn on *Personal Hotspot*.
-- **Prepare a USB stick beforehand.** On another computer, download the `.deb` and the board file (the address is in the app and in [data/wifi/README.md](../data/wifi/README.md)), copy both to the stick, install the `.deb` on the Mac and, in the download notice, choose *I have the file…* and pick it from the stick. Or, on another computer, save the file from the address the app shows, copy it to a USB stick, and in the app choose *I have the file…* in the download notice. The same SHA-256 check applies.
+- **Prepare a USB stick beforehand.** On another computer, download the `.deb` and the board file (the address is in the app and in [data/wifi/README.md](../data/wifi/README.md)), copy both to the stick, install the `.deb` on the Mac and, in the download notice, choose *I have the file…* and pick it from the stick. The same SHA-256 check applies.
 
 Offline, or if the address stops working: save the file yourself and run `sudo pomona wifi fix --board-file /path/to/brcmfmac43602-pcie.txt`. It is checked against the same SHA-256. The app's *Fix* button needs a connection; if the card is the only way to get one, use a cable or a phone's USB tethering, or the `--board-file` form.
 
