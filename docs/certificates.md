@@ -22,8 +22,35 @@ There is one kind of certificate per module:
 | --- | --- | --- | --- | --- |
 | Touch Bar, camera, light sensor (T1) | `pomona certify` | `1` | `embeddedos` (T1 EmbeddedOS version) | ten, see [how-it-works.md](how-it-works.md) |
 | Wi-Fi (Broadcom BCM43602) | `pomona wifi certify` | `2`, with `"module": "wifi"` | `subsystem` (PCI subsystem id, such as `106b:0173`) | nine, see [wifi.md](wifi.md#certificate) |
+| Sound (Cirrus Logic CS8409) | `pomona audio certify` | `2`, with `"module": "audio"` | `subsystem` | eight, see [audio.md](audio.md#certificate) |
 
-Each has its own table in the [compatibility page](compatibility.md), and its files are named `certificates/<model>/<date>-<hash>.json` (T1) or `certificates/<model>/wifi-<date>-<hash>.json`.
+Each has its own table in the [compatibility page](compatibility.md), and its files are named `certificates/<model>/<date>-<hash>.json` (T1) or `certificates/<model>/wifi-<date>-<hash>.json`, `audio-<date>-<hash>.json`. Certificates are separate per module, so a Mac with all three modules sends up to three, one issue each: `pomona share` sends the newest one.
+
+## What Pomona fixed, and what already worked
+
+The checks say what is true now. A certificate can also say **how it got there**: which checks passed on this Mac before Pomona changed anything, which ones Pomona made work, and which fixes did not work. This is the `history` field of the JSON and the **History** table of the readable copy:
+
+| Check | Before Pomona | Now | What it means |
+| --- | --- | --- | --- |
+| Board file installed | no | yes | Made to work by Pomona |
+| brcmfmac driver bound | yes | yes | Worked before Pomona |
+| Connected to a network | yes | no | Stopped working |
+| Driver option feature_disable set | no | no | Not working (a Pomona fix failed) |
+
+The meanings:
+
+| Before Pomona | Now | Meaning |
+| --- | --- | --- |
+| passed | passes | **Worked before Pomona** |
+| failed | passes | **Made to work by Pomona** when a Pomona fix ran successfully (for the T1, starting it is the fix); otherwise **Working now, not through a Pomona fix** |
+| passed | fails | **Stopped working** |
+| failed | fails | **Not working**, with *(a Pomona fix failed)* when a fix ended in failure |
+
+Facts about the hardware (the model, the chip, the firmware on the EFI partition) and a pending restart are left out of the table: no fix changes them. Under the table: the counts, and `Fix attempts: N ok, N failed, N undone`.
+
+Where it comes from: Pomona keeps a small record on the Mac ([how-it-works.md](how-it-works.md#what-pomona-remembers)). It notes the state of each module once, before the first change: when the package or `install.sh` installs Pomona, and again before the first fix of Wi-Fi or audio if that was not done. Every fix and undo then adds a line, `ok` or `failed`. When Pomona had already changed things before this record existed (an upgrade from an older version, for example), the state before is **unknown**: the table then says only what works now, and no check is credited to Pomona.
+
+The history has exactly the same rules as the rest of a certificate: it is written by the user's own machine, so it cannot be proven; the robot checks its shape (known check names, yes or no, at most ten fix entries, no free text) and rebuilds the readable copy itself from the JSON. The compatibility tables show a **Made to work by Pomona** column with the number of checks, or `n/a` for certificates without a history. Certificates from earlier versions stay valid.
 
 ## What happens after submitting
 

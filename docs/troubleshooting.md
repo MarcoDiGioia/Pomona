@@ -61,12 +61,10 @@ Run `sudo pomona start`. If it happens every time, please open an issue: resume 
 
 ## The Mac does not wake up from sleep
 
-On the MacBookPro14,3 tested so far, neither deep sleep (S3) nor s2idle resumes: the screen stays black, the keyboard stays lit and only the power button helps. The logs show the Thunderbolt bridges staying powered off and the AMD GPU failing to reload its firmware after resume; `iommu=pt` and `pcie_port_pm=off` did not help. Until there is a fix, turn suspend off so that closing the lid or pressing the power button does not hang the Mac:
+On some of these Macs the screen stays black after suspend, the keyboard stays lit and only the power button helps. There is no fix for the wake-up itself; turn suspend off so that closing the lid or pressing the power button does not hang the Mac:
 
 ```bash
 sudo pomona sleep disable    # sudo pomona sleep enable to turn it back on
 ```
 
-Or, in the app, the **Sleep** step of the Setup page. It counts the earlier boots that ended while the Mac was asleep, read from the system journal, so the Mac is never put to sleep to find out. When it finds any, it offers *Turn off*.
-
-In GNOME, also set *Settings → Power → Automatic Suspend* to off.
+Or use the **Sleep** step of the Setup page, which also counts how many earlier boots ended asleep. Details: [sleep.md](sleep.md).
