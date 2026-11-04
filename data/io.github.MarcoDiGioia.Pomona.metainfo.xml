@@ -146,6 +146,18 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="0.11.1" date="2026-11-04">
+      <description>
+        <p>The compatibility list now counts what Pomona fixes: a certificate that cannot show a fix by Pomona only counts as a reinforcement. No change to how the app works.</p>
+        <p xml:lang="it">L’elenco di compatibilità ora conta ciò che Pomona sistema: un certificato che non può mostrare un fix di Pomona vale solo come rinforzo. Nessun cambiamento nel funzionamento dell’app.</p>
+        <p xml:lang="de">Die Kompatibilitätsliste zählt jetzt, was Pomona repariert: Ein Zertifikat, das keine Reparatur durch Pomona zeigen kann, gilt nur als Bestätigung. Die App selbst arbeitet unverändert.</p>
+        <p xml:lang="fr">La liste de compatibilité compte désormais ce que Pomona répare : un certificat qui ne peut pas montrer une réparation de Pomona ne compte que comme renfort. Aucun changement dans le fonctionnement de l’application.</p>
+        <p xml:lang="es">La lista de compatibilidad ahora cuenta lo que Pomona arregla: un certificado que no puede mostrar un arreglo de Pomona solo vale como refuerzo. Sin cambios en el funcionamiento de la aplicación.</p>
+        <p xml:lang="pt">A lista de compatibilidade passa a contar o que o Pomona corrige: um certificado que não consegue mostrar uma correção do Pomona vale apenas como reforço. Sem alterações no funcionamento da aplicação.</p>
+        <p xml:lang="nl">De compatibiliteitslijst telt nu wat Pomona oplost: een certificaat dat geen oplossing van Pomona kan tonen, telt alleen als versterking. De app zelf werkt ongewijzigd.</p>
+        <p xml:lang="pl">Lista zgodności liczy teraz to, co naprawia Pomona: certyfikat, który nie może pokazać naprawy przez Pomonę, liczy się tylko jako wzmocnienie. Działanie aplikacji bez zmian.</p>
+      </description>
+    </release>
     <release version="0.11.0" date="2026-11-04">
       <description>
         <p>New: certificates now say what Pomona fixed, what already worked before it and what did not work. A Sleep step turns suspend off on Macs that do not wake up.</p>
