@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.11.0 - 2026-11-04
+
+- **Certificates say what Pomona did.** Besides what works now, a certificate has a **History**: which checks passed before Pomona changed anything, which ones Pomona made work, which fixes did not work and which checks still fail. Pomona records the state of each module once, when it is installed or before the first fix, and one line (`ok` or `failed`) for every fix and undo, in `/var/lib/pomona/history/`. The same table is in the JSON (an optional `history` field, so older certificates stay valid) and in the readable copy, which the robot rebuilds from the JSON. When Pomona had made changes before the record existed, the state before is shown as unknown and nothing is credited to Pomona. The compatibility tables get a **Made to work by Pomona** column. See docs/certificates.md.
+- New `pomona baseline`, run by the package and by `install.sh` before anything is changed.
+- README and documents rewritten to say what Pomona does, which problems it solves and how, without the story of how it got there (a short *Background* section keeps it). New page `docs/sleep.md`; the wiki sidebar lists Audio, Sleep and Diagnostics.
+- `sudo pomona sleep disable` turns suspend off (masks the systemd sleep units), for Macs that do not wake up from it: the lid, the power button and automatic suspend then do nothing instead of hanging the Mac. `sudo pomona sleep enable` turns it back on; `pomona sleep status` (also `--json`).
+- The Setup page has a **Sleep** step. Pomona reads the system journal (it never suspends the Mac to find out): when earlier boots ended while the Mac was asleep, because it never woke up and was switched off with the power button, the step says how many times and offers *Turn off*. When sleep is off, *Turn on* brings it back. On the MacBookPro14,3 neither deep nor s2idle sleep resumes yet; see docs/troubleshooting.md.
+
 ## 0.10.0 - 2026-10-30
 
 - **Is Pomona wrong?** At the end of the Setup, Wi-Fi and Audio pages, a diagnostic report for when the page says something is broken and it works, or the other way round. It holds only what the page checked (chips, drivers, kernel, distribution); your browser opens it as a pre-filled GitHub issue and a robot adds it to `diagnostics/`, to fix the checks that misjudge. Also `pomona diagnose MODULE works|broken`. See docs/diagnostics.md.

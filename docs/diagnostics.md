@@ -1,6 +1,6 @@
 # Diagnostics: when Pomona gets it wrong
 
-Every page of Pomona decides whether something works from what it can read on the machine: which chip is there, which driver is bound to it, which files are installed. It does not listen to the speakers or watch the Touch Bar, so it can be wrong. For example, the audio page says the speakers are silent when the codec is driven by the kernel's own driver (`CS8409`) instead of the Mac one (`CS8409/CS42L83`): true on every Mac seen so far, but a rule, not a measurement.
+Every page of Pomona decides whether something works from what it can read on the machine: which chip is there, which driver is bound to it, which files are installed. It does not listen to the speakers or watch the Touch Bar, so it can be wrong: a rule such as "the speakers are silent unless the Mac's own sound driver is in use" is a rule, not a measurement.
 
 A diagnostic is how you tell Pomona it got it wrong.
 

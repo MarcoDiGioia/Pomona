@@ -515,3 +515,21 @@ msgstr "Dice che qualcosa non va, ma funziona"
 
 msgid "It says everything works, but something is wrong"
 msgstr "Dice che funziona tutto, ma qualcosa non va"
+
+msgid "Sleep"
+msgstr "Sospensione"
+
+msgid "Turned off: closing the lid or pressing the power button does nothing"
+msgstr "Disattivata: chiudere il coperchio o premere il tasto di accensione non fa nulla"
+
+msgid "Turn on"
+msgstr "Riattiva"
+
+msgid "The Mac did not wake up %d time(s): turn sleep off so that it does not hang"
+msgstr "Il Mac non si è ripreso %d volte: disattiva la sospensione così non si blocca"
+
+msgid "Turn off"
+msgstr "Disattiva"
+
+msgid "No failed wake-up found"
+msgstr "Nessuna ripresa fallita trovata"

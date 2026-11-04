@@ -334,6 +334,7 @@ class Window(Adw.ApplicationWindow):
 
         self.setup_page = Adw.PreferencesPage()
         self.add_page(self.setup_page, "setup", _("Setup"), "emblem-system-symbolic")
+        self.sleep = {}
         self.wifi = {}
         self.wifi_page = Adw.PreferencesPage()
         self.add_page(self.wifi_page, "wifi", _("Wi-Fi"), "network-wireless-symbolic")
@@ -456,6 +457,15 @@ class Window(Adw.ApplicationWindow):
 
         run_async(pomona_cmd() + ["audio", "status", "--json"], audio_done)
 
+        def sleep_done(ok, out):
+            try:
+                self.sleep = json.loads(out) if ok else {}
+            except ValueError:
+                self.sleep = {}
+            self.build_setup_page()
+
+        run_async(pomona_cmd() + ["sleep", "status", "--json"], sleep_done)
+
     def build_hardware_pages(self):
         s = self.status
         bound = bool(s.get("touchbar_bound"))
@@ -554,6 +564,8 @@ class Window(Adw.ApplicationWindow):
             done = Adw.PreferencesGroup()
             done.add(done_banner(_("Everything works"), _("Touch Bar, camera and light sensor are up."), mascot_texture()))
             self.add_group(page, done)
+
+        self.add_sleep_group(page, installed)
 
         wrong = Adw.PreferencesGroup()
         wrong.add(self.diagnose_row("t1"))
@@ -1036,6 +1048,33 @@ class Window(Adw.ApplicationWindow):
                 self.toast(_("Could not open the browser"))
 
         run_async(pomona_cmd() + ["share", "--url", path], done)
+
+    # -------------------------------------------------------------- sleep
+
+    def add_sleep_group(self, page, installed):
+        """Suspend: turned off, or the journal shows wake-ups that failed (read, never tested)."""
+        sl = self.sleep
+        if not sl:
+            return
+        group = Adw.PreferencesGroup(title=_("Sleep"))
+        state, failed = sl.get("state"), int(sl.get("failed_resumes") or 0)
+        if state == "disabled":
+            row = Adw.ActionRow(title=_("Sleep"),
+                                subtitle=_("Turned off: closing the lid or pressing the power button does nothing"))
+            icon = Gtk.Image.new_from_icon_name("emblem-ok-symbolic")
+            icon.add_css_class("success")
+            row.add_prefix(icon)
+            b = Gtk.Button(label=_("Turn on"), valign=Gtk.Align.CENTER, sensitive=installed and not self.busy)
+            b.connect("clicked", lambda *_a: self.admin(["sleep-enable"], "sleep-enable"))
+            row.add_suffix(b)
+            group.add(row)
+        elif failed or state == "partial":
+            self.step(group, _("Sleep"), False,
+                      _("The Mac did not wake up %d time(s): turn sleep off so that it does not hang") % failed,
+                      _("Turn off"), (lambda: self.admin(["sleep-disable"], "sleep-disable")) if installed else None)
+        else:
+            self.step(group, _("Sleep"), True, _("No failed wake-up found"))
+        self.add_group(page, group)
 
     # -------------------------------------------------------------- diagnostics
 

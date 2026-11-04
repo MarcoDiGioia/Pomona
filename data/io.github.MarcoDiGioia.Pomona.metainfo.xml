@@ -146,6 +146,18 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="0.11.0" date="2026-11-04">
+      <description>
+        <p>New: certificates now say what Pomona fixed, what already worked before it and what did not work. A Sleep step turns suspend off on Macs that do not wake up.</p>
+        <p xml:lang="it">Novità: i certificati ora dicono cosa ha sistemato Pomona, cosa funzionava già prima e cosa non ha funzionato. Un passaggio Sleep spegne la sospensione sui Mac che non si risvegliano.</p>
+        <p xml:lang="de">Neu: Zertifikate zeigen jetzt, was Pomona repariert hat, was schon vorher funktionierte und was nicht geklappt hat. Ein Schritt „Ruhezustand“ schaltet den Standby bei Macs aus, die nicht mehr aufwachen.</p>
+        <p xml:lang="fr">Nouveau : les certificats indiquent désormais ce que Pomona a réparé, ce qui fonctionnait déjà avant et ce qui n’a pas marché. Une étape Veille désactive la mise en veille sur les Mac qui ne se réveillent pas.</p>
+        <p xml:lang="es">Novedad: los certificados ahora indican qué arregló Pomona, qué ya funcionaba antes y qué no funcionó. Un paso Suspensión desactiva la suspensión en los Mac que no despiertan.</p>
+        <p xml:lang="pt">Novo: os certificados passam a indicar o que o Pomona corrigiu, o que já funcionava antes e o que não resultou. Um passo Suspensão desativa a suspensão nos Mac que não acordam.</p>
+        <p xml:lang="nl">Nieuw: certificaten tonen nu wat Pomona heeft opgelost, wat al werkte en wat niet gelukt is. Een stap Slaapstand schakelt de slaapstand uit op Macs die niet meer wakker worden.</p>
+        <p xml:lang="pl">Nowość: certyfikaty podają teraz, co naprawiła Pomona, co działało już wcześniej i co się nie udało. Krok Uśpienie wyłącza usypianie na Macach, które się nie budzą.</p>
+      </description>
+    </release>
     <release version="0.10.0" date="2026-10-30">
       <description>
         <p>New: the speakers work. The new Audio page installs the Mac driver for the Cirrus Logic sound chip, rebuilt automatically at every kernel update. If a page gets your Mac wrong, “Is Pomona wrong?” sends a diagnostic report.</p>

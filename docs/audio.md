@@ -21,7 +21,7 @@ Then restart. From then on DKMS rebuilds the module at every kernel update, with
 
 ## Why the exact kernel source matters
 
-The patched driver is built from the kernel's own `cs8409.c` and from private headers of the sound subsystem (`hda_local.h`, `generic.h`, …) that are not in the `linux-headers` package. The module shares structures with the kernel's `snd-hda-codec-generic`. If one header differs by a single field, every member after it moves, the module reads the wrong memory and the kernel crashes (an *oops*) when the codec is probed. This is what happens with headers taken from kernel.org for an Ubuntu kernel: Ubuntu 7.0.0-42 has one more field in `struct hda_multi_out` than mainline 7.0, so `hda_gen_spec` is 8 bytes longer.
+The patched driver is built from the kernel's own `cs8409.c` and from private headers of the sound subsystem (`hda_local.h`, `generic.h`, …) that are not in the `linux-headers` package. The module shares structures with the kernel's `snd-hda-codec-generic`. If one header differs by a single field, every member after it moves, the module reads the wrong memory and the kernel crashes (an *oops*) when the codec is probed. Distribution kernels carry their own patches, so headers taken from the mainline release of the same version can differ: an Ubuntu kernel, for example, can have a different `struct hda_multi_out` than the mainline kernel it is based on.
 
 So `pomona-cs8409-prepare`, which DKMS runs before each build:
 

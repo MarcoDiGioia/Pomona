@@ -9,7 +9,9 @@
 #   pomona share      open your latest certificate as a pre-filled GitHub report
 #   pomona wifi       Broadcom Wi-Fi: status | fix | undo | certify  (pomona wifi help)
 #   pomona audio      Cirrus Logic sound: status | fix | undo | certify  (pomona audio help)
+#   pomona sleep      suspend: status | disable | enable  (for Macs that do not wake up)
 #   pomona diagnose   Pomona got it wrong? MODULE (t1|wifi|audio) works|broken: a report to share
+#   pomona baseline   note how the Mac is before Pomona changes anything (the installer does it)
 #   pomona version
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
@@ -81,30 +83,46 @@ EOF
 # json_str S -> S as a JSON string literal
 json_str() { printf '"%s"' "$(printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g')"; }
 
+# checks_t1 / checks_wifi / checks_audio: the checks of each certificate, one "name|yes" or "name|no" per
+# line, in the order of the certificate. The certificates and the history record (lib/history.sh) use
+# the same lists, so what was recorded before a fix can be compared with what is true now.
+checks_t1() {
+	local model class fw nimg=0 t1 cfg
+	model=$(et1_model); class=$(et1_model_class "$model")
+	fw=$(et1_find_firmware || true)
+	if [ -n "$fw" ]; then nimg=$(et1_count_img4 "$fw"); fi
+	t1=$(et1_t1_state); cfg=$(et1_usb_config || true)
+	printf '%s|%s\n' \
+		"T1 MacBook Pro model" "$([ "$class" = t1 ] && echo yes || echo no)" \
+		"EmbeddedOS firmware on the EFI partition" "$([ -n "$fw" ] && echo yes || echo no)" \
+		"Firmware holds 4 signed images" "$([ "$nimg" -ge 4 ] 2>/dev/null && echo yes || echo no)" \
+		"T1 running (05ac:8600)" "$([ "$t1" = booted ] && echo yes || echo no)" \
+		"USB configuration 1 selected" "$([ "$cfg" = 1 ] && echo yes || echo no)" \
+		"Touch Bar bound to hid-appletb-kbd" "$(yesno et1_tb_bound)" \
+		"FaceTime camera present" "$(yesno et1_camera_present)" \
+		"Ambient light sensor present" "$(yesno et1_als_present)" \
+		"Boot service enabled" "$([ "$(svc_enabled pomona.service)" = enabled ] && echo yes || echo no)" \
+		"Touch Bar daemon running" "$([ "$(svc pomona-touchbard.service)" = active ] && echo yes || echo no)"
+}
+
+# count_checks: sets pass and total from the checks array
+count_checks() {
+	local c
+	pass=0; total=0
+	for c in "${checks[@]}"; do total=$((total + 1)); if [ "${c##*|}" = yes ]; then pass=$((pass + 1)); fi; done
+}
+
 cmd_certify() {
-	local out_dir=${1:-$PWD} model class compat stamp base fw fwver nimg t1 cfg tb cam als fnsvc bootsvc
-	local verdict checks=() pass=0 total=0 name ok
-	model=$(et1_model); class=$(et1_model_class "$model"); compat=$(et1_compat_status "$model")
+	local out_dir=${1:-$PWD} model stamp base fw fwver t1
+	local verdict checks=() pass=0 total=0 name ok c
+	model=$(et1_model)
 	stamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 	fw=$(et1_find_firmware || true)
-	fwver=""; nimg=0
-	if [ -n "$fw" ]; then fwver=$(et1_firmware_version "$fw"); nimg=$(et1_count_img4 "$fw"); fi
-	t1=$(et1_t1_state); cfg=$(et1_usb_config || true)
-	tb=$(yesno et1_tb_bound); cam=$(yesno et1_camera_present); als=$(yesno et1_als_present)
-	bootsvc=$(svc_enabled pomona.service)
-	fnsvc=$(svc pomona-touchbard.service)
-
-	check() { total=$((total + 1)); if [ "$2" = yes ]; then pass=$((pass + 1)); fi; checks+=("$1|$2"); }
-	check "T1 MacBook Pro model" "$([ "$class" = t1 ] && echo yes || echo no)"
-	check "EmbeddedOS firmware on the EFI partition" "$([ -n "$fw" ] && echo yes || echo no)"
-	check "Firmware holds 4 signed images" "$([ "$nimg" -ge 4 ] 2>/dev/null && echo yes || echo no)"
-	check "T1 running (05ac:8600)" "$([ "$t1" = booted ] && echo yes || echo no)"
-	check "USB configuration 1 selected" "$([ "$cfg" = 1 ] && echo yes || echo no)"
-	check "Touch Bar bound to hid-appletb-kbd" "$tb"
-	check "FaceTime camera present" "$cam"
-	check "Ambient light sensor present" "$als"
-	check "Boot service enabled" "$([ "$bootsvc" = enabled ] && echo yes || echo no)"
-	check "Touch Bar daemon running" "$([ "$fnsvc" = active ] && echo yes || echo no)"
+	fwver=""
+	if [ -n "$fw" ]; then fwver=$(et1_firmware_version "$fw"); fi
+	t1=$(et1_t1_state)
+	mapfile -t checks < <(checks_t1)
+	count_checks
 
 	if [ "$pass" = "$total" ]; then verdict=WORKING
 	elif [ "$t1" = booted ]; then verdict=PARTIAL
@@ -133,6 +151,7 @@ cmd_certify() {
 		echo "| --- | --- |"
 		for c in "${checks[@]}"; do name=${c%|*}; ok=${c##*|}; echo "| $name | $([ "$ok" = yes ] && echo PASS || echo FAIL) |"; done
 		echo
+		hist_md t1 "${checks[@]}"
 		echo "Pomona is provided as is, without warranty, and is not affiliated with Apple Inc."
 		echo
 		echo "No serial numbers, ECID or UUIDs are included. To add your Mac to the compatibility"
@@ -157,7 +176,7 @@ cmd_certify() {
 			i=$((i + 1)); name=${c%|*}; ok=${c##*|}
 			printf '    %s: %s%s\n' "$(json_str "$name")" "$([ "$ok" = yes ] && echo true || echo false)" "$([ "$i" -lt "${#checks[@]}" ] && echo ,)"
 		done
-		echo "  }"
+		hist_close_checks t1
 		echo "}"
 	} > "$base.json"
 	cat "$base.md"
@@ -264,22 +283,28 @@ EOF
 	esac
 }
 
+checks_wifi() {
+	local model class iface
+	model=$(et1_model); class=$(et1_model_class "$model"); iface=$(wf_iface)
+	printf '%s|%s\n' \
+		"Supported MacBook Pro model" "$([ "$class" = t1 ] && echo yes || echo no)" \
+		"Broadcom BCM43602 Wi-Fi chip (14e4:43ba)" "$(yesno wf_present)" \
+		"brcmfmac driver bound" "$(yesno wf_driver_ok)" \
+		"Board file installed" "$(yesno wf_nvram_ok)" \
+		"NetworkManager keeps the real MAC address" "$(yesno wf_nm_ok)" \
+		"Driver option feature_disable set" "$(yesno wf_modprobe_ok)" \
+		"Wi-Fi interface present" "$([ -n "$iface" ] && echo yes || echo no)" \
+		"Connected to a network" "$(yesno wf_connected)" \
+		"No restart pending" "$(if wf_restart_pending; then echo no; else echo yes; fi)"
+}
+
 cmd_wifi_certify() {
-	local out_dir=${1:-$PWD} model class stamp base sub iface pass=0 total=0 verdict checks=() name ok c i
-	model=$(et1_model); class=$(et1_model_class "$model")
+	local out_dir=${1:-$PWD} model stamp base sub iface pass=0 total=0 verdict checks=() name ok c i
+	model=$(et1_model)
 	stamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 	sub=$(wf_subsystem); iface=$(wf_iface)
-
-	check() { total=$((total + 1)); if [ "$2" = yes ]; then pass=$((pass + 1)); fi; checks+=("$1|$2"); }
-	check "Supported MacBook Pro model" "$([ "$class" = t1 ] && echo yes || echo no)"
-	check "Broadcom BCM43602 Wi-Fi chip (14e4:43ba)" "$(yesno wf_present)"
-	check "brcmfmac driver bound" "$(yesno wf_driver_ok)"
-	check "Board file installed" "$(yesno wf_nvram_ok)"
-	check "NetworkManager keeps the real MAC address" "$(yesno wf_nm_ok)"
-	check "Driver option feature_disable set" "$(yesno wf_modprobe_ok)"
-	check "Wi-Fi interface present" "$([ -n "$iface" ] && echo yes || echo no)"
-	check "Connected to a network" "$(yesno wf_connected)"
-	check "No restart pending" "$(if wf_restart_pending; then echo no; else echo yes; fi)"
+	mapfile -t checks < <(checks_wifi)
+	count_checks
 
 	if [ "$pass" = "$total" ]; then verdict=WORKING
 	elif [ -n "$iface" ]; then verdict=PARTIAL
@@ -308,6 +333,7 @@ cmd_wifi_certify() {
 		echo "| --- | --- |"
 		for c in "${checks[@]}"; do name=${c%|*}; ok=${c##*|}; echo "| $name | $([ "$ok" = yes ] && echo PASS || echo FAIL) |"; done
 		echo
+		hist_md wifi "${checks[@]}"
 		echo "Pomona is provided as is, without warranty, and is not affiliated with Apple Inc. or Broadcom Inc."
 		echo
 		echo "No serial numbers, MAC addresses, network names or UUIDs are included. To add your Mac to the"
@@ -333,7 +359,7 @@ cmd_wifi_certify() {
 			i=$((i + 1)); name=${c%|*}; ok=${c##*|}
 			printf '    %s: %s%s\n' "$(json_str "$name")" "$([ "$ok" = yes ] && echo true || echo false)" "$([ "$i" -lt "${#checks[@]}" ] && echo ,)"
 		done
-		echo "  }"
+		hist_close_checks wifi
 		echo "}"
 	} > "$base.json"
 	cat "$base.md"
@@ -346,8 +372,8 @@ cmd_wifi_certify() {
 cmd_wifi() {
 	case "${1:-status}" in
 		status) shift; wifi_status "$@";;
-		fix) shift; wf_fix "$@";;
-		undo) shift; wf_undo "$@";;
+		fix) shift; hist_run wifi fix wf_fix "$@";;
+		undo) shift; hist_run wifi undo wf_undo "$@";;
 		certify) shift; cmd_wifi_certify "$@";;
 		help|-h|--help) wifi_help;;
 		*) et1_err "unknown wifi command $1 (try: pomona wifi help)"; return 2;;
@@ -417,22 +443,28 @@ EOF
 	esac
 }
 
-cmd_audio_certify() {
-	local out_dir=${1:-$PWD} model class stamp base sub pass=0 total=0 verdict checks=() name ok c i
+checks_audio() {
+	local model class
 	model=$(et1_model); class=$(et1_model_class "$model")
+	printf '%s|%s\n' \
+		"Supported MacBook Pro model" "$([ "$class" = t1 ] && echo yes || echo no)" \
+		"Cirrus Logic CS8409 sound chip (10138409)" "$(yesno au_present)" \
+		"Amplifiers known to the driver" "$(yesno au_supported)" \
+		"DKMS package installed" "$(yesno au_package_added)" \
+		"Driver built for the running kernel" "$(yesno au_module_built)" \
+		"No other copy of the driver" "$(if au_foreign >/dev/null; then echo no; else echo yes; fi)" \
+		"Mac driver in use (CS8409/CS42L83)" "$(yesno au_active)" \
+		"No restart pending" "$(if [ "$(au_state)" = restart ]; then echo no; else echo yes; fi)"
+}
+
+cmd_audio_certify() {
+	local out_dir=${1:-$PWD} model stamp base sub pass=0 total=0 verdict checks=() name ok c i
+	model=$(et1_model)
 	stamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 	# 0x106b3900 -> 106b:3900, the form certificates use for every subsystem id
 	sub=$(au_subsystem); sub=${sub#0x}; [ -n "$sub" ] && sub="${sub:0:4}:${sub:4:4}"
-
-	check() { total=$((total + 1)); if [ "$2" = yes ]; then pass=$((pass + 1)); fi; checks+=("$1|$2"); }
-	check "Supported MacBook Pro model" "$([ "$class" = t1 ] && echo yes || echo no)"
-	check "Cirrus Logic CS8409 sound chip (10138409)" "$(yesno au_present)"
-	check "Amplifiers known to the driver" "$(yesno au_supported)"
-	check "DKMS package installed" "$(yesno au_package_added)"
-	check "Driver built for the running kernel" "$(yesno au_module_built)"
-	check "No other copy of the driver" "$(if au_foreign >/dev/null; then echo no; else echo yes; fi)"
-	check "Mac driver in use (CS8409/CS42L83)" "$(yesno au_active)"
-	check "No restart pending" "$(if [ "$(au_state)" = restart ]; then echo no; else echo yes; fi)"
+	mapfile -t checks < <(checks_audio)
+	count_checks
 
 	if [ "$pass" = "$total" ]; then verdict=WORKING
 	elif au_active; then verdict=PARTIAL
@@ -461,6 +493,7 @@ cmd_audio_certify() {
 		echo "| --- | --- |"
 		for c in "${checks[@]}"; do name=${c%|*}; ok=${c##*|}; echo "| $name | $([ "$ok" = yes ] && echo PASS || echo FAIL) |"; done
 		echo
+		hist_md audio "${checks[@]}"
 		echo "Pomona is provided as is, without warranty, and is not affiliated with Apple Inc. or Cirrus Logic, Inc."
 		echo
 		echo "No serial numbers or UUIDs are included. To add your Mac to the compatibility table, run: pomona share"
@@ -485,7 +518,7 @@ cmd_audio_certify() {
 			i=$((i + 1)); name=${c%|*}; ok=${c##*|}
 			printf '    %s: %s%s\n' "$(json_str "$name")" "$([ "$ok" = yes ] && echo true || echo false)" "$([ "$i" -lt "${#checks[@]}" ] && echo ,)"
 		done
-		echo "  }"
+		hist_close_checks audio
 		echo "}"
 	} > "$base.json"
 	cat "$base.md"
@@ -498,11 +531,29 @@ cmd_audio_certify() {
 cmd_audio() {
 	case "${1:-status}" in
 		status) shift; audio_status "$@";;
-		fix) shift; au_fix "$@";;
-		undo) shift; au_undo "$@";;
+		fix) shift; hist_run audio fix au_fix "$@";;
+		undo) shift; hist_run audio undo au_undo "$@";;
 		certify) shift; cmd_audio_certify "$@";;
 		help|-h|--help) audio_help;;
 		*) et1_err "unknown audio command $1 (try: pomona audio help)"; return 2;;
+	esac
+}
+
+# ------------------------------------------------------------------ sleep
+
+cmd_sleep() {
+	case "${1:-status}" in
+		status)
+			if [ "${2:-}" = --json ]; then
+				printf '{\n  "state": %s,\n  "masked": %s,\n  "failed_resumes": %s\n}\n' \
+					"$(json_str "$(sl_state)")" "$(sl_masked_count)" "$(sl_failed_resumes)"
+			else
+				echo "suspend          $(sl_state)  ($(sl_masked_count) of $(echo $SL_UNITS | wc -w) sleep units masked)"
+				echo "failed wake-ups  $(sl_failed_resumes) earlier boot(s) ended while the Mac was asleep"
+			fi;;
+		disable) sl_disable;;
+		enable) sl_enable;;
+		*) et1_err "usage: pomona sleep status | sudo pomona sleep disable | sudo pomona sleep enable"; return 2;;
 	esac
 }
 
@@ -578,6 +629,7 @@ PYEOF
 
 case "${1:-status}" in
 	start) et1_start;;
+	baseline) hist_baseline_all;;
 	stop) et1_stop;;
 	status) shift; cmd_status "$@";;
 	certify) shift; cmd_certify "$@";;
@@ -585,7 +637,8 @@ case "${1:-status}" in
 	wifi) shift; cmd_wifi "$@";;
 	audio) shift; cmd_audio "$@";;
 	diagnose) shift; cmd_diagnose "$@";;
+	sleep) shift; cmd_sleep "$@";;
 	version|--version|-V) echo "Pomona $POMONA_VERSION";;
-	help|-h|--help) sed -n '2,12p' "$_self" | sed 's/^# \{0,1\}//';;
+	help|-h|--help) sed -n '2,13p' "$_self" | sed 's/^# \{0,1\}//';;
 	*) echo "pomona: unknown command $1 (try: pomona help)" >&2; exit 2;;
 esac

@@ -624,6 +624,144 @@ class Workflow(unittest.TestCase):
         self.assertIn("certificate", [b.get("id") for b in form["body"]])
 
 
+def with_history(cert, before="same", fixes=()):
+    """`cert` with a history: `before` is a dict, None (unknown) or "same" (all as they are now)."""
+    cert = copy.deepcopy(cert)
+    if before == "same":
+        before = dict(cert["checks"])
+    cert["history"] = {"before": before, "fixes": [dict(f) for f in fixes]}
+    return cert
+
+
+class History(unittest.TestCase):
+    def good(self, **kw):
+        return with_history(GOOD, **kw)
+
+    def test_old_certificates_have_no_history(self):
+        cert = C.validate(GOOD, now=NOW)
+        self.assertNotIn("history", cert)
+        self.assertIsNone(C.history_rows(cert))
+        self.assertNotIn("## History", C.render_markdown(cert))
+        self.assertIsNone(C.made_by_pomona_count(cert))
+
+    def test_history_is_kept_and_rebuilt(self):
+        cert = C.validate(self.good(), now=NOW)
+        self.assertEqual(cert["history"]["fixes"], [])
+        self.assertEqual(list(cert["history"]), ["before", "fixes"])
+
+    def test_unknown_before(self):
+        cert = C.validate(self.good(before=None), now=NOW)
+        self.assertIsNone(cert["history"]["before"])
+        self.assertIn("state before Pomona is not known", C.render_markdown(cert))
+
+    def test_rejects_malformed_history(self):
+        bad = [
+            "text", [], {"before": None}, {"fixes": []}, {"before": None, "fixes": [], "x": 1},
+            {"before": {"T1 running (05ac:8600)": True}, "fixes": []},
+            {"before": {**{c: True for c in C.CHECKS}, "extra": True}, "fixes": []},
+            {"before": {c: "yes" for c in C.CHECKS}, "fixes": []},
+            {"before": None, "fixes": "none"},
+            {"before": None, "fixes": [{"action": "fix"}]},
+            {"before": None, "fixes": [{"action": "format", "ok": True}]},
+            {"before": None, "fixes": [{"action": "fix", "ok": "yes"}]},
+            {"before": None, "fixes": [{"action": "fix", "ok": True, "note": "free text"}]},
+            {"before": None, "fixes": [{"action": "fix", "ok": True}] * (C.MAX_FIXES + 1)},
+        ]
+        for history in bad:
+            with self.subTest(history=history):
+                with self.assertRaises(C.Invalid):
+                    C.validate(with_(history=history), now=NOW)
+
+    def test_meanings_of_the_t1(self):
+        # nothing worked before, the T1 module is started by Pomona itself
+        before = {c: False for c in C.CHECKS}
+        for c in C.STATIC_CHECKS["t1"]:
+            before[c] = True
+        cert = C.validate(self.good(before=before), now=NOW)
+        rows = C.history_rows(cert)
+        self.assertEqual({r[0] for r in rows}, set(C.CHECKS) - C.STATIC_CHECKS["t1"])
+        self.assertTrue(all(r[1:] == ("no", "yes", "Made to work by Pomona") for r in rows))
+        self.assertEqual(C.made_by_pomona_count(cert), 7)
+
+    def test_wifi_meanings(self):
+        base = wifi_()
+        base["checks"]["Connected to a network"] = False
+        base["checks"]["Board file installed"] = False
+        base["result"] = "PARTIAL"
+        before = {c: True for c in C.WIFI_CHECKS}
+        before["Board file installed"] = False
+        before["Driver option feature_disable set"] = False
+        before["Connected to a network"] = True
+        fixes = [{"action": "fix", "ok": True}]
+        cert = C.validate(with_history(base, before=before, fixes=fixes), now=NOW)
+        rows = {r[0]: r for r in C.history_rows(cert)}
+        self.assertEqual(rows["brcmfmac driver bound"][3], "Worked before Pomona")
+        self.assertEqual(rows["Driver option feature_disable set"][3], "Made to work by Pomona")
+        self.assertEqual(rows["Board file installed"][3], "Not working")
+        self.assertEqual(rows["Connected to a network"][3], "Stopped working")
+        self.assertNotIn("Supported MacBook Pro model", rows)
+        self.assertNotIn("No restart pending", rows)
+
+    def test_working_without_a_fix_is_not_credited(self):
+        base = wifi_()
+        before = {c: True for c in C.WIFI_CHECKS}
+        before["Board file installed"] = False
+        cert = C.validate(with_history(base, before=before), now=NOW)
+        rows = {r[0]: r for r in C.history_rows(cert)}
+        self.assertEqual(rows["Board file installed"][3], "Working now, not through a Pomona fix")
+        self.assertEqual(C.made_by_pomona_count(cert), 0)
+        failed = C.validate(with_history(base, before=before, fixes=[{"action": "fix", "ok": False}]), now=NOW)
+        self.assertEqual({r[0]: r for r in C.history_rows(failed)}["Board file installed"][3],
+                         "Working now, not through a Pomona fix")
+
+    def test_failed_fix_is_named(self):
+        base = wifi_()
+        base["checks"]["Board file installed"] = False
+        base["result"] = "PARTIAL"
+        before = {c: True for c in C.WIFI_CHECKS}
+        before["Board file installed"] = False
+        cert = C.validate(with_history(base, before=before, fixes=[{"action": "fix", "ok": False}]), now=NOW)
+        rows = {r[0]: r for r in C.history_rows(cert)}
+        self.assertEqual(rows["Board file installed"][3], "Not working (a Pomona fix failed)")
+        text = C.render_markdown(cert)
+        self.assertIn("Fix attempts: 0 ok, 1 failed, 0 undone", text)
+        self.assertIn("Made to work by Pomona: 0 · Worked before Pomona: ", text)
+
+    def test_markdown_section_sits_between_the_checks_and_the_disclaimer(self):
+        text = C.render_markdown(C.validate(self.good(), now=NOW))
+        self.assertLess(text.index("| Check | Result |"), text.index("## History"))
+        self.assertLess(text.index("## History"), text.index("Pomona is provided"))
+
+    def test_table_has_a_column(self):
+        plain = C.validate(GOOD, now=NOW)
+        with_h = C.validate(self.good(before={c: c in C.STATIC_CHECKS["t1"] for c in C.CHECKS}), now=NOW)
+        table = C.report_table([("a-1", plain), ("a-2", with_h)])
+        lines = table.split("\n")
+        self.assertIn("Made to work by Pomona", lines[0])
+        self.assertEqual({len(l.split(" | ")) for l in lines if l.startswith("|") and not l.startswith("| ---")}, {11})
+        self.assertIn("| 0.8.0 | n/a |", table)
+        self.assertIn("| 0.8.0 | 7 |", table)
+
+    def test_intake_keeps_the_history(self):
+        cert = with_history(GOOD, before=None, fixes=[{"action": "fix", "ok": True}])
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, tmp)
+        event = {"issue": {"number": 7, "user": {"login": "someone"}, "body": issue_body(json.dumps(cert))}}
+        status = C.intake(event, os.path.join(tmp, "out"), cert_dir=os.path.join(tmp, "certs"),
+                          doc_path=self.doc(tmp), now=NOW, account_created="2020-01-01T00:00:00Z", releases=RELEASES)
+        self.assertEqual(status, "ok")
+        stored = C.load_all(os.path.join(tmp, "certs"))
+        self.assertEqual(stored[0][1]["history"]["fixes"], [{"action": "fix", "ok": True}])
+
+    def doc(self, tmp):
+        path = os.path.join(tmp, "compatibility.md")
+        blocks = "".join("<!-- %s:start -->\n<!-- %s:end -->\n" % (n, n) for n in
+                         ("models", "reports", "wifi-models", "wifi-reports", "audio-models", "audio-reports"))
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(blocks)
+        return path
+
+
 if __name__ == "__main__":
     unittest.main()
 

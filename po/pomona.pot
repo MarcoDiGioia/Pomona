@@ -515,3 +515,21 @@ msgstr ""
 
 msgid "It says everything works, but something is wrong"
 msgstr ""
+
+msgid "Sleep"
+msgstr ""
+
+msgid "Turned off: closing the lid or pressing the power button does nothing"
+msgstr ""
+
+msgid "Turn on"
+msgstr ""
+
+msgid "The Mac did not wake up %d time(s): turn sleep off so that it does not hang"
+msgstr ""
+
+msgid "Turn off"
+msgstr ""
+
+msgid "No failed wake-up found"
+msgstr ""

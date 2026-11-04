@@ -8,7 +8,7 @@
 #   POMONA_OS_RELEASE                   (default /etc/os-release)
 # shellcheck shell=bash
 
-POMONA_VERSION=0.10.0
+POMONA_VERSION=0.11.0
 POMONA_REPO_URL=https://github.com/MarcoDiGioia/Pomona
 
 : "${POMONA_SYS:=/sys}"
@@ -338,3 +338,13 @@ PYEOF
 
 # shellcheck source=audio.sh
 [ -r "$POMONA_LIBEXEC/audio.sh" ] && . "$POMONA_LIBEXEC/audio.sh"
+
+# ------------------------------------------------------------------ sleep module
+
+# shellcheck source=sleep.sh
+[ -r "$POMONA_LIBEXEC/sleep.sh" ] && . "$POMONA_LIBEXEC/sleep.sh"
+
+# ------------------------------------------------------------------ history of the fixes
+
+# shellcheck source=history.sh
+[ -r "$POMONA_LIBEXEC/history.sh" ] && . "$POMONA_LIBEXEC/history.sh"

@@ -102,6 +102,16 @@ TOUCHBAR = "Touch Bar bound to hid-appletb-kbd"
 # devices that only exist while the T1 is running
 DEVICE_CHECKS = ["USB configuration 1 selected", TOUCHBAR, "FaceTime camera present", "Ambient light sensor present"]
 
+# Checks that are facts about the hardware or a pending restart: no fix changes them, so the history
+# leaves them out. Keep in step with hist_static in lib/history.sh.
+STATIC_CHECKS = {
+    "t1": {"T1 MacBook Pro model", FIRMWARE, "Firmware holds 4 signed images"},
+    "wifi": {WIFI_MODEL, WIFI_CHIP, "No restart pending"},
+    "audio": {WIFI_MODEL, AUDIO_CHIP, AUDIO_KNOWN, "No restart pending"},
+}
+HISTORY_FIELD = "history"
+MAX_FIXES = 10
+
 RESULTS = ("WORKING", "PARTIAL", "NOT-WORKING")
 FIELDS = ["schema", "date", "pomona", "result", "model", "board", "mac_firmware", "embeddedos",
           "distribution", "kernel", "desktop", "checks"]
@@ -186,7 +196,7 @@ def validate(raw, now=None, stored=False):
     module = module_for_schema(raw)
     spec = MODULES[module]
     fields, check_names = spec["fields"], spec["checks"]
-    allowed = set(fields) | ({STORED_EXTRA} if stored else set())
+    allowed = set(fields) | {HISTORY_FIELD} | ({STORED_EXTRA} if stored else set())
     extra = sorted(set(raw) - allowed)
     missing = [f for f in fields if f not in raw]
     if extra:
@@ -221,12 +231,111 @@ def validate(raw, now=None, stored=False):
     if raw["result"] != derive_result(checks, module):
         raise Invalid("the result does not match the checks")
     cert = {f: ({c: checks[c] for c in check_names} if f == "checks" else raw[f]) for f in fields}
+    if HISTORY_FIELD in raw:
+        cert[HISTORY_FIELD] = validate_history(raw[HISTORY_FIELD], check_names)
     if stored and STORED_EXTRA in raw:
         login = raw[STORED_EXTRA]
         if not isinstance(login, str) or not LOGIN_RE.fullmatch(login):
             raise Invalid("invalid value for 'reported_by'")
         cert[STORED_EXTRA] = login
     return cert
+
+
+def validate_history(raw, check_names):
+    """The optional `history` field: the checks as they were before Pomona changed anything (or null
+    when that is not known) and the fixes that ran. Only these values, nothing free-form."""
+    if not isinstance(raw, dict) or set(raw) != {"before", "fixes"}:
+        raise Invalid("invalid value for 'history'")
+    before = raw["before"]
+    if before is not None:
+        if not isinstance(before, dict) or set(before) != set(check_names) \
+                or not all(isinstance(v, bool) for v in before.values()):
+            raise Invalid("the history does not match the list of checks")
+        before = {c: before[c] for c in check_names}
+    fixes = raw["fixes"]
+    if not isinstance(fixes, list) or len(fixes) > MAX_FIXES:
+        raise Invalid("invalid value for 'history'")
+    clean = []
+    for f in fixes:
+        if not isinstance(f, dict) or set(f) != {"action", "ok"} or f["action"] not in ("fix", "undo") \
+                or not isinstance(f["ok"], bool):
+            raise Invalid("invalid value for 'history'")
+        clean.append({"action": f["action"], "ok": f["ok"]})
+    return {"before": before, "fixes": clean}
+
+
+def history_rows(cert):
+    """The History table of a certificate: [(check, before, now, meaning)], or None without a history.
+
+    Same rules as hist_md in lib/history.sh. The T1 has no fix to run: Pomona starting it is the fix.
+    """
+    history = cert.get(HISTORY_FIELD)
+    if history is None:
+        return None
+    module = module_of(cert)
+    before = history["before"]
+    fixes = history["fixes"]
+    made_by_pomona = module == "t1" or any(f["action"] == "fix" and f["ok"] for f in fixes)
+    failed = any(f["action"] == "fix" and not f["ok"] for f in fixes)
+    rows = []
+    for name in MODULES[module]["checks"]:
+        if name in STATIC_CHECKS[module]:
+            continue
+        now = cert["checks"][name]
+        if before is None:
+            if now:
+                meaning = "Working"
+            else:
+                meaning = "Not working (a Pomona fix failed)" if failed else "Not working"
+            was = "unknown"
+        else:
+            was = before[name]
+            if now:
+                meaning = "Worked before Pomona" if was else (
+                    "Made to work by Pomona" if made_by_pomona else "Working now, not through a Pomona fix")
+            elif was:
+                meaning = "Stopped working"
+            else:
+                meaning = "Not working (a Pomona fix failed)" if failed else "Not working"
+            was = "yes" if was else "no"
+        rows.append((name, was, "yes" if now else "no", meaning))
+    return rows
+
+
+def made_by_pomona_count(cert):
+    """How many checks the history says Pomona made work, or None without a history."""
+    rows = history_rows(cert)
+    if rows is None:
+        return None
+    return sum(1 for r in rows if r[3] == "Made to work by Pomona")
+
+
+def history_markdown(cert):
+    rows = history_rows(cert)
+    if rows is None:
+        return []
+    history = cert[HISTORY_FIELD]
+    known = history["before"] is not None
+    fixes = history["fixes"]
+    ok_fix = sum(1 for f in fixes if f["action"] == "fix" and f["ok"])
+    bad_fix = sum(1 for f in fixes if f["action"] == "fix" and not f["ok"])
+    undone = sum(1 for f in fixes if f["action"] == "undo")
+    out = ["## History", ""]
+    out.append("Each check as it was before Pomona changed anything, and now. Recorded by Pomona on this Mac."
+               if known else
+               "The state before Pomona is not known: Pomona had already changed things when this record began.")
+    out += ["", "| Check | Before Pomona | Now | What it means |", "| --- | --- | --- | --- |"]
+    out += ["| %s | %s | %s | %s |" % row for row in rows]
+    broken = sum(1 for r in rows if r[3].startswith(("Not working", "Stopped working")))
+    out.append("")
+    if known:
+        out.append("Made to work by Pomona: %d · Worked before Pomona: %d · Not working: %d" % (
+            sum(1 for r in rows if r[3] == "Made to work by Pomona"),
+            sum(1 for r in rows if r[3] == "Worked before Pomona"), broken))
+    else:
+        out.append("Not working: %d" % broken)
+    out += ["Fix attempts: %d ok, %d failed, %d undone" % (ok_fix, bad_fix, undone), ""]
+    return out
 
 
 def check_consistency(cert, releases=None):
@@ -357,7 +466,8 @@ def render_markdown(cert):
     out += ["| %s | %s |" % (k, md_escape(v)) for k, v in rows]
     out += ["", "| Check | Result |", "| --- | --- |"]
     out += ["| %s | %s |" % (c, "PASS" if cert["checks"][c] else "FAIL") for c in check_names]
-    out += ["", "Pomona is provided as is, without warranty, and is not affiliated with Apple Inc."
+    out += [""] + history_markdown(cert)
+    out += ["Pomona is provided as is, without warranty, and is not affiliated with Apple Inc."
             + VENDOR.get(module, ""), ""]
     return "\n".join(out)
 
@@ -438,18 +548,19 @@ def model_table(certs, verified_ids=frozenset(), module="t1"):
 def report_table(certs, verified_ids=frozenset(), module="t1"):
     certs = [(p, c) for p, c in certs if module_of(c) == module]
     third = SUBSYSTEM_LABEL[module][1] if module in SUBSYSTEM_LABEL else "EmbeddedOS"
-    out = ["| Date | Model | Distribution | Kernel | Desktop | Mac firmware | %s | Pomona | Reported by | Result |" % third,
-           "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+    out = ["| Date | Model | Distribution | Kernel | Desktop | Mac firmware | %s | Pomona | Made to work by Pomona | Reported by | Result |" % third,
+           "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     icon = {"WORKING": "✅ Working", "PARTIAL": "🟡 Partial", "NOT-WORKING": "❌ Not working"}
     for path, c in sorted(certs, key=lambda x: (x[1]["date"], x[1]["model"]), reverse=True):
         who = "@" + c[STORED_EXTRA] if c.get(STORED_EXTRA) else "n/a"
         result = icon[c["result"]] + (" · verified" if cert_id(path) in verified_ids else "")
         detail = (c["subsystem"] or "n/a") if module in SUBSYSTEM_LABEL else (c["embeddedos"] or "n/a")
-        out.append("| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |" % (
+        made = made_by_pomona_count(c)
+        out.append("| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |" % (
             c["date"][:10], c["model"], md_escape(c["distribution"]), c["kernel"], md_escape(c["desktop"] or "n/a"),
-            c["mac_firmware"], detail, c["pomona"], who, result))
+            c["mac_firmware"], detail, c["pomona"], "n/a" if made is None else made, who, result))
     if not certs:
-        out.append("| | | | | | | | | | |")
+        out.append("| | | | | | | | | | | |")
     return "\n".join(out)
 
 

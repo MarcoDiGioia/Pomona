@@ -80,6 +80,8 @@ install -m 755 "$SRC/libexec/pomona-admin" "$PREFIX/lib/pomona/pomona-admin"
 install -m 644 "$SRC/lib/pomona.sh" "$PREFIX/lib/pomona/pomona.sh"
 install -m 644 "$SRC/lib/wifi.sh" "$PREFIX/lib/pomona/wifi.sh"
 install -m 644 "$SRC/lib/audio.sh" "$PREFIX/lib/pomona/audio.sh"
+install -m 644 "$SRC/lib/sleep.sh" "$PREFIX/lib/pomona/sleep.sh"
+install -m 644 "$SRC/lib/history.sh" "$PREFIX/lib/pomona/history.sh"
 install -D -m 755 "$SRC/data/audio/dkms/pomona-cs8409-prepare" "$PREFIX/share/pomona/audio/dkms/pomona-cs8409-prepare"
 install -D -m 644 "$SRC/data/audio/dkms/Makefile" "$PREFIX/share/pomona/audio/dkms/Makefile"
 install -m 755 "$SRC/bin/pomona" "$PREFIX/bin/pomona"
@@ -118,7 +120,8 @@ if [ ! -e /etc/pomona/config.json ]; then
 	rm -f /tmp/pomona-default.json
 fi
 
-# 4. enable and start
+# 4. note how the Mac is before Pomona changes anything, then enable and start
+"$PREFIX/bin/pomona" baseline >/dev/null 2>&1 || true
 say "enabling the services"
 systemctl daemon-reload
 systemctl enable pomona.service pomona-touchbard.service

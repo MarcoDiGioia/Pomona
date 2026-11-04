@@ -8,6 +8,7 @@
 #   pomona-admin wifi-undo             put back the files the last Wi-Fi fix replaced
 #   pomona-admin audio-fix [--download]  download and build the Mac sound driver (DKMS)
 #   pomona-admin audio-undo            remove the Mac sound driver
+#   pomona-admin sleep-disable | sleep-enable   turn suspend off or on again
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 set -uo pipefail
@@ -94,6 +95,12 @@ EOF
 		"$LIBEXEC/../../bin/pomona" audio fix ${args[@]+"${args[@]}"}
 		exit $?
 		;;
+	sleep-disable)
+		exec "$LIBEXEC/../../bin/pomona" sleep disable
+		;;
+	sleep-enable)
+		exec "$LIBEXEC/../../bin/pomona" sleep enable
+		;;
 	audio-undo)
 		exec "$LIBEXEC/../../bin/pomona" audio undo
 		;;
@@ -104,7 +111,7 @@ EOF
 		systemctl disable --now $UNITS
 		;;
 	*)
-		sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'
+		sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
 		exit 2
 		;;
 esac

@@ -58,3 +58,13 @@ With the T1 running, the Mac freezes at the very end of power-off unless Linux r
 ## After suspend the Touch Bar is dark
 
 Run `sudo pomona start`. If it happens every time, please open an issue: resume handling is not implemented yet.
+
+## The Mac does not wake up from sleep
+
+On some of these Macs the screen stays black after suspend, the keyboard stays lit and only the power button helps. There is no fix for the wake-up itself; turn suspend off so that closing the lid or pressing the power button does not hang the Mac:
+
+```bash
+sudo pomona sleep disable    # sudo pomona sleep enable to turn it back on
+```
+
+Or use the **Sleep** step of the Setup page, which also counts how many earlier boots ended asleep. Details: [sleep.md](sleep.md).
