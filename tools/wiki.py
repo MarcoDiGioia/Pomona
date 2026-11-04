@@ -24,6 +24,7 @@ PAGES = {
     "README.md": "Home",
     "docs/wifi.md": "Wi-Fi",
     "docs/audio.md": "Audio",
+    "docs/sleep.md": "Sleep",
     "docs/how-it-works.md": "How-it-works",
     "docs/troubleshooting.md": "Troubleshooting",
     "docs/compatibility.md": "Compatibility",
@@ -41,10 +42,13 @@ SIDEBAR = """**[Pomona](Home)**
 
 - [Home](Home)
 - [Wi-Fi](Wi-Fi)
+- [Audio](Audio)
+- [Sleep](Sleep)
 - [How it works](How-it-works)
 - [Troubleshooting](Troubleshooting)
 - [Compatibility](Compatibility)
 - [Certificates](Certificates)
+- [Diagnostics](Diagnostics)
 
 **Project**
 
