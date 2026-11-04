@@ -7,7 +7,8 @@
 Each model is in one of these states. The table is generated from the certificates.
 
 - ✅ **Verified**: tested by the maintainer, or approved by him after seeing material evidence (photos, logs, a call) from people he trusts. The certificate is listed in [`certificates/VERIFIED`](../certificates/VERIFIED).
-- 🟢 **Tested by the community**: at least one user sent a working certificate. Certificates come from the users' own machines and are not checked one by one, so they cannot be proven.
+- 🟢 **Tested by the community**: at least one user sent a working certificate in which Pomona made something work. Certificates come from the users' own machines and are not checked one by one, so they cannot be proven.
+- ⚪ **Works without Pomona**: working certificates exist, but their [history](certificates.md#what-pomona-fixed-and-what-already-worked) says that everything already worked before Pomona, or came right without one of its fixes. This table is about what Pomona manages to fix, not about what works natively on Linux, so these certificates do not count towards the status. They stay in the list below.
 - 🟠 **Problems reported**: certificates exist, but none is fully working.
 - 🟡 **Should work**: the model has the same T1 chip (`iBridge1,1`, CPID `0x8002`) and the same start-up path as a tested one, but nobody has sent a certificate yet.
 

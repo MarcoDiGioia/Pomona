@@ -525,12 +525,32 @@ def load_verified(path=None):
 
 # ------------------------------------------------------------------ tables
 
+def pomona_fixed_something(cert):
+    """True when a certificate shows Pomona at work, or cannot say.
+
+    The compatibility table is about what Pomona manages to fix, not about what already works on
+    Linux. A working certificate whose history says that every check passed before Pomona, or came
+    right without a Pomona fix, shows nothing of Pomona and does not count. A certificate without a
+    history (written by an older version) or with an unknown state before cannot be told apart,
+    so it counts.
+    """
+    if cert["result"] != "WORKING":
+        return False
+    history = cert.get(HISTORY_FIELD)
+    if history is None or history["before"] is None:
+        return True
+    return made_by_pomona_count(cert) > 0
+
+
 def model_status(mine, verified_ids):
     working = [(p, c) for p, c in mine if c["result"] == "WORKING"]
-    if any(cert_id(p) in verified_ids for p, _ in working):
+    counted = [(p, c) for p, c in working if pomona_fixed_something(c)]
+    if any(cert_id(p) in verified_ids for p, _ in counted):
         return "✅ Verified"
-    if working:
+    if counted:
         return "🟢 Tested by the community"
+    if working:
+        return "⚪ Works without Pomona"
     if mine:
         return "🟠 Problems reported"
     return "🟡 Should work"
@@ -554,6 +574,8 @@ def report_table(certs, verified_ids=frozenset(), module="t1"):
     for path, c in sorted(certs, key=lambda x: (x[1]["date"], x[1]["model"]), reverse=True):
         who = "@" + c[STORED_EXTRA] if c.get(STORED_EXTRA) else "n/a"
         result = icon[c["result"]] + (" · verified" if cert_id(path) in verified_ids else "")
+        if c["result"] == "WORKING" and not pomona_fixed_something(c):
+            result += " · nothing fixed by Pomona"
         detail = (c["subsystem"] or "n/a") if module in SUBSYSTEM_LABEL else (c["embeddedos"] or "n/a")
         made = made_by_pomona_count(c)
         out.append("| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |" % (
@@ -635,6 +657,10 @@ def intake(event, outdir, cert_dir=None, doc_path=None, now=None, account_create
             "`docs/compatibility.md` was regenerated from `certificates/`.\n\n"
             % (number, cert["model"], cert["distribution"], cert["kernel"], cert["pomona"], label,
                " from @" + reporter if reporter else ""))
+    if cert["result"] == "WORKING" and not pomona_fixed_something(cert):
+        body += ("**Pomona fixed nothing here:** the history says every check passed before Pomona, or came right "
+                 "without one of its fixes. The certificate is added to the reports, but it does not count towards "
+                 "the status of the model.\n\n")
     if flags:
         body += "**Needs a closer look:**\n\n" + "".join("- %s\n" % f for f in flags) + "\n"
         out("needs-review", "\n".join(flags) + "\n")
