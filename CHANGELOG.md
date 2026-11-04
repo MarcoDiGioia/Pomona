@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **The compatibility status counts what Pomona fixes, not what already works on Linux.** A working certificate whose History shows that everything worked before Pomona, or came right without one of its fixes, no longer raises a model to *Tested by the community* or *Verified*: the model shows **⚪ Works without Pomona**, the certificate is listed as *nothing fixed by Pomona*, and the pull request says so. Certificates without a History, or with an unknown state before, count as before. See docs/certificates.md.
+
 ## 0.11.0 - 2026-11-04
 
 - **Certificates say what Pomona did.** Besides what works now, a certificate has a **History**: which checks passed before Pomona changed anything, which ones Pomona made work, which fixes did not work and which checks still fail. Pomona records the state of each module once, when it is installed or before the first fix, and one line (`ok` or `failed`) for every fix and undo, in `/var/lib/pomona/history/`. The same table is in the JSON (an optional `history` field, so older certificates stay valid) and in the readable copy, which the robot rebuilds from the JSON. When Pomona had made changes before the record existed, the state before is shown as unknown and nothing is credited to Pomona. The compatibility tables get a **Made to work by Pomona** column. See docs/certificates.md.

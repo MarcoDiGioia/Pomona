@@ -50,6 +50,8 @@ Facts about the hardware (the model, the chip, the firmware on the EFI partition
 
 Where it comes from: Pomona keeps a small record on the Mac ([how-it-works.md](how-it-works.md#what-pomona-remembers)). It notes the state of each module once, before the first change: when the package or `install.sh` installs Pomona, and again before the first fix of Wi-Fi or audio if that was not done. Every fix and undo then adds a line, `ok` or `failed`. When Pomona had already changed things before this record existed (an upgrade from an older version, for example), the state before is **unknown**: the table then says only what works now, and no check is credited to Pomona.
 
+**What counts for the status.** The compatibility table is a record of what Pomona manages to fix, not of what works natively on Linux. A working certificate counts towards **Tested by the community** or **Verified** when its history shows at least one check made to work by Pomona. One whose history says that everything worked before Pomona, or came right without a Pomona fix, is accepted and listed (marked *nothing fixed by Pomona*), and the pull request says so, but it does not raise the status of the model. A certificate without a history (written by an older version) or with an unknown state before cannot be told apart, so it counts as before.
+
 The history has exactly the same rules as the rest of a certificate: it is written by the user's own machine, so it cannot be proven; the robot checks its shape (known check names, yes or no, at most ten fix entries, no free text) and rebuilds the readable copy itself from the JSON. The compatibility tables show a **Made to work by Pomona** column with the number of checks, or `n/a` for certificates without a history. Certificates from earlier versions stay valid.
 
 ## What happens after submitting
@@ -86,7 +88,8 @@ A certificate is written by the user's own machine, so it cannot be proven true.
 | Level | Meaning |
 | --- | --- |
 | ✅ Verified | the maintainer tested it, or approved it after seeing material evidence from people he trusts; listed in [`certificates/VERIFIED`](../certificates/VERIFIED) (the id of a Wi-Fi certificate starts with `wifi-`) |
-| 🟢 Tested by the community | users sent working certificates; not checked one by one |
+| 🟢 Tested by the community | users sent working certificates in which Pomona made something work; not checked one by one |
+| ⚪ Works without Pomona | working certificates whose history shows Pomona fixed nothing (see above); listed, but they do not count |
 | 🟡 Should work | same chip and start-up path as a tested model, nobody has reported yet |
 
 To verify a community certificate, the maintainer adds its id (the file name without extension) and a note on the evidence to `certificates/VERIFIED`, and runs `python3 tools/certificates.py table`.

@@ -118,7 +118,7 @@ The app is available in English, Italian, German, French, Spanish, Portuguese, D
 | MacBook Pro 15" 2016 (MacBookPro13,3) | 🟢 Tested by the community |
 | MacBook Pro 13" 2016 with Touch Bar (MacBookPro13,2) | 🟡 Should work |
 
-✅ Verified: tested by the maintainer. 🟢 Tested by the community: a user sent a working certificate. 🟡 Should work: same chip, nobody has reported yet. Verified on Ubuntu 26.04. The same four models carry the Wi-Fi card and the CS8409 sound chip, each with its own table. Details and how to add your Mac: [docs/compatibility.md](docs/compatibility.md).
+✅ Verified: tested by the maintainer. 🟢 Tested by the community: a user sent a working certificate in which Pomona fixed something. ⚪ Works without Pomona: it already worked on Linux, so Pomona had nothing to fix. 🟡 Should work: same chip, nobody has reported yet. Verified on Ubuntu 26.04. The same four models carry the Wi-Fi card and the CS8409 sound chip, each with its own table. Details and how to add your Mac: [docs/compatibility.md](docs/compatibility.md).
 
 **Does it work on your Mac? Tell us.** After a full shutdown and power-on, open the **Report** page, press **Create certificate** and then **Share with the community**. Your browser opens a GitHub page with the certificate already filled in; press *Submit new issue* and your Mac is added to the table. It contains no serial numbers or personal data. What a certificate says, including what Pomona fixed and what already worked: [docs/certificates.md](docs/certificates.md).
 

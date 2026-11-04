@@ -742,6 +742,65 @@ class History(unittest.TestCase):
         self.assertIn("| 0.8.0 | n/a |", table)
         self.assertIn("| 0.8.0 | 7 |", table)
 
+    def entry(self, base, before, fixes=(), name="x", who="jane-doe"):
+        cert = C.validate(dict(with_history(base, before=before, fixes=fixes), reported_by=who), now=NOW, stored=True)
+        return ("/x/%s.json" % name, cert)
+
+    def t1_before(self, **changes):
+        before = {c: True for c in C.CHECKS}
+        before.update(changes)
+        return before
+
+    def test_a_certificate_without_a_fix_does_not_count(self):
+        everything_worked = self.entry(GOOD, "same")
+        self.assertFalse(C.pomona_fixed_something(everything_worked[1]))
+        self.assertEqual(C.model_status([everything_worked], set()), "⚪ Works without Pomona")
+        self.assertEqual(C.model_status([everything_worked], {"x"}), "⚪ Works without Pomona")
+
+    def test_a_fix_by_pomona_counts(self):
+        fixed = self.entry(GOOD, self.t1_before(**{"Touch Bar daemon running": False}))
+        self.assertTrue(C.pomona_fixed_something(fixed[1]))
+        self.assertEqual(C.model_status([fixed], set()), "🟢 Tested by the community")
+        self.assertEqual(C.model_status([fixed], {"x"}), "✅ Verified")
+
+    def test_unknown_or_missing_history_is_not_held_against_a_certificate(self):
+        old = ("/x/old.json", C.validate(dict(GOOD, reported_by="jane-doe"), now=NOW, stored=True))
+        unknown = self.entry(GOOD, None, name="u")
+        self.assertTrue(C.pomona_fixed_something(old[1]))
+        self.assertTrue(C.pomona_fixed_something(unknown[1]))
+        self.assertEqual(C.model_status([old], set()), "🟢 Tested by the community")
+        self.assertEqual(C.model_status([unknown], set()), "🟢 Tested by the community")
+
+    def test_a_certificate_that_did_not_work_never_counts(self):
+        broken = dict(GOOD, result="PARTIAL", checks=dict(GOOD["checks"], **{"Boot service enabled": False}))
+        entry = self.entry(broken, self.t1_before(**{"Boot service enabled": False}))
+        self.assertFalse(C.pomona_fixed_something(entry[1]))
+        self.assertEqual(C.model_status([entry], set()), "🟠 Problems reported")
+
+    def test_one_certificate_with_a_fix_is_enough(self):
+        mine = [self.entry(GOOD, "same", name="a"),
+                self.entry(GOOD, self.t1_before(**{"FaceTime camera present": False}), name="b", who="john")]
+        self.assertEqual(C.model_status(mine, set()), "🟢 Tested by the community")
+
+    def test_a_certificate_that_counts_for_nothing_is_marked_in_the_reports(self):
+        nothing = self.entry(GOOD, "same")
+        fixed = self.entry(GOOD, self.t1_before(**{"FaceTime camera present": False}), name="f")
+        table = C.report_table([nothing, fixed])
+        self.assertEqual(table.count("nothing fixed by Pomona"), 1)
+
+    def test_intake_says_when_a_certificate_does_not_count(self):
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, tmp)
+        for name, cert in (("none", with_history(GOOD, before="same")),
+                           ("fix", with_history(GOOD, before=self.t1_before(**{"FaceTime camera present": False})))):
+            event = {"issue": {"number": 7, "user": {"login": "someone"}, "body": issue_body(json.dumps(cert))}}
+            out = os.path.join(tmp, name)
+            self.assertEqual(C.intake(event, out, cert_dir=os.path.join(tmp, "certs-" + name),
+                                      doc_path=self.doc(tmp), now=NOW, account_created="2020-01-01T00:00:00Z",
+                                      releases=RELEASES), "ok")
+            body = read_text(os.path.join(out, "pr-body.md"))
+            self.assertEqual("Pomona fixed nothing here" in body, name == "none")
+
     def test_intake_keeps_the_history(self):
         cert = with_history(GOOD, before=None, fixes=[{"action": "fix", "ok": True}])
         tmp = tempfile.mkdtemp()
