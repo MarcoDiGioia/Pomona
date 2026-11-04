@@ -15,7 +15,7 @@ Each model is in one of these states. The table is generated from the certificat
 | Model | Machine | Status | Reports | People |
 | --- | --- | --- | --- | --- |
 | MacBookPro13,2 | 13", 2016, four Thunderbolt ports | 🟡 Should work | 0 | 0 |
-| MacBookPro13,3 | 15", 2016 | 🟡 Should work | 0 | 0 |
+| MacBookPro13,3 | 15", 2016 | 🟢 Tested by the community | 1 | 1 |
 | MacBookPro14,2 | 13", 2017, four Thunderbolt ports | 🟡 Should work | 0 | 0 |
 | MacBookPro14,3 | 15", 2017 | ✅ Verified | 2 | 1 |
 <!-- models:end -->
@@ -45,6 +45,7 @@ Generated from [`certificates/`](../certificates), newest first.
 <!-- reports:start -->
 | Date | Model | Distribution | Kernel | Desktop | Mac firmware | EmbeddedOS | Pomona | Made to work by Pomona | Reported by | Result |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-03 | MacBookPro13,3 | Ubuntu 26.04.1 LTS | 7.0.0-30-generic | ubuntu:GNOME | 529.120.1.0.0 | 910 | 0.10.0 | n/a | @jisongkun | ✅ Working |
 | 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 910 | 0.8.0 | n/a | @MarcoDiGioia | ✅ Working · verified |
 | 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 910 | 0.3.0 | n/a | @MarcoDiGioia | ✅ Working · verified |
 <!-- reports:end -->
