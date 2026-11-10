@@ -184,6 +184,12 @@ fa_can_write() { [ "$(id -u)" = 0 ]; }
 
 fa_fix() {
 	fa_can_write || { et1_err "run it with sudo"; return 4; }
+	if [ "${1:-}" != --yes ]; then
+		fa_explain
+		[ -t 0 ] || { et1_err "not a terminal: run  sudo pomona fan fix --yes  to turn it on"; return 5; }
+		printf 'Turn it on? [y/N] '; local a; read -r a
+		case "$a" in y|Y|yes|s|S|si) ;; *) et1_log "nothing changed"; return 0;; esac
+	fi
 	fa_dir >/dev/null || { et1_err "no fan found on this Mac: nothing to do"; return 1; }
 	systemctl cat "$FA_SERVICE" >/dev/null 2>&1 || { et1_err "$FA_SERVICE is not installed"; return 1; }
 	systemctl enable --now "$FA_SERVICE" || { et1_err "could not start $FA_SERVICE"; return 1; }
@@ -206,4 +212,85 @@ fa_sensors() {
 		l=$(cat "${f%_input}_label" 2>/dev/null); v=$(fa_read "$f") || continue
 		echo "${l:-${f##*/}} $((v / 1000))"
 	done | sort
+}
+
+# fa_diagnose -> absent | pomona | hot | ok   (is this the problem the fan fix is for?)
+#   hot: the firmware sets the fans, the hottest die is at POMONA_FAN_HOT degrees or more
+#        (default 75) and every fan is under half of its range: the firmware is letting the
+#        Mac get hot without using the fans, which is what `pomona fan fix` changes
+fa_diagnose() {
+	local dir t n in mn mx slow=1 any=""
+	dir=$(fa_dir) || { echo absent; return; }
+	[ "$(fa_state)" = pomona ] && { echo pomona; return; }
+	t=$(fa_cpu_temp "$dir") || { echo ok; return; }
+	for n in $(fa_fans "$dir"); do
+		in=$(fa_read "$dir/fan${n}_input") && mn=$(fa_read "$dir/fan${n}_min") && mx=$(fa_read "$dir/fan${n}_max") || continue
+		any=1
+		[ "$in" -lt $((mn + (mx - mn) / 2)) ] || slow=""
+	done
+	if [ -n "$any" ] && [ -n "$slow" ] && [ "$t" -ge $((${POMONA_FAN_HOT:-75} * 1000)) ]; then echo hot; else echo ok; fi
+}
+
+# fa_explain: what the fix is, in words, for someone who has not read the docs
+fa_explain() {
+	cat <<'TXT'
+This is an optional fix for a Mac that runs hot while its fans turn slowly.
+The firmware sets the fan speed and, on some of these Macs under Linux, it lets the CPU reach
+90-100 C with the fans near their minimum. The fix starts a small service that sets the fans
+from the temperature of the CPU and GPU, never under the firmware's own minimum, and gives them
+back to the firmware when it stops. Louder fans are the price of lower temperatures.
+If your Mac is not hot, or the fans already follow the temperature, you do not need it.
+You can check whether it helps: sudo pomona fan verify
+TXT
+}
+
+# fa_verify [SECONDS]: run the same moderate load twice, with the firmware and with Pomona's fan
+# control, and say whether the control lowers the temperature. The problem is "the firmware does not
+# use the fans", so the answer is "yes, it helps" or "no, the heat is not a fan problem".
+fa_verify() {
+	local secs=${1:-40} dir load tmp phase t0 t hot s
+	fa_can_write || [ -n "${POMONA_FAN_DIR:-}" ] || { et1_err "run it with sudo"; return 4; }
+	dir=$(fa_dir) || { et1_err "no fan found: nothing to verify"; return 1; }
+	[ "$(fa_state)" = pomona ] && { et1_err "Pomona already controls the fans: run sudo pomona fan undo first, then verify"; return 1; }
+	load=${POMONA_FAN_VERIFY_LOAD:-$(( $(nproc) / 2 ))}; [ "$load" -ge 1 ] || load=1
+	tmp=$(mktemp -d) || return 1
+	FA_VERIFY_PIDS=""; FA_VERIFY_FAND=""
+	fa_verify_stop() {
+		[ -n "$FA_VERIFY_PIDS" ] && kill $FA_VERIFY_PIDS 2>/dev/null
+		[ -n "$FA_VERIFY_FAND" ] && kill -TERM "$FA_VERIFY_FAND" 2>/dev/null
+		wait 2>/dev/null; FA_VERIFY_PIDS=""; FA_VERIFY_FAND=""; fa_release "$dir"
+	}
+	trap 'fa_verify_stop; rm -rf "$tmp"; exit 1' INT TERM
+	et1_log "verifying: two runs of $secs s under the same load ($load busy loops); the Mac gets warm, each run stops by itself near 97 C"
+	for phase in firmware pomona; do
+		fa_release "$dir"
+		et1_log "[$phase] letting the CPU cool for up to ${POMONA_FAN_VERIFY_COOL:-60} s"
+		for _ in $(seq 1 $((${POMONA_FAN_VERIFY_COOL:-60} / 2))); do t=$(fa_cpu_temp "$dir") || break; [ "$t" -lt 68000 ] && break; sleep 2; done
+		if [ "$phase" = pomona ]; then fa_run >/dev/null 2>&1 & FA_VERIFY_FAND=$!; sleep 3; fi
+		for _ in $(seq 1 "$load"); do yes > /dev/null & FA_VERIFY_PIDS="$FA_VERIFY_PIDS $!"; done
+		t0=$SECONDS; hot=0
+		while [ $((SECONDS - t0)) -lt "$secs" ]; do
+			t=$(fa_cpu_temp "$dir") || break
+			echo $((t / 1000)) >> "$tmp/$phase"
+			if [ "$t" -ge 97000 ]; then hot=$((hot + 1)); else hot=0; fi
+			{ [ "$hot" -ge 3 ] || [ "$t" -ge 100000 ]; } && { et1_log "[$phase] $((t / 1000)) C: stopped early"; break; }
+			sleep 1
+		done
+		fa_verify_stop
+		sleep 3
+	done
+	trap - INT TERM
+	s=$(for phase in firmware pomona; do
+		awk -v p="$phase" 'NF { n++; sum += $1; if ($1 > max) max = $1 } END { if (n) printf "%s %.1f %d %d\n", p, sum / n, max, n; else print p, "0 0 0" }' "$tmp/$phase" 2>/dev/null || echo "$phase 0 0 0"
+	done)
+	rm -rf "$tmp"
+	echo "$s" | awk '{ printf "  %-9s average %5.1f C, peak %3d C, %d readings\n", $1, $2, $3, $4 }'
+	echo "$s" | awk 'NR == 1 { fa = $2; fp = $3; fn = $4 } NR == 2 { pa = $2; pp = $3; pn = $4 }
+		END {
+			if (fn < 5 || pn < 5) { print "verdict: inconclusive (too few readings)"; exit }
+			da = fa - pa; dp = fp - pp
+			if (da >= 3 || dp >= 3) printf "verdict: it helps. With Pomona the average was %.1f C lower and the peak %d C lower.\n", da, dp
+			else if (da <= 1 && dp <= 1) print "verdict: no measurable difference. The heat does not come from the fans being held back (dust, thermal paste or the load itself): this fix is not for your problem."
+			else print "verdict: a small difference. The fix helps a little; the main cause may be elsewhere (dust, thermal paste, load)."
+		}'
 }

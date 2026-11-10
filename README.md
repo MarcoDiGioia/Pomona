@@ -105,6 +105,7 @@ From the terminal:
 | `pomona sleep status` | shows whether suspend is on and how many earlier boots ended while the Mac was asleep |
 | `sudo pomona sleep disable` | turns suspend off on a Mac that does not wake up from it (`enable` turns it back on) |
 | `pomona fan status` | shows the fans, their speed and the CPU temperature |
+| `sudo pomona fan verify` | checks, with a two-minute load test, whether the fan fix helps your Mac |
 | `sudo pomona fan fix` | starts the service that sets the fan speed from the CPU temperature (`undo` gives the fans back to the firmware) |
 | `pomona diagnose MODULE works\|broken` | Pomona got it wrong? Sends what it checked as a pre-filled GitHub report |
 | `sudo pomona start` | turns everything on again (for example after unplugging something) |

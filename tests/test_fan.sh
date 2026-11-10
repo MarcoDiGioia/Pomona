@@ -104,6 +104,25 @@ eq "status --json without fans" "$(pomona fan status --json | python3 -I -c 'imp
 eq "a bad command is refused" "$(pomona fan nonsense 2>/dev/null; echo $?)" "2"
 ( [ "$(id -u)" = 0 ] && exit 0; fa_fix >/dev/null 2>&1; [ $? = 4 ] ) && eq "fix needs root" ok ok || eq "fix needs root" "$(id -u)" "not-root-ok"
 
+echo "-- the diagnosis and the verification"
+fake_fans 80000; export POMONA_FAN_DIR="$D"; echo 2900 > "$D/fan1_input"; echo 2700 > "$D/fan2_input"
+eq "hot with slow fans: the fix may help" "$(fa_diagnose)" "hot"
+echo 5500 > "$D/fan1_input"; eq "a fast fan: nothing to fix" "$(fa_diagnose)" "ok"
+echo 2900 > "$D/fan1_input"; echo 60000 > "$D/temp1_input"; echo 55000 > "$D/temp2_input"
+eq "cool: nothing to fix" "$(fa_diagnose)" "ok"
+echo 80000 > "$D/temp1_input"; echo 1 > "$D/fan1_manual"
+eq "Pomona in charge" "$(fa_diagnose)" "pomona"; echo 0 > "$D/fan1_manual"
+eq "status says so" "$(pomona fan status | grep -c '^diagnosis       the Mac is hot')" "1"
+eq "status --json has it" "$(pomona fan status --json | python3 -I -c 'import json,sys; print(json.load(sys.stdin)["diagnosis"])')" "hot"
+eq "fix explains itself and does not turn on from a pipe" "$(fa_fix </dev/null 2>&1 | grep -c 'optional fix')" "1"
+eq "explain" "$(pomona fan explain | grep -c 'sudo pomona fan verify')" "1"
+out=$(POMONA_FAN_VERIFY_COOL=0 POMONA_FAN_VERIFY_LOAD=1 fa_verify 4 2>&1); eq "verify ends" "$?" "0"
+eq "verify prints both runs" "$(grep -c 'average' <<< "$out")" "2"
+eq "and a verdict" "$(grep -c '^verdict:' <<< "$out")" "1"
+eq "and leaves the fans to the firmware" "$(cat "$D/fan1_manual")$(cat "$D/fan2_manual")" "00"
+eq "no busy loop is left" "$(pgrep -cx yes)" "0"
+unset POMONA_FAN_DIR
+
 echo
 echo "fan: $PASS passed, $FAIL failed"
 [ "$FAIL" = 0 ]

@@ -576,9 +576,9 @@ cmd_fan() {
 			if [ -n "$dir" ]; then t=$(fa_cpu_temp "$dir"); rows=$(fan_rows "$dir"); fi
 			if [ "${2:-}" = --json ]; then
 				local tc=null; [ -n "$t" ] && tc=$((t / 1000))
-				printf '{\n  "state": %s,\n  "found": %s,\n  "cpu_temp_c": %s,\n  "service": %s,\n  "fans": [' \
+				printf '{\n  "state": %s,\n  "found": %s,\n  "cpu_temp_c": %s,\n  "service": %s,\n  "diagnosis": %s,\n  "fans": [' \
 					"$(json_str "$(fa_state)")" "$(jbool test -n "$dir")" "$tc" \
-					"$(json_str "$(svc pomona-fand.service)")"
+					"$(json_str "$(svc pomona-fand.service)")" "$(json_str "$(fa_diagnose)")"
 				local first=1
 				while read -r n in mn mx man; do
 					[ -n "$n" ] || continue
@@ -596,16 +596,23 @@ cmd_fan() {
 					echo "fan $n           $in rpm  (firmware range $mn-$mx)  $([ "$man" = 1 ] && echo "set by Pomona" || echo "set by the firmware")"
 				done <<< "$rows"
 				echo "pomona-fand     $(svc pomona-fand.service)"
+				case "$(fa_diagnose)" in
+					hot) echo "diagnosis       the Mac is hot while the fans turn slowly: the optional fan fix may help (sudo pomona fan fix; check first with sudo pomona fan verify)";;
+					pomona) echo "diagnosis       Pomona is controlling the fans";;
+					*) echo "diagnosis       nothing to fix: the temperature is not high, or the fans already follow it";;
+				esac
 				if [ "${2:-}" = --sensors ]; then
 					echo "sensors (label, C):"
 					fa_sensors "$dir" | awk '{printf "  %-6s %s\n", $1, $2}'
 				fi
 			fi;;
-		fix) fa_fix;;
+		explain) fa_explain;;
+		verify) fa_verify "${2:-}";;
+		fix) fa_fix "${2:-}";;
 		undo) fa_undo;;
 		run) fa_run;;
 		release) fa_release;;
-		*) et1_err "usage: pomona fan status [--json|--sensors] | sudo pomona fan fix | sudo pomona fan undo"; return 2;;
+		*) et1_err "usage: pomona fan status [--json|--sensors] | sudo pomona fan verify | sudo pomona fan fix | sudo pomona fan undo"; return 2;;
 	esac
 }
 

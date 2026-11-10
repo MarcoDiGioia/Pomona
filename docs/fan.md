@@ -44,9 +44,15 @@ While the CPU is busy (40 % or more since the last reading) the fans are kept at
 
 For a test the curve can be changed with `POMONA_FAN_CURVE="55:0 62:30 70:45 80:75 88:100"` (temperature in °C, percent), the speed floor with `POMONA_FAN_FLOOR_RPM` and `POMONA_FAN_FLOOR_TEMP`, and the busy limit and its floor with `POMONA_FAN_BUSY` and `POMONA_FAN_FLOOR`, in the environment of the service.
 
-## Comparing the two
+## Do you need it? Check before you turn it on
 
-`sudo bash tools/fan-bench.sh` runs the same load twice, with the firmware and with `pomona fan run` (90 seconds each by default, one busy loop per core, or `FAN_BENCH_LOAD` of them: `sudo FAN_BENCH_LOAD=2 bash tools/fan-bench.sh`), and prints the average and maximum CPU temperature and fan speed of each. A phase stops by itself after three readings in a row at 97 °C (`FAN_BENCH_STOP`), or at once at 100 °C (`FAN_BENCH_HARD`): the first second of a full load takes the sensor to about 98 °C on its own.
+The fix is optional and off until you turn it on. It is for a Mac that runs hot while its fans turn slowly. `pomona fan status` says in one line whether yours looks like that (`diagnosis`). To check whether the fix helps **your** Mac:
+
+```bash
+sudo pomona fan verify        # about two minutes
+```
+
+It runs the same moderate load twice, 40 seconds each, first with the firmware in charge of the fans and then with Pomona's control, and compares the CPU temperature. A run stops by itself after three readings in a row at 97 °C or at once at 100 °C. The answer is one of: *it helps* (the average or the peak is at least 3 °C lower), *no measurable difference* (the heat is not caused by the fans being held back: dust, thermal paste or the load itself, and the fix is not for your problem) or *a small difference*. The Mac gets warm and the fans get louder while it runs. `POMONA_FAN_VERIFY_LOAD` sets the number of busy loops (default: half the cores).
 
 ## What it does not do
 

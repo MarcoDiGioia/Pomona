@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- **New fan module.** `pomona fan status` shows the fans (speed, firmware range, who sets it) and the CPU temperature, wherever the kernel puts them (`/sys/bus/acpi/devices/APP0001:00` on the 7.0 kernel, `applesmc.768` on older ones). `sudo pomona fan fix` starts `pomona-fand.service`, which sets the fans on a curve of the hottest CPU or GPU die temperature (the firmware minimum up to 67 C, 50 percent of the range at 78 C, the maximum from 90 C; never under 2,600 rpm from 67 C up) with a floor while the CPU is busy, never below the firmware minimum, and hands them back to the firmware when it stops; `sudo pomona fan undo` stops it. Not yet in the app.
+- **New fan module.** `pomona fan status` shows the fans (speed, firmware range, who sets it) and the CPU temperature, wherever the kernel puts them (`/sys/bus/acpi/devices/APP0001:00` on the 7.0 kernel, `applesmc.768` on older ones). `sudo pomona fan fix` starts `pomona-fand.service`, which sets the fans on a curve of the hottest CPU or GPU die temperature (the firmware minimum up to 67 C, 50 percent of the range at 78 C, the maximum from 90 C; never under 2,600 rpm from 67 C up) with a floor while the CPU is busy, never below the firmware minimum, and hands them back to the firmware when it stops; `sudo pomona fan undo` stops it. `sudo pomona fan verify` runs the same load with the firmware and with Pomona in charge of the fans and says whether the fix helps that Mac; `fan status` says whether it looks hot with slow fans, and `fan fix` explains what it does and asks first (`--yes` to skip). Opt-in: nothing turns it on by itself. Not yet in the app.
 
 ## 0.11.1 - 2026-11-04
 
