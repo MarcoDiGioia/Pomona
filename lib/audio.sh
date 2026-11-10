@@ -96,6 +96,33 @@ au_driver() {
 # au_active: the patched driver is the one driving the codec
 au_active() { [ "$(au_chip_name)" = "$AU_ACTIVE_NAME" ]; }
 
+# au_playback -> how many playback devices the sound system lists
+au_playback() { grep -c 'playback' "$POMONA_PROC/asound/pcm" 2>/dev/null || true; }
+
+# au_verdict -> "VERDICT|message", the answer of `pomona audio verify`. The symptom this fix cures is a
+# silent machine: the kernel's own driver does not drive this chip, so there is no sound output.
+au_verdict() {
+	au_present || { echo "na|There is no Cirrus Logic CS8409 chip on this Mac: this fix is not for it."; return; }
+	au_supported || { echo "na|The driver does not know this Mac's amplifiers yet: this fix cannot help."; return; }
+	if au_active; then
+		if [ "$(au_playback)" -ge 1 ] 2>/dev/null; then
+			if au_package_added; then echo "fixed|The Mac driver is in use and the sound system lists an output: the fix works."
+			else echo "none|The sound chip already works without Pomona's driver: you do not need this fix."; fi
+		else echo "persists|The Mac driver is in use but the sound system lists no output: the cause is elsewhere (muted, no sound server). This fix is not the missing piece."; fi
+		return
+	fi
+	if [ "$(au_state)" = restart ]; then echo "inconclusive|Restart the Mac to load the new driver, then verify again."; return; fi
+	echo "problem|The kernel's own driver drives the chip, and the speakers stay silent: this is the problem the fix cures. Run sudo pomona audio fix."
+}
+
+# au_tone: plays one short test tone through the default output (needs alsa-utils)
+au_tone() {
+	command -v speaker-test >/dev/null || { et1_err "speaker-test is missing (package alsa-utils): no test tone"; return 1; }
+	et1_log "playing a short tone: do you hear it?"
+	timeout 6 speaker-test -t sine -f 440 -l 1 >/dev/null 2>&1
+	return 0
+}
+
 # ------------------------------------------------------------------ the DKMS package
 
 au_kernel() { uname -r; }

@@ -87,6 +87,13 @@ wf_operstate() { wf_attr operstate; }
 wf_mac() { wf_attr address; }
 wf_connected() { [ "$(wf_operstate)" = up ]; }
 
+# wf_ip -> the IPv4 address of the interface, empty without one
+wf_ip() {
+	local i
+	i=$(wf_iface); [ -n "$i" ] || return 0
+	ip -4 -o addr show dev "$i" 2>/dev/null | awk '{print $4; exit}'
+}
+
 # ------------------------------------------------------------------ any Wi-Fi card
 
 # wf_any_iface -> name of the first wireless network interface, whatever the card
@@ -295,6 +302,20 @@ wf_state() {
 	if wf_restart_pending; then echo restart
 	elif wf_nvram_ok && wf_nm_ok && wf_modprobe_ok; then echo ok
 	else echo needs-fix; fi
+}
+
+# wf_verdict -> "VERDICT|message", the answer of `pomona wifi verify`. The symptom this fix cures is a
+# card that sees networks but never connects, because the driver has no board file for it.
+wf_verdict() {
+	wf_present || { echo "na|There is no Broadcom BCM43602 card on this Mac: this fix is not for it."; return; }
+	if wf_connected && [ -n "$(wf_ip)" ]; then
+		if wf_nvram_ok; then echo "fixed|The card is connected and has an address, with Pomona's board file in place: the fix works."
+		else echo "none|The card is connected and has an address without Pomona's board file: you do not need this fix."; fi
+		return
+	fi
+	if wf_restart_pending; then echo "inconclusive|Restart the Mac to load the driver with the new board file, then verify again."; return; fi
+	if ! wf_nvram_ok; then echo "problem|The card is not connected and the board file is missing: this is the problem the fix cures. Run sudo pomona wifi fix."
+	else echo "persists|The board file is in place and the card is still not connected: the cause is elsewhere (no network chosen, wrong password, router). This fix is not the missing piece."; fi
 }
 
 # ------------------------------------------------------------------ fix and undo

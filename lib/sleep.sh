@@ -30,18 +30,40 @@ sl_state() {
 	if [ "$n" = "$total" ]; then echo disabled; elif [ "$n" = 0 ]; then echo enabled; else echo partial; fi
 }
 
-# sl_failed_resumes -> how many earlier boots ended while the Mac was asleep: their kernel log
-# ends with "PM: suspend entry" and no "PM: suspend exit" after it, so the Mac never woke up and
-# was switched off with the power button. Read from the journal; nothing is suspended to find out.
-sl_failed_resumes() {
-	command -v journalctl >/dev/null || { echo 0; return; }
-	local b n=0
+# sl_boot_ends -> one line per earlier boot that went to sleep: "entry" when its kernel log ends with
+# "PM: suspend entry" and no "PM: suspend exit" after it (the Mac never woke up and was switched off
+# with the power button), "exit" when it woke up. Read from the journal; nothing is suspended.
+sl_boot_ends() {
+	command -v journalctl >/dev/null || return 0
+	local b last
 	for b in $(journalctl --list-boots --no-pager 2>/dev/null | awk 'NR > 1 && $2 ~ /^[0-9a-f]{32}$/ {print $2}' | head -n -1); do
-		case "$(journalctl -b "$b" -k -o cat --no-pager -g '^PM: suspend (entry|exit)' 2>/dev/null | tail -n1)" in
-			"PM: suspend entry"*) n=$((n + 1));;
+		last=$(journalctl -b "$b" -k -o cat --no-pager -g '^PM: suspend (entry|exit)' 2>/dev/null | tail -n1)
+		case "$last" in
+			"PM: suspend entry"*) echo entry;;
+			"PM: suspend exit"*) echo exit;;
 		esac
 	done
-	echo "$n"
+}
+
+# sl_failed_resumes -> how many earlier boots ended while the Mac was asleep
+sl_failed_resumes() { sl_boot_ends | grep -c '^entry$' || true; }
+
+# sl_good_resumes -> how many earlier boots woke up from sleep
+sl_good_resumes() { sl_boot_ends | grep -c '^exit$' || true; }
+
+# sl_verdict -> "VERDICT|message", the answer of `pomona sleep verify`. The symptom this fix cures is a Mac
+# that never wakes up from sleep. A real suspend is not tried: if it hangs, the Mac has to be switched off.
+sl_verdict() {
+	local failed good state
+	failed=$(sl_failed_resumes); good=$(sl_good_resumes); state=$(sl_state)
+	if [ "$failed" -gt 0 ]; then
+		if [ "$state" = disabled ]; then echo "fixed|Earlier boots ended asleep and suspend is now off: the Mac can no longer hang on sleep."
+		else echo "problem|$failed earlier boot(s) ended while the Mac was asleep: this is the problem the fix cures. Run sudo pomona sleep disable."; fi
+	elif [ "$good" -gt 0 ]; then
+		echo "none|The Mac woke up from sleep on $good earlier boot(s) and never hung: you do not need this fix."
+	else
+		echo "inconclusive|The journal has no earlier sleep: nothing shows whether this Mac wakes up. Use suspend once, switch off if it hangs, and verify again."
+	fi
 }
 
 sl_can_write() { [ "$(id -u)" = 0 ] || [ "$POMONA_SYSTEMD_DIR" != /etc/systemd/system ]; }
