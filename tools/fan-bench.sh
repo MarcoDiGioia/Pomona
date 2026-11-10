@@ -6,7 +6,7 @@
 # Phase A: the firmware sets the fans. Phase B: `pomona fan run` does. Each phase waits for the CPU
 # to cool below 70 C (3 minutes at most), then runs one busy loop per core and samples every 2 s.
 # It stops a phase if a CPU sensor reaches 97 C (FAN_BENCH_STOP), and always gives the fans back to the firmware.
-# Writes /tmp/fan-bench-DATE.csv and prints a summary. Needs root only to write the fan files.
+# Writes fan-bench-DATE.csv in the folder you run it from (or in FAN_BENCH_OUT) and prints a summary. Needs root only to write the fan files.
 # SPDX-License-Identifier: GPL-3.0-or-later
 set -u
 ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
@@ -16,7 +16,7 @@ D=${POMONA_FAN_DIR:-$SYS/bus/acpi/devices/APP0001:00}
 [ -r "$D/fan1_input" ] || D=$SYS/devices/platform/applesmc.768
 [ -r "$D/fan1_input" ] || { echo "no fans found" >&2; exit 1; }
 [ "$(id -u)" = 0 ] || [ -n "${POMONA_FAN_DIR:-}" ] || { echo "run it with sudo" >&2; exit 4; }
-OUT=/tmp/fan-bench-$(date +%Y%m%d-%H%M%S).csv
+OUT=${FAN_BENCH_OUT:-$PWD}/fan-bench-$(date +%Y%m%d-%H%M%S).csv
 CORES=$(nproc)
 PIDS=""
 release() { for f in "$D"/fan*_manual; do echo 0 > "$f" 2>/dev/null; done; }
@@ -38,7 +38,8 @@ cpu_t() {
 }
 rpm() { cat "$D/fan$1_input" 2>/dev/null || echo 0; }
 
-echo "phase,seconds,cpu_c,fan1_rpm,fan2_rpm,fan1_manual,fan2_manual" > "$OUT"
+echo "phase,seconds,cpu_c,fan1_rpm,fan2_rpm,fan1_manual,fan2_manual" > "$OUT" || { echo "cannot write $OUT" >&2; exit 1; }
+[ -n "${SUDO_USER:-}" ] && chown "$SUDO_USER" "$OUT" 2>/dev/null
 phase() { # phase NAME
 	local name=$1 t0 t s
 	release
