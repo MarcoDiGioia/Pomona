@@ -5,6 +5,7 @@
 #   pomona start      boot the T1 and bind its devices (what the service runs at boot)
 #   pomona stop       release the T1 before power-off (what the service runs at shutdown)
 #   pomona status     one screen with the state of every piece (--json for the GUI)
+#   pomona verify     is the T1 problem present on this Mac, and did the fix cure it
 #   pomona certify    run the checks and write a compatibility certificate
 #   pomona share      open your latest certificate as a pre-filled GitHub report
 #   pomona wifi       Broadcom Wi-Fi: status | fix | undo | certify  (pomona wifi help)
@@ -209,6 +210,41 @@ cmd_share() {
 	xdg-open "$url" >/dev/null 2>&1 &
 }
 
+# ------------------------------------------------------------------ verify
+
+# vf_print MODULE PROBLEM "VERDICT|message" [--json]: the answer of every `pomona ... verify`.
+# VERDICT is problem (present, the fix may help), fixed, persists (fix in place, problem still there),
+# none (no problem, no fix needed), na (not this Mac's hardware) or inconclusive.
+# Exit status 1 for problem and persists, so a script can tell.
+vf_print() {
+	local module=$1 problem=$2 v=${3%%|*} msg=${3#*|}
+	if [ "${4:-}" = --json ]; then
+		printf '{\n  "module": %s,\n  "problem": %s,\n  "verdict": %s,\n  "message": %s\n}\n' \
+			"$(json_str "$module")" "$(json_str "$problem")" "$(json_str "$v")" "$(json_str "$msg")"
+	else
+		printf 'problem   %s\nverdict   %s\n%s\n' "$problem" "$v" "$msg"
+	fi
+	case "$v" in problem|persists) return 1;; esac
+	return 0
+}
+
+# t1_verdict -> "VERDICT|message" for `pomona verify`: the symptom is a Touch Bar, camera and light sensor
+# that are dead because the T1 chip is never booted under Linux.
+t1_verdict() {
+	local model t1
+	model=$(et1_model)
+	[ "$(et1_model_class "$model")" = t1 ] || { echo "na|This Mac has no Apple T1 chip: this fix is not for it."; return; }
+	t1=$(et1_t1_state)
+	if [ "$t1" = booted ] && et1_tb_bound && et1_camera_present && et1_als_present; then
+		if [ "$(svc_enabled pomona.service)" = enabled ]; then echo "fixed|The T1 is running and the Touch Bar, camera and light sensor are present: the fix works."
+		else echo "none|The T1 is running without Pomona's boot service: you do not need this fix."; fi
+		return
+	fi
+	if [ "$t1" = booted ]; then echo "persists|The T1 is running but the Touch Bar, camera or light sensor is missing: the cause is elsewhere (driver or kernel). This fix is not the missing piece."; return; fi
+	if [ "$(svc_enabled pomona.service)" = enabled ]; then echo "persists|The boot service is enabled and the T1 is still not running: see pomona status."
+	else echo "problem|The T1 is not running: the Touch Bar, camera and light sensor stay dead. This is the problem the fix cures. Run sudo pomona start (and enable pomona.service)."; fi
+}
+
 # ------------------------------------------------------------------ wifi
 
 wifi_help() {
@@ -221,6 +257,7 @@ sudo pomona wifi fix           install the board file and settings (backed up fi
       --board-file FILE        use this copy of the board file instead of downloading it
       --force                  install even if the card is not found
 sudo pomona wifi undo          put the files back as they were before the last fix
+pomona wifi verify [--json]    is the problem this fix cures present on this Mac, and did the fix cure it
 pomona wifi certify [DIR]      run the checks and write a compatibility certificate
 EOF
 }
@@ -376,6 +413,7 @@ cmd_wifi() {
 		fix) shift; hist_run wifi fix wf_fix "$@";;
 		undo) shift; hist_run wifi undo wf_undo "$@";;
 		certify) shift; cmd_wifi_certify "$@";;
+		verify) shift; vf_print wifi no-connection "$(wf_verdict)" "$@";;
 		help|-h|--help) wifi_help;;
 		*) et1_err "unknown wifi command $1 (try: pomona wifi help)"; return 2;;
 	esac
@@ -390,6 +428,8 @@ sudo pomona audio fix          download and build the Mac sound driver (DKMS); t
       --download               agree to download the driver and the kernel source (otherwise you are asked)
       --force                  install even if the sound chip is not found
 sudo pomona audio undo         remove the driver: the kernel's own one is used again after a restart
+pomona audio verify [--tone] [--json]  is the silent-speakers problem present, and did the fix cure it
+                               (--tone plays a short test tone)
 pomona audio certify [DIR]     run the checks and write a compatibility certificate
 EOF
 }
@@ -535,6 +575,10 @@ cmd_audio() {
 		fix) shift; hist_run audio fix au_fix "$@";;
 		undo) shift; hist_run audio undo au_undo "$@";;
 		certify) shift; cmd_audio_certify "$@";;
+		verify)
+			shift
+			if [ "${1:-}" = --tone ]; then shift; au_tone || true; fi
+			vf_print audio silent-speakers "$(au_verdict)" "$@";;
 		help|-h|--help) audio_help;;
 		*) et1_err "unknown audio command $1 (try: pomona audio help)"; return 2;;
 	esac
@@ -552,9 +596,10 @@ cmd_sleep() {
 				echo "suspend          $(sl_state)  ($(sl_masked_count) of $(echo $SL_UNITS | wc -w) sleep units masked)"
 				echo "failed wake-ups  $(sl_failed_resumes) earlier boot(s) ended while the Mac was asleep"
 			fi;;
+		verify) shift; vf_print sleep no-wake-up "$(sl_verdict)" "$@";;
 		disable) sl_disable;;
 		enable) sl_enable;;
-		*) et1_err "usage: pomona sleep status | sudo pomona sleep disable | sudo pomona sleep enable"; return 2;;
+		*) et1_err "usage: pomona sleep status | pomona sleep verify | sudo pomona sleep disable | sudo pomona sleep enable"; return 2;;
 	esac
 }
 
@@ -691,6 +736,7 @@ case "${1:-status}" in
 	baseline) hist_baseline_all;;
 	stop) et1_stop;;
 	status) shift; cmd_status "$@";;
+	verify) shift; vf_print t1 dead-touchbar "$(t1_verdict)" "$@";;
 	certify) shift; cmd_certify "$@";;
 	share) shift; cmd_share "$@";;
 	wifi) shift; cmd_wifi "$@";;

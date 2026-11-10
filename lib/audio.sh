@@ -97,7 +97,7 @@ au_driver() {
 au_active() { [ "$(au_chip_name)" = "$AU_ACTIVE_NAME" ]; }
 
 # au_playback -> how many playback devices the sound system lists
-au_playback() { grep -c 'playback' "$POMONA_PROC/asound/pcm" 2>/dev/null || true; }
+au_playback() { grep -c 'playback' "$POMONA_PROC/asound/pcm" 2>/dev/null || echo 0; }
 
 # au_verdict -> "VERDICT|message", the answer of `pomona audio verify`. The symptom this fix cures is a
 # silent machine: the kernel's own driver does not drive this chip, so there is no sound output.

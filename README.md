@@ -102,6 +102,7 @@ From the terminal:
 | `sudo pomona audio undo` | removes it: the kernel's own driver is used again |
 | `pomona audio certify` | creates the audio compatibility certificate |
 | `pomona share` | opens your certificate as a pre-filled GitHub report, to add your Mac to the table |
+| `pomona verify`, `pomona wifi verify`, `pomona audio verify [--tone]`, `pomona sleep verify` | is the problem a fix cures present on this Mac, and did the fix cure it: `problem`, `fixed`, `persists`, `none`, `na` or `inconclusive` (`--json` for the app). Nothing is changed; a failed check exits with 1 |
 | `pomona sleep status` | shows whether suspend is on and how many earlier boots ended while the Mac was asleep |
 | `sudo pomona sleep disable` | turns suspend off on a Mac that does not wake up from it (`enable` turns it back on) |
 | `pomona fan status` | shows the fans, their speed and the CPU temperature |

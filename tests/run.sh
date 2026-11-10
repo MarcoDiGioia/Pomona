@@ -23,6 +23,9 @@ bash "$HERE/test_sleep.sh" || rc=1
 echo "== lib/fan.sh and pomona fan"
 bash "$HERE/test_fan.sh" || rc=1
 
+echo "== verify of every module"
+bash "$HERE/test_verify.sh" || rc=1
+
 echo "== lib/history.sh and the History of a certificate"
 bash "$HERE/test_history.sh" || rc=1
 
