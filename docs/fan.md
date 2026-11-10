@@ -57,5 +57,5 @@ It runs the same moderate load twice, 40 seconds each, first with the firmware i
 ## What it does not do
 
 - It does not fix a Mac that is hot for other reasons: dust, dry thermal paste, a process using the CPU. Louder fans are the price of lower temperatures.
-- It is not in the app yet, only on the command line.
+- The app has a Fans page with the same actions: status, turn on, turn off, check if it helps.
 - It has been run on one Mac only; if you try it, check `pomona fan status` while the Mac is working.

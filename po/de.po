@@ -533,3 +533,96 @@ msgstr "Ausschalten"
 
 msgid "No failed wake-up found"
 msgstr "Kein fehlgeschlagenes Aufwachen gefunden"
+
+msgid "Fans"
+msgstr "Lüfter"
+
+msgid "Turn on the fan control?"
+msgstr "Lüftersteuerung einschalten?"
+
+msgid "Only turn this on if the Mac overheats or the fans do not follow the temperature. Pomona then sets the fan speed itself with a gentler curve, from 67 °C, and gives control back to the firmware when you turn it off. It runs as a service started at every boot."
+msgstr "Schalte das nur ein, wenn sich der Mac überhitzt oder die Lüfter der Temperatur nicht folgen. Pomona regelt dann die Lüfterdrehzahl selbst mit einer sanfteren Kurve ab 67 °C und gibt die Kontrolle an die Firmware zurück, wenn du es ausschaltest. Es läuft als Dienst, der bei jedem Start beginnt."
+
+msgid "Check if the fan control helps?"
+msgstr "Prüfen, ob die Lüftersteuerung hilft?"
+
+msgid "Pomona runs a moderate load for about three minutes with the firmware’s control and again with its own, and compares the temperatures. The Mac gets warm and the fans louder; it stops by itself if it gets too hot. Do not use the Mac meanwhile."
+msgstr "Pomona führt etwa drei Minuten lang eine mäßige Last aus, erst mit der Steuerung der Firmware, dann mit der eigenen, und vergleicht die Temperaturen. Der Mac wird warm und die Lüfter lauter; bei zu großer Hitze bricht es selbst ab. Benutze den Mac währenddessen nicht."
+
+msgid "Fan check result"
+msgstr "Ergebnis der Lüfterprüfung"
+
+msgid "Start the check"
+msgstr "Prüfung starten"
+
+msgid "Fan status"
+msgstr "Lüfterstatus"
+
+msgid "No fan found"
+msgstr "Kein Lüfter gefunden"
+
+msgid "This Mac shows no fan to Linux: there is nothing for Pomona to control"
+msgstr "Dieser Mac zeigt Linux keinen Lüfter: Pomona hat nichts zu steuern"
+
+msgid "Processor temperature"
+msgstr "Prozessortemperatur"
+
+msgid "%d rpm, set by Pomona"
+msgstr "%d U/min, von Pomona gesetzt"
+
+msgid "%d rpm, set by the firmware"
+msgstr "%d U/min, von der Firmware gesetzt"
+
+msgid "Fan %s"
+msgstr "Lüfter %s"
+
+msgid "The Mac is hot while the fans turn slowly"
+msgstr "Der Mac ist heiß, während die Lüfter langsam drehen"
+
+msgid "The optional fan control may help: check it first with “Check if it helps”"
+msgstr "Die optionale Lüftersteuerung kann helfen: prüfe sie zuerst mit „Prüfen, ob es hilft“"
+
+msgid "Pomona controls the fans"
+msgstr "Pomona steuert die Lüfter"
+
+msgid "The speed follows the temperature"
+msgstr "Die Drehzahl folgt der Temperatur"
+
+msgid "No fan problem seen"
+msgstr "Kein Lüfterproblem erkannt"
+
+msgid "The fans follow the temperature"
+msgstr "Die Lüfter folgen der Temperatur"
+
+msgid "Fan control by Pomona"
+msgstr "Lüftersteuerung durch Pomona"
+
+msgid "Optional. Only needed if the Mac overheats or the fans do not follow the temperature."
+msgstr "Optional. Nur nötig, wenn sich der Mac überhitzt oder die Lüfter der Temperatur nicht folgen."
+
+msgid "Turn off the fan control"
+msgstr "Lüftersteuerung ausschalten"
+
+msgid "Turn on the fan control"
+msgstr "Lüftersteuerung einschalten"
+
+msgid "Gives the fans back to the firmware"
+msgstr "Gibt die Lüfter an die Firmware zurück"
+
+msgid "Starts a service that sets the fan speed from the temperature"
+msgstr "Startet einen Dienst, der die Lüfterdrehzahl nach der Temperatur setzt"
+
+msgid "Check if it helps"
+msgstr "Prüfen, ob es hilft"
+
+msgid "Turn the control off first: the check compares it with the firmware"
+msgstr "Schalte die Steuerung zuerst aus: die Prüfung vergleicht sie mit der Firmware"
+
+msgid "Runs a load test with the firmware and with Pomona and compares the temperatures"
+msgstr "Führt einen Lasttest mit der Firmware und mit Pomona aus und vergleicht die Temperaturen"
+
+msgid "Check…"
+msgstr "Prüfen…"
+
+msgid "Close"
+msgstr "Schließen"

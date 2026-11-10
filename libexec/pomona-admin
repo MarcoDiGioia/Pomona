@@ -10,6 +10,7 @@
 #   pomona-admin audio-undo            remove the Mac sound driver
 #   pomona-admin sleep-disable | sleep-enable   turn suspend off or on again
 #   pomona-admin fan-fix | fan-undo    start or stop the fan control service
+#   pomona-admin fan-verify            compare the firmware's fan control with Pomona's (load test)
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 set -uo pipefail
@@ -103,7 +104,10 @@ EOF
 		exec "$LIBEXEC/../../bin/pomona" sleep enable
 		;;
 	fan-fix)
-		exec "$LIBEXEC/../../bin/pomona" fan fix
+		exec "$LIBEXEC/../../bin/pomona" fan fix --yes
+		;;
+	fan-verify)
+		exec "$LIBEXEC/../../bin/pomona" fan verify
 		;;
 	fan-undo)
 		exec "$LIBEXEC/../../bin/pomona" fan undo

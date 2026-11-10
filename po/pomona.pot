@@ -533,3 +533,96 @@ msgstr ""
 
 msgid "No failed wake-up found"
 msgstr ""
+
+msgid "Fans"
+msgstr ""
+
+msgid "Turn on the fan control?"
+msgstr ""
+
+msgid "Only turn this on if the Mac overheats or the fans do not follow the temperature. Pomona then sets the fan speed itself with a gentler curve, from 67 °C, and gives control back to the firmware when you turn it off. It runs as a service started at every boot."
+msgstr ""
+
+msgid "Check if the fan control helps?"
+msgstr ""
+
+msgid "Pomona runs a moderate load for about three minutes with the firmware’s control and again with its own, and compares the temperatures. The Mac gets warm and the fans louder; it stops by itself if it gets too hot. Do not use the Mac meanwhile."
+msgstr ""
+
+msgid "Fan check result"
+msgstr ""
+
+msgid "Start the check"
+msgstr ""
+
+msgid "Fan status"
+msgstr ""
+
+msgid "No fan found"
+msgstr ""
+
+msgid "This Mac shows no fan to Linux: there is nothing for Pomona to control"
+msgstr ""
+
+msgid "Processor temperature"
+msgstr ""
+
+msgid "%d rpm, set by Pomona"
+msgstr ""
+
+msgid "%d rpm, set by the firmware"
+msgstr ""
+
+msgid "Fan %s"
+msgstr ""
+
+msgid "The Mac is hot while the fans turn slowly"
+msgstr ""
+
+msgid "The optional fan control may help: check it first with “Check if it helps”"
+msgstr ""
+
+msgid "Pomona controls the fans"
+msgstr ""
+
+msgid "The speed follows the temperature"
+msgstr ""
+
+msgid "No fan problem seen"
+msgstr ""
+
+msgid "The fans follow the temperature"
+msgstr ""
+
+msgid "Fan control by Pomona"
+msgstr ""
+
+msgid "Optional. Only needed if the Mac overheats or the fans do not follow the temperature."
+msgstr ""
+
+msgid "Turn off the fan control"
+msgstr ""
+
+msgid "Turn on the fan control"
+msgstr ""
+
+msgid "Gives the fans back to the firmware"
+msgstr ""
+
+msgid "Starts a service that sets the fan speed from the temperature"
+msgstr ""
+
+msgid "Check if it helps"
+msgstr ""
+
+msgid "Turn the control off first: the check compares it with the firmware"
+msgstr ""
+
+msgid "Runs a load test with the firmware and with Pomona and compares the temperatures"
+msgstr ""
+
+msgid "Check…"
+msgstr ""
+
+msgid "Close"
+msgstr ""
