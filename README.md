@@ -104,6 +104,10 @@ From the terminal:
 | `pomona share` | opens your certificate as a pre-filled GitHub report, to add your Mac to the table |
 | `pomona sleep status` | shows whether suspend is on and how many earlier boots ended while the Mac was asleep |
 | `sudo pomona sleep disable` | turns suspend off on a Mac that does not wake up from it (`enable` turns it back on) |
+| `pomona verify`, `pomona wifi verify`, `pomona audio verify`, `pomona sleep verify` | read-only: is the fix the right one for your Mac, and does it work? |
+| `pomona fan status` | shows the fans, their speed and the CPU temperature |
+| `sudo pomona fan verify` | checks, with a two-minute load test, whether the fan fix helps your Mac |
+| `sudo pomona fan fix` | starts the service that sets the fan speed from the CPU temperature (`undo` gives the fans back to the firmware) |
 | `pomona diagnose MODULE works\|broken` | Pomona got it wrong? Sends what it checked as a pre-filled GitHub report |
 | `sudo pomona start` | turns everything on again (for example after unplugging something) |
 
@@ -115,10 +119,10 @@ The app is available in English, Italian, German, French, Spanish, Portuguese, D
 | --- | --- |
 | MacBook Pro 15" 2017 (MacBookPro14,3) | ✅ Verified |
 | MacBook Pro 13" 2017 with Touch Bar (MacBookPro14,2) | 🟡 Should work |
-| MacBook Pro 15" 2016 (MacBookPro13,3) | 🟢 Tested by the community |
+| MacBook Pro 15" 2016 (MacBookPro13,3) | 🟡 Should work |
 | MacBook Pro 13" 2016 with Touch Bar (MacBookPro13,2) | 🟡 Should work |
 
-✅ Verified: tested by the maintainer. 🟢 Tested by the community: a user sent a working certificate. 🟡 Should work: same chip, nobody has reported yet. Verified on Ubuntu 26.04. The same four models carry the Wi-Fi card and the CS8409 sound chip, each with its own table. Details and how to add your Mac: [docs/compatibility.md](docs/compatibility.md).
+✅ Verified: tested by the maintainer. 🟢 Tested by the community: a user sent a working certificate in which Pomona fixed something. ⚪ Works without Pomona: it already worked on Linux, so Pomona had nothing to fix. 🟡 Should work: same chip, nobody has reported yet. Verified on Ubuntu 26.04. The same four models carry the Wi-Fi card and the CS8409 sound chip, each with its own table. Details and how to add your Mac: [docs/compatibility.md](docs/compatibility.md).
 
 **Does it work on your Mac? Tell us.** After a full shutdown and power-on, open the **Report** page, press **Create certificate** and then **Share with the community**. Your browser opens a GitHub page with the certificate already filled in; press *Submit new issue* and your Mac is added to the table. It contains no serial numbers or personal data. What a certificate says, including what Pomona fixed and what already worked: [docs/certificates.md](docs/certificates.md).
 
@@ -128,6 +132,7 @@ The app is available in English, Italian, German, French, Spanish, Portuguese, D
 - [Wi-Fi](docs/wifi.md): what the fix changes, the MAC address, undo.
 - [Audio](docs/audio.md): the Mac sound driver, why it is built from the exact kernel source, kernel updates, undo.
 - [Sleep](docs/sleep.md): detecting a Mac that does not wake up, and turning suspend off.
+- [Fans](docs/fan.md): reading the fans and temperatures, and raising the fans earlier than the firmware does.
 - [Troubleshooting](docs/troubleshooting.md)
 - [Compatibility](docs/compatibility.md)
 - [Compatibility certificates](docs/certificates.md)

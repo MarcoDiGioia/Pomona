@@ -96,6 +96,17 @@ au_driver() {
 # au_active: the patched driver is the one driving the codec
 au_active() { [ "$(au_chip_name)" = "$AU_ACTIVE_NAME" ]; }
 
+# au_playback -> how many playback devices the sound system lists
+au_playback() { grep -c 'playback' "$POMONA_PROC/asound/pcm" 2>/dev/null || echo 0; }
+
+# au_tone: plays one short test tone through the default output (needs alsa-utils)
+au_tone() {
+	command -v speaker-test >/dev/null || { et1_err "speaker-test is missing (package alsa-utils): no test tone"; return 1; }
+	et1_log "playing a short tone: do you hear it?"
+	timeout 6 speaker-test -t sine -f 440 -l 1 >/dev/null 2>&1
+	return 0
+}
+
 # ------------------------------------------------------------------ the DKMS package
 
 au_kernel() { uname -r; }

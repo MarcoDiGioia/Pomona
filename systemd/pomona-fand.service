@@ -1,0 +1,14 @@
+[Unit]
+Description=pomona: set the speed of the fans from the CPU temperature
+After=systemd-udevd.service
+
+[Service]
+Type=simple
+ExecStart=@PREFIX@/bin/pomona fan run
+# whatever happens, the fans go back to the firmware
+ExecStopPost=@PREFIX@/bin/pomona fan release
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

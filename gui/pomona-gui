@@ -341,6 +341,9 @@ class Window(Adw.ApplicationWindow):
         self.audio = {}
         self.audio_page = Adw.PreferencesPage()
         self.add_page(self.audio_page, "audio", _("Audio"), "audio-speakers-symbolic")
+        self.fan = {}
+        self.fan_page = Adw.PreferencesPage()
+        self.add_page(self.fan_page, "fan", _("Fans"), "weather-windy-symbolic")
         self.report_page = Adw.PreferencesPage()
         self.add_page(self.report_page, "report", _("Report"), "emblem-documents-symbolic")
         self.touchbar_page = Adw.PreferencesPage()
@@ -426,6 +429,7 @@ class Window(Adw.ApplicationWindow):
         self.build_setup_page()
         self.build_wifi_page()
         self.build_audio_page()
+        self.build_fan_page()
 
     def refresh(self):
         def done(ok, out):
@@ -456,6 +460,15 @@ class Window(Adw.ApplicationWindow):
             self.build_audio_page()
 
         run_async(pomona_cmd() + ["audio", "status", "--json"], audio_done)
+
+        def fan_done(ok, out):
+            try:
+                self.fan = json.loads(out) if ok else {}
+            except ValueError:
+                self.fan = {}
+            self.build_fan_page()
+
+        run_async(pomona_cmd() + ["fan", "status", "--json"], fan_done)
 
         def sleep_done(ok, out):
             try:
@@ -568,6 +581,7 @@ class Window(Adw.ApplicationWindow):
         self.add_sleep_group(page, installed)
 
         wrong = Adw.PreferencesGroup()
+        wrong.add(self.verify_row(["verify"]))
         wrong.add(self.diagnose_row("t1"))
         self.add_group(page, wrong)
 
@@ -733,6 +747,7 @@ class Window(Adw.ApplicationWindow):
         cert.connect("clicked", lambda *_a: self.certify(["wifi", "certify"]))
         cert_row.add_suffix(cert)
         tools.add(cert_row)
+        tools.add(self.verify_row(["wifi", "verify"]))
         tools.add(self.diagnose_row("wifi"))
         self.add_group(page, tools)
         self.set_hardware(page, hardware)
@@ -842,9 +857,101 @@ class Window(Adw.ApplicationWindow):
         cert.connect("clicked", lambda *_a: self.certify(["audio", "certify"]))
         cert_row.add_suffix(cert)
         tools.add(cert_row)
+        tools.add(self.verify_row(["audio", "verify"]))
         tools.add(self.diagnose_row("audio"))
         self.add_group(page, tools)
         self.set_hardware(page, hardware)
+
+    # -------------------------------------------------------------- fans
+
+    def text_dialog(self, title, text, buttons):
+        """A dialog with a message and buttons: buttons is a list of (label, action or None, suggested)."""
+        close = [None]
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
+                      margin_top=12, margin_bottom=12, margin_start=12, margin_end=12)
+        label = Gtk.Label(wrap=True, xalign=0, selectable=True, label=text)
+        box.append(label)
+        row = Gtk.Box(spacing=12, halign=Gtk.Align.END)
+        for name, action, suggested in buttons:
+            b = Gtk.Button(label=name)
+            if suggested:
+                b.add_css_class("suggested-action")
+            b.connect("clicked", lambda *_a, act=action: (close[0](), act and act()))
+            row.append(b)
+        box.append(row)
+        close[0] = present_dialog(self, title, box)
+
+    def fan_fix(self):
+        self.text_dialog(_("Turn on the fan control?"), _(
+            "Only turn this on if the Mac overheats or the fans do not follow the temperature. Pomona then sets the "
+            "fan speed itself with a gentler curve, from 67 °C, and gives control back to the firmware when you turn "
+            "it off. It runs as a service started at every boot."),
+            [(_("Cancel"), None, False),
+             (_("Turn on"), lambda: self.admin(["fan-fix"], "fan-fix"), True)])
+
+    def fan_verify(self):
+        def show(ok, out):
+            self.text_dialog(_("Fan check result"), out.strip() or _("Failed"), [(_("Close"), None, True)])
+
+        self.text_dialog(_("Check if the fan control helps?"), _(
+            "Pomona runs a moderate load for about three minutes with the firmware’s control and again with its own, "
+            "and compares the temperatures. The Mac gets warm and the fans louder; it stops by itself if it gets too hot. "
+            "Do not use the Mac meanwhile."),
+            [(_("Cancel"), None, False),
+             (_("Start the check"), lambda: self.admin(["fan-verify"], "fan-verify", then=show), True)])
+
+    def build_fan_page(self):
+        f = self.fan
+        page = self.fan_page
+        self.clear(page)
+        status = Adw.PreferencesGroup(title=_("Fan status"))
+        self.add_group(page, status)
+        if not f.get("found"):
+            status.add(Adw.ActionRow(title=_("No fan found"),
+                                     subtitle=_("This Mac shows no fan to Linux: there is nothing for Pomona to control")))
+            return
+        temp = f.get("cpu_temp_c")
+        if temp is not None:
+            status.add(Adw.ActionRow(title=_("Processor temperature"), subtitle="%d °C" % temp))
+        for fan in f.get("fans") or []:
+            sub = _("%d rpm, set by Pomona") if fan.get("manual") else _("%d rpm, set by the firmware")
+            status.add(Adw.ActionRow(title=_("Fan %s") % fan.get("id"), subtitle=sub % int(fan.get("rpm") or 0)))
+        diagnosis = f.get("diagnosis")
+        if diagnosis == "hot":
+            self.step(status, _("The Mac is hot while the fans turn slowly"), False,
+                      _("The optional fan control may help: check it first with “Check if it helps”"))
+        elif diagnosis == "pomona":
+            self.step(status, _("Pomona controls the fans"), True, _("The speed follows the temperature"))
+        else:
+            self.step(status, _("No fan problem seen"), True, _("The fans follow the temperature"))
+
+        controlled = f.get("state") == "pomona"
+        card = Adw.PreferencesGroup(
+            title=_("Fan control by Pomona"),
+            description=_("Optional. Only needed if the Mac overheats or the fans do not follow the temperature."))
+        self.add_group(page, card)
+        row = Adw.ActionRow(
+            title=_("Turn off the fan control") if controlled else _("Turn on the fan control"),
+            subtitle=_("Gives the fans back to the firmware") if controlled
+            else _("Starts a service that sets the fan speed from the temperature"))
+        button = Gtk.Button(label=_("Turn off") if controlled else _("Turn on"),
+                            valign=Gtk.Align.CENTER, sensitive=not self.busy)
+        if not controlled:
+            button.add_css_class("suggested-action")
+        button.connect("clicked", lambda *_a: self.fan_undo() if controlled else self.fan_fix())
+        row.add_suffix(button)
+        card.add(row)
+        check = Adw.ActionRow(
+            title=_("Check if it helps"),
+            subtitle=_("Turn the control off first: the check compares it with the firmware") if controlled
+            else _("Runs a load test with the firmware and with Pomona and compares the temperatures"))
+        verify = Gtk.Button(label=_("Check…"), valign=Gtk.Align.CENTER, sensitive=not self.busy and not controlled)
+        verify.connect("clicked", lambda *_a: self.fan_verify())
+        check.add_suffix(verify)
+        card.add(check)
+
+    def fan_undo(self):
+        self.admin(["fan-undo"], "fan-undo")
 
     # -------------------------------------------------------------- touch bar
 
@@ -1074,9 +1181,39 @@ class Window(Adw.ApplicationWindow):
                       _("Turn off"), (lambda: self.admin(["sleep-disable"], "sleep-disable")) if installed else None)
         else:
             self.step(group, _("Sleep"), True, _("No failed wake-up found"))
+        group.add(self.verify_row(["sleep", "verify"]))
         self.add_group(page, group)
 
     # -------------------------------------------------------------- diagnostics
+
+    def verify_row(self, command):
+        """A row that runs `pomona MODULE verify --json` (read-only) and shows whether the fix fits this Mac."""
+        row = Adw.ActionRow(title=_("Does the fix fit this Mac?"),
+                            subtitle=_("Reads this Mac and says whether the fix is the right one for it. Nothing is changed."))
+        b = Gtk.Button(label=_("Check…"), valign=Gtk.Align.CENTER)
+        b.connect("clicked", lambda *_a: self.verify(command))
+        row.add_suffix(b)
+        return row
+
+    def verify(self, command):
+        labels = {"not-applicable": _("Not for this Mac"), "not-needed": _("Not needed"), "may-help": _("May help"),
+                  "effective": _("Works"), "not-effective": _("Not working"), "restart": _("Restart needed"),
+                  "inconclusive": _("Cannot tell")}
+
+        def done(ok, out):
+            try:
+                v = json.loads(out)
+            except ValueError:
+                self.text_dialog(_("Check result"), _("Failed"), [(_("Close"), None, True)])
+                return
+            lines = [labels.get(v.get("verdict"), v.get("verdict") or ""), "", v.get("text") or ""]
+            if v.get("cause_text"):
+                lines.append(v["cause_text"])
+            if v.get("fix") in ("applied", "not-applied"):
+                lines.append(_("Fix applied") if v["fix"] == "applied" else _("Fix not applied"))
+            self.text_dialog(_("Check result"), "\n".join(lines), [(_("Close"), None, True)])
+
+        run_async(pomona_cmd() + list(command) + ["--json"], done)
 
     def diagnose_row(self, module):
         row = Adw.ActionRow(title=_("Is Pomona wrong?"),

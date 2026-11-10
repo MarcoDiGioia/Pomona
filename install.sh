@@ -81,6 +81,8 @@ install -m 644 "$SRC/lib/pomona.sh" "$PREFIX/lib/pomona/pomona.sh"
 install -m 644 "$SRC/lib/wifi.sh" "$PREFIX/lib/pomona/wifi.sh"
 install -m 644 "$SRC/lib/audio.sh" "$PREFIX/lib/pomona/audio.sh"
 install -m 644 "$SRC/lib/sleep.sh" "$PREFIX/lib/pomona/sleep.sh"
+install -m 644 "$SRC/lib/fan.sh" "$PREFIX/lib/pomona/fan.sh"
+install -m 644 "$SRC/lib/verify.sh" "$PREFIX/lib/pomona/verify.sh"
 install -m 644 "$SRC/lib/history.sh" "$PREFIX/lib/pomona/history.sh"
 install -D -m 755 "$SRC/data/audio/dkms/pomona-cs8409-prepare" "$PREFIX/share/pomona/audio/dkms/pomona-cs8409-prepare"
 install -D -m 644 "$SRC/data/audio/dkms/Makefile" "$PREFIX/share/pomona/audio/dkms/Makefile"
@@ -90,6 +92,7 @@ install -m 755 "$SRC/gui/pomona-gui" "$PREFIX/bin/pomona-gui"
 tmpl() { sed "s#@PREFIX@#$PREFIX#g" "$1" > "$2"; chmod 644 "$2"; }
 tmpl "$SRC/systemd/pomona.service" /etc/systemd/system/pomona.service
 tmpl "$SRC/systemd/pomona-touchbard.service" /etc/systemd/system/pomona-touchbard.service
+tmpl "$SRC/systemd/pomona-fand.service" /etc/systemd/system/pomona-fand.service
 install -m 644 "$SRC/data/60-pomona.rules" /etc/udev/rules.d/60-pomona.rules
 udevadm control --reload 2>/dev/null || true
 install -d /usr/lib/systemd/system-sleep

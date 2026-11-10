@@ -525,12 +525,45 @@ def load_verified(path=None):
 
 # ------------------------------------------------------------------ tables
 
+def fix_evidence(cert):
+    """What a certificate shows of Pomona at work: None when it does not work, else
+
+    "fixed"   its history says Pomona made at least one check work;
+    "nothing" its history says everything worked before Pomona, or came right without a Pomona fix;
+    "unknown" it cannot say (written by an older version, or Pomona had already made changes
+              before the record began).
+    """
+    if cert["result"] != "WORKING":
+        return None
+    history = cert.get(HISTORY_FIELD)
+    if history is None or history["before"] is None:
+        return "unknown"
+    return "fixed" if made_by_pomona_count(cert) > 0 else "nothing"
+
+
 def model_status(mine, verified_ids):
-    working = [(p, c) for p, c in mine if c["result"] == "WORKING"]
-    if any(cert_id(p) in verified_ids for p, _ in working):
+    """The status of a model for one module.
+
+    The table is about what Pomona manages to fix, not about what already works on Linux, so a
+    certificate counts fully only when it shows a fix. One that cannot say ("unknown") is a
+    reinforcement: it counts once another person has sent one too, but alone it only leaves the
+    model at "Should work". One that shows nothing fixed never counts. A certificate the
+    maintainer listed in VERIFIED is his own decision and counts whatever its history says
+    (unless it shows nothing fixed).
+    """
+    evidence = [(p, c, fix_evidence(c)) for p, c in mine]
+    fixed = [e for e in evidence if e[2] == "fixed"]
+    unknown = [e for e in evidence if e[2] == "unknown"]
+    nothing = [e for e in evidence if e[2] == "nothing"]
+    if any(cert_id(p) in verified_ids for p, _, _ in fixed + unknown):
         return "✅ Verified"
-    if working:
+    people = {c.get(STORED_EXTRA) or cert_id(p) for p, c, _ in unknown}
+    if fixed or len(people) >= 2:
         return "🟢 Tested by the community"
+    if unknown:
+        return "🟡 Should work"
+    if nothing:
+        return "⚪ Works without Pomona"
     if mine:
         return "🟠 Problems reported"
     return "🟡 Should work"
@@ -554,6 +587,11 @@ def report_table(certs, verified_ids=frozenset(), module="t1"):
     for path, c in sorted(certs, key=lambda x: (x[1]["date"], x[1]["model"]), reverse=True):
         who = "@" + c[STORED_EXTRA] if c.get(STORED_EXTRA) else "n/a"
         result = icon[c["result"]] + (" · verified" if cert_id(path) in verified_ids else "")
+        evidence = fix_evidence(c)
+        if evidence == "nothing":
+            result += " · nothing fixed by Pomona"
+        elif evidence == "unknown":
+            result += " · fix by Pomona not shown"
         detail = (c["subsystem"] or "n/a") if module in SUBSYSTEM_LABEL else (c["embeddedos"] or "n/a")
         made = made_by_pomona_count(c)
         out.append("| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |" % (
@@ -635,6 +673,15 @@ def intake(event, outdir, cert_dir=None, doc_path=None, now=None, account_create
             "`docs/compatibility.md` was regenerated from `certificates/`.\n\n"
             % (number, cert["model"], cert["distribution"], cert["kernel"], cert["pomona"], label,
                " from @" + reporter if reporter else ""))
+    evidence = fix_evidence(cert)
+    if evidence == "nothing":
+        body += ("**Pomona fixed nothing here:** the history says every check passed before Pomona, or came right "
+                 "without one of its fixes. The certificate is added to the reports, but it does not count towards "
+                 "the status of the model.\n\n")
+    elif evidence == "unknown":
+        body += ("**This certificate cannot show a fix by Pomona** (no history, or Pomona had already made changes "
+                 "before the record began). On its own it leaves the model at \"Should work\"; with a second one "
+                 "from another person it counts.\n\n")
     if flags:
         body += "**Needs a closer look:**\n\n" + "".join("- %s\n" % f for f in flags) + "\n"
         out("needs-review", "\n".join(flags) + "\n")

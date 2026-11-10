@@ -7,7 +7,9 @@
 Each model is in one of these states. The table is generated from the certificates.
 
 - ✅ **Verified**: tested by the maintainer, or approved by him after seeing material evidence (photos, logs, a call) from people he trusts. The certificate is listed in [`certificates/VERIFIED`](../certificates/VERIFIED).
-- 🟢 **Tested by the community**: at least one user sent a working certificate. Certificates come from the users' own machines and are not checked one by one, so they cannot be proven.
+- 🟢 **Tested by the community**: at least one user sent a working certificate in which Pomona made something work, or two different people sent working certificates that cannot say either way (see below). Certificates come from the users' own machines and are not checked one by one, so they cannot be proven.
+- ⚪ **Works without Pomona**: working certificates exist, but their [history](certificates.md#what-pomona-fixed-and-what-already-worked) says that everything already worked before Pomona, or came right without one of its fixes. This table is about what Pomona manages to fix, not about what works natively on Linux, so these certificates do not count towards the status. They stay in the list below.
+- 🟡 **Should work** also covers a model with a single working certificate that cannot show a Pomona fix (written by an older version, or the state before Pomona is unknown): it is a reinforcement, not proof. It becomes **Tested by the community** when a certificate shows a fix, or when a second person sends one.
 - 🟠 **Problems reported**: certificates exist, but none is fully working.
 - 🟡 **Should work**: the model has the same T1 chip (`iBridge1,1`, CPID `0x8002`) and the same start-up path as a tested one, but nobody has sent a certificate yet.
 
@@ -15,7 +17,7 @@ Each model is in one of these states. The table is generated from the certificat
 | Model | Machine | Status | Reports | People |
 | --- | --- | --- | --- | --- |
 | MacBookPro13,2 | 13", 2016, four Thunderbolt ports | 🟡 Should work | 0 | 0 |
-| MacBookPro13,3 | 15", 2016 | 🟢 Tested by the community | 1 | 1 |
+| MacBookPro13,3 | 15", 2016 | 🟡 Should work | 1 | 1 |
 | MacBookPro14,2 | 13", 2017, four Thunderbolt ports | 🟡 Should work | 0 | 0 |
 | MacBookPro14,3 | 15", 2017 | ✅ Verified | 2 | 1 |
 <!-- models:end -->
@@ -45,9 +47,9 @@ Generated from [`certificates/`](../certificates), newest first.
 <!-- reports:start -->
 | Date | Model | Distribution | Kernel | Desktop | Mac firmware | EmbeddedOS | Pomona | Made to work by Pomona | Reported by | Result |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2026-11-03 | MacBookPro13,3 | Ubuntu 26.04.1 LTS | 7.0.0-30-generic | ubuntu:GNOME | 529.120.1.0.0 | 910 | 0.10.0 | n/a | @jisongkun | ✅ Working |
-| 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 910 | 0.8.0 | n/a | @MarcoDiGioia | ✅ Working · verified |
-| 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 910 | 0.3.0 | n/a | @MarcoDiGioia | ✅ Working · verified |
+| 2026-11-03 | MacBookPro13,3 | Ubuntu 26.04.1 LTS | 7.0.0-30-generic | ubuntu:GNOME | 529.120.1.0.0 | 910 | 0.10.0 | n/a | @jisongkun | ✅ Working · fix by Pomona not shown |
+| 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 910 | 0.8.0 | n/a | @MarcoDiGioia | ✅ Working · verified · fix by Pomona not shown |
+| 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 910 | 0.3.0 | n/a | @MarcoDiGioia | ✅ Working · verified · fix by Pomona not shown |
 <!-- reports:end -->
 
 ## Wi-Fi (Broadcom BCM43602)
@@ -68,7 +70,7 @@ Wi-Fi certificates received, newest first:
 <!-- wifi-reports:start -->
 | Date | Model | Distribution | Kernel | Desktop | Mac firmware | Wi-Fi card | Pomona | Made to work by Pomona | Reported by | Result |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 106b:0173 | 0.9.0 | n/a | @MarcoDiGioia | ✅ Working · verified |
+| 2026-10-29 | MacBookPro14,3 | Ubuntu 26.04.1 LTS | 7.0.0-42-generic | ubuntu:GNOME | 529.140.2.0.0 | 106b:0173 | 0.9.0 | n/a | @MarcoDiGioia | ✅ Working · verified · fix by Pomona not shown |
 <!-- wifi-reports:end -->
 
 ## Audio (Cirrus Logic CS8409)

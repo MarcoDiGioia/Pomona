@@ -533,3 +533,129 @@ msgstr "Desativar"
 
 msgid "No failed wake-up found"
 msgstr "Nenhum despertar falhado encontrado"
+
+msgid "Fans"
+msgstr "Ventoinhas"
+
+msgid "Turn on the fan control?"
+msgstr "Ativar o controlo das ventoinhas?"
+
+msgid "Only turn this on if the Mac overheats or the fans do not follow the temperature. Pomona then sets the fan speed itself with a gentler curve, from 67 °C, and gives control back to the firmware when you turn it off. It runs as a service started at every boot."
+msgstr "Ativa isto só se o Mac sobreaquecer ou se as ventoinhas não acompanharem a temperatura. O Pomona define então ele próprio a velocidade com uma curva mais suave, a partir de 67 °C, e devolve o controlo ao firmware quando o desativas. Funciona como um serviço iniciado a cada arranque."
+
+msgid "Check if the fan control helps?"
+msgstr "Verificar se o controlo das ventoinhas ajuda?"
+
+msgid "Pomona runs a moderate load for about three minutes with the firmware’s control and again with its own, and compares the temperatures. The Mac gets warm and the fans louder; it stops by itself if it gets too hot. Do not use the Mac meanwhile."
+msgstr "O Pomona aplica uma carga moderada durante cerca de três minutos com o controlo do firmware e depois com o seu, e compara as temperaturas. O Mac aquece e as ventoinhas ficam mais ruidosas; pára sozinho se ficar demasiado quente. Não uses o Mac entretanto."
+
+msgid "Fan check result"
+msgstr "Resultado da verificação"
+
+msgid "Start the check"
+msgstr "Iniciar a verificação"
+
+msgid "Fan status"
+msgstr "Estado das ventoinhas"
+
+msgid "No fan found"
+msgstr "Nenhuma ventoinha encontrada"
+
+msgid "This Mac shows no fan to Linux: there is nothing for Pomona to control"
+msgstr "Este Mac não mostra nenhuma ventoinha ao Linux: o Pomona não tem nada a controlar"
+
+msgid "Processor temperature"
+msgstr "Temperatura do processador"
+
+msgid "%d rpm, set by Pomona"
+msgstr "%d rpm, definidas pelo Pomona"
+
+msgid "%d rpm, set by the firmware"
+msgstr "%d rpm, definidas pelo firmware"
+
+msgid "Fan %s"
+msgstr "Ventoinha %s"
+
+msgid "The Mac is hot while the fans turn slowly"
+msgstr "O Mac está quente enquanto as ventoinhas rodam devagar"
+
+msgid "The optional fan control may help: check it first with “Check if it helps”"
+msgstr "O controlo opcional das ventoinhas pode ajudar: verifica-o primeiro com “Verificar se ajuda”"
+
+msgid "Pomona controls the fans"
+msgstr "O Pomona controla as ventoinhas"
+
+msgid "The speed follows the temperature"
+msgstr "A velocidade acompanha a temperatura"
+
+msgid "No fan problem seen"
+msgstr "Nenhum problema de ventoinhas visto"
+
+msgid "The fans follow the temperature"
+msgstr "As ventoinhas acompanham a temperatura"
+
+msgid "Fan control by Pomona"
+msgstr "Controlo das ventoinhas do Pomona"
+
+msgid "Optional. Only needed if the Mac overheats or the fans do not follow the temperature."
+msgstr "Opcional. Só é preciso se o Mac sobreaquecer ou as ventoinhas não acompanharem a temperatura."
+
+msgid "Turn off the fan control"
+msgstr "Desativar o controlo das ventoinhas"
+
+msgid "Turn on the fan control"
+msgstr "Ativar o controlo das ventoinhas"
+
+msgid "Gives the fans back to the firmware"
+msgstr "Devolve as ventoinhas ao firmware"
+
+msgid "Starts a service that sets the fan speed from the temperature"
+msgstr "Inicia um serviço que define a velocidade das ventoinhas pela temperatura"
+
+msgid "Check if it helps"
+msgstr "Verificar se ajuda"
+
+msgid "Turn the control off first: the check compares it with the firmware"
+msgstr "Desativa primeiro o controlo: a verificação compara-o com o firmware"
+
+msgid "Runs a load test with the firmware and with Pomona and compares the temperatures"
+msgstr "Faz um teste de carga com o firmware e com o Pomona e compara as temperaturas"
+
+msgid "Check…"
+msgstr "Verificar…"
+
+msgid "Close"
+msgstr "Fechar"
+
+msgid "Does the fix fit this Mac?"
+msgstr "A correção serve para este Mac?"
+
+msgid "Reads this Mac and says whether the fix is the right one for it. Nothing is changed."
+msgstr "Lê este Mac e diz se a correção é a certa. Não altera nada."
+
+msgid "Check result"
+msgstr "Resultado da verificação"
+
+msgid "Not for this Mac"
+msgstr "Não é para este Mac"
+
+msgid "Not needed"
+msgstr "Não é preciso"
+
+msgid "May help"
+msgstr "Pode ajudar"
+
+msgid "Works"
+msgstr "Funciona"
+
+msgid "Not working"
+msgstr "Não funciona"
+
+msgid "Cannot tell"
+msgstr "Não se consegue saber"
+
+msgid "Fix applied"
+msgstr "Correção aplicada"
+
+msgid "Fix not applied"
+msgstr "Correção não aplicada"

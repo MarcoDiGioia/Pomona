@@ -235,7 +235,8 @@ class Intake(unittest.TestCase):
         files = sorted(os.listdir(os.path.join(self.certs, "MacBookPro13_3")))
         self.assertEqual(len(files), 2)
         doc = read_text(self.doc)
-        self.assertIn("| MacBookPro13,3 | 15\", 2016 | 🟢 Tested by the community | 1 | 1 |", doc)
+        # a certificate that cannot show a Pomona fix is only a reinforcement
+        self.assertIn("| MacBookPro13,3 | 15\", 2016 | 🟡 Should work | 1 | 1 |", doc)
         self.assertIn("@jane-doe", doc)
         self.assertNotIn("needs-review", os.listdir(self.out))
         self.assertIn("| 2026-10-30 | MacBookPro13,3 | Linux Mint 22.1 |", doc)
@@ -396,7 +397,8 @@ class Tiers(unittest.TestCase):
     def test_status_levels(self):
         self.assertEqual(C.model_status([], set()), "🟡 Should work")
         self.assertEqual(C.model_status([self.entry("PARTIAL")], set()), "🟠 Problems reported")
-        self.assertEqual(C.model_status([self.entry()], set()), "🟢 Tested by the community")
+        self.assertEqual(C.model_status([self.entry()], set()), "🟡 Should work")
+        self.assertEqual(C.model_status([self.entry(), self.entry(name="b", who="john")], set()), "🟢 Tested by the community")
         self.assertEqual(C.model_status([self.entry(name="abc")], {"abc"}), "✅ Verified")
 
     def test_verified_needs_a_working_certificate(self):
@@ -539,8 +541,8 @@ class WifiCertificates(unittest.TestCase):
                  ("/x/wifi-20261030-091500-bbbbbbbb.json", C.validate(WIFI, now=NOW))]
         t1 = C.model_table(certs)
         wifi = C.model_table(certs, module="wifi")
-        self.assertIn("| MacBookPro14,3 | 15\", 2017 | 🟢 Tested by the community | 1 | 0 |", t1)
-        self.assertIn("| MacBookPro14,3 | 15\", 2017 | 🟢 Tested by the community | 1 | 0 |", wifi)
+        self.assertIn("| MacBookPro14,3 | 15\", 2017 | 🟡 Should work | 1 | 0 |", t1)
+        self.assertIn("| MacBookPro14,3 | 15\", 2017 | 🟡 Should work | 1 | 0 |", wifi)
         self.assertIn("| MacBookPro13,3 | 15\", 2016 | 🟡 Should work | 0 | 0 |", wifi)
         self.assertIn("EmbeddedOS", C.report_table(certs))
         self.assertIn("Wi-Fi card", C.report_table(certs, module="wifi"))
@@ -570,7 +572,7 @@ class WifiIntake(unittest.TestCase):
         doc = read_text(self.doc)
         top, bottom = doc.split("<!-- wifi-models:start -->")
         self.assertIn("MacBookPro14,3 | 15\", 2017 | 🟡 Should work | 0 | 0 |", top)
-        self.assertIn("MacBookPro14,3 | 15\", 2017 | 🟢 Tested by the community | 1 | 1 |", bottom)
+        self.assertIn("MacBookPro14,3 | 15\", 2017 | 🟡 Should work | 1 | 1 |", bottom)
         self.assertIn("@jane-doe", bottom)
         self.assertNotIn("@jane-doe", top)
 
@@ -742,6 +744,88 @@ class History(unittest.TestCase):
         self.assertIn("| 0.8.0 | n/a |", table)
         self.assertIn("| 0.8.0 | 7 |", table)
 
+    def entry(self, base, before, fixes=(), name="x", who="jane-doe"):
+        cert = C.validate(dict(with_history(base, before=before, fixes=fixes), reported_by=who), now=NOW, stored=True)
+        return ("/x/%s.json" % name, cert)
+
+    def t1_before(self, **changes):
+        before = {c: True for c in C.CHECKS}
+        before.update(changes)
+        return before
+
+    def test_a_certificate_without_a_fix_does_not_count(self):
+        everything_worked = self.entry(GOOD, "same")
+        self.assertEqual(C.fix_evidence(everything_worked[1]), "nothing")
+        self.assertEqual(C.model_status([everything_worked], set()), "⚪ Works without Pomona")
+        self.assertEqual(C.model_status([everything_worked], {"x"}), "⚪ Works without Pomona")
+
+    def test_a_fix_by_pomona_counts(self):
+        fixed = self.entry(GOOD, self.t1_before(**{"Touch Bar daemon running": False}))
+        self.assertEqual(C.fix_evidence(fixed[1]), "fixed")
+        self.assertEqual(C.model_status([fixed], set()), "🟢 Tested by the community")
+        self.assertEqual(C.model_status([fixed], {"x"}), "✅ Verified")
+
+    def test_a_certificate_that_cannot_say_is_only_a_reinforcement(self):
+        old = ("/x/old.json", C.validate(dict(GOOD, reported_by="jane-doe"), now=NOW, stored=True))
+        unknown = self.entry(GOOD, None, name="u", who="john")
+        self.assertEqual(C.fix_evidence(old[1]), "unknown")
+        self.assertEqual(C.fix_evidence(unknown[1]), "unknown")
+        self.assertEqual(C.model_status([old], set()), "🟡 Should work")
+        self.assertEqual(C.model_status([unknown], set()), "🟡 Should work")
+
+    def test_two_people_reinforce_each_other(self):
+        a = self.entry(GOOD, None, name="a", who="jane-doe")
+        b = self.entry(GOOD, None, name="b", who="john")
+        again = self.entry(GOOD, None, name="c", who="jane-doe")
+        self.assertEqual(C.model_status([a, b], set()), "🟢 Tested by the community")
+        self.assertEqual(C.model_status([a, again], set()), "🟡 Should work")
+
+    def test_a_certificate_with_nothing_fixed_does_not_reinforce(self):
+        a = self.entry(GOOD, None, name="a", who="jane-doe")
+        b = self.entry(GOOD, "same", name="b", who="john")
+        self.assertEqual(C.model_status([a, b], set()), "🟡 Should work")
+
+    def test_a_fix_wins_over_everything_else(self):
+        fixed = self.entry(GOOD, self.t1_before(**{"FaceTime camera present": False}), name="f", who="john")
+        old = self.entry(GOOD, None, name="o")
+        self.assertEqual(C.model_status([old, fixed], set()), "🟢 Tested by the community")
+
+    def test_the_maintainer_can_verify_a_certificate_that_cannot_say(self):
+        old = self.entry(GOOD, None, name="abc")
+        self.assertEqual(C.model_status([old], {"abc"}), "✅ Verified")
+        nothing = self.entry(GOOD, "same", name="abc")
+        self.assertEqual(C.model_status([nothing], {"abc"}), "⚪ Works without Pomona")
+
+    def test_a_certificate_that_did_not_work_never_counts(self):
+        broken = dict(GOOD, result="PARTIAL", checks=dict(GOOD["checks"], **{"Boot service enabled": False}))
+        entry = self.entry(broken, self.t1_before(**{"Boot service enabled": False}))
+        self.assertIsNone(C.fix_evidence(entry[1]))
+        self.assertEqual(C.model_status([entry], set()), "🟠 Problems reported")
+
+    def test_markers_in_the_reports(self):
+        nothing = self.entry(GOOD, "same")
+        unknown = self.entry(GOOD, None, name="u")
+        fixed = self.entry(GOOD, self.t1_before(**{"FaceTime camera present": False}), name="f")
+        table = C.report_table([nothing, unknown, fixed])
+        self.assertEqual(table.count("nothing fixed by Pomona"), 1)
+        self.assertEqual(table.count("fix by Pomona not shown"), 1)
+
+    def test_intake_says_when_a_certificate_does_not_count(self):
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, tmp)
+        cases = (("none", with_history(GOOD, before="same"), "Pomona fixed nothing here"),
+                 ("unknown", with_history(GOOD, before=None), "cannot show a fix by Pomona"),
+                 ("fix", with_history(GOOD, before=self.t1_before(**{"FaceTime camera present": False})), None))
+        for name, cert, text in cases:
+            event = {"issue": {"number": 7, "user": {"login": "someone"}, "body": issue_body(json.dumps(cert))}}
+            out = os.path.join(tmp, name)
+            self.assertEqual(C.intake(event, out, cert_dir=os.path.join(tmp, "certs-" + name),
+                                      doc_path=self.doc(tmp), now=NOW, account_created="2020-01-01T00:00:00Z",
+                                      releases=RELEASES), "ok")
+            body = read_text(os.path.join(out, "pr-body.md"))
+            for other in ("Pomona fixed nothing here", "cannot show a fix by Pomona"):
+                self.assertEqual(other in body, other == text, (name, other))
+
     def test_intake_keeps_the_history(self):
         cert = with_history(GOOD, before=None, fixes=[{"action": "fix", "ok": True}])
         tmp = tempfile.mkdtemp()
@@ -823,5 +907,5 @@ class AudioIntake(unittest.TestCase):
         doc = read_text(self.doc)
         top, bottom = doc.split("<!-- audio-models:start -->")
         self.assertNotIn("@jane-doe", top)
-        self.assertIn("MacBookPro14,3 | 15\", 2017 | 🟢 Tested by the community | 1 | 1 |", bottom)
+        self.assertIn("MacBookPro14,3 | 15\", 2017 | 🟡 Should work | 1 | 1 |", bottom)
         self.assertIn("| 106b:3900 |", bottom)
