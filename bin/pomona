@@ -10,6 +10,7 @@
 #   pomona wifi       Broadcom Wi-Fi: status | fix | undo | certify  (pomona wifi help)
 #   pomona audio      Cirrus Logic sound: status | fix | undo | certify  (pomona audio help)
 #   pomona sleep      suspend: status | disable | enable  (for Macs that do not wake up)
+#   pomona fan        fans: status | fix | undo  (pomona fan help)
 #   pomona diagnose   Pomona got it wrong? MODULE (t1|wifi|audio) works|broken: a report to share
 #   pomona baseline   note how the Mac is before Pomona changes anything (the installer does it)
 #   pomona version
@@ -557,6 +558,53 @@ cmd_sleep() {
 	esac
 }
 
+# ------------------------------------------------------------------ fan
+
+fan_rows() { # fan_rows DIR -> one line per fan: N input min max manual
+	local dir=$1 n
+	for n in $(fa_fans "$dir"); do
+		echo "$n $(fa_read "$dir/fan${n}_input" || echo 0) $(fa_read "$dir/fan${n}_min" || echo 0) $(fa_read "$dir/fan${n}_max" || echo 0) $(cat "$dir/fan${n}_manual" 2>/dev/null || echo 0)"
+	done
+}
+
+cmd_fan() {
+	local dir t rows n in mn mx man
+	case "${1:-status}" in
+		status)
+			dir=$(fa_dir) || dir=""
+			t=""; rows=""
+			if [ -n "$dir" ]; then t=$(fa_cpu_temp "$dir"); rows=$(fan_rows "$dir"); fi
+			if [ "${2:-}" = --json ]; then
+				local tc=null; [ -n "$t" ] && tc=$((t / 1000))
+				printf '{\n  "state": %s,\n  "found": %s,\n  "cpu_temp_c": %s,\n  "service": %s,\n  "fans": [' \
+					"$(json_str "$(fa_state)")" "$(jbool test -n "$dir")" "$tc" \
+					"$(json_str "$(svc pomona-fand.service)")"
+				local first=1
+				while read -r n in mn mx man; do
+					[ -n "$n" ] || continue
+					[ "$first" = 1 ] || printf ','
+					first=0
+					printf '\n    {"id": %s, "rpm": %s, "min": %s, "max": %s, "manual": %s}' "$n" "$in" "$mn" "$mx" "$([ "$man" = 1 ] && echo true || echo false)"
+				done <<< "$rows"
+				printf '\n  ]\n}\n'
+			else
+				if [ -z "$dir" ]; then echo "fans            none found (no fanN_input under $POMONA_SYS)"; return 0; fi
+				echo "sensors         $dir"
+				echo "cpu temperature ${t:+$((t / 1000)) C}${t:-unknown}"
+				while read -r n in mn mx man; do
+					[ -n "$n" ] || continue
+					echo "fan $n           $in rpm  (firmware range $mn-$mx)  $([ "$man" = 1 ] && echo "set by Pomona" || echo "set by the firmware")"
+				done <<< "$rows"
+				echo "pomona-fand     $(svc pomona-fand.service)"
+			fi;;
+		fix) fa_fix;;
+		undo) fa_undo;;
+		run) fa_run;;
+		release) fa_release;;
+		*) et1_err "usage: pomona fan status [--json] | sudo pomona fan fix | sudo pomona fan undo"; return 2;;
+	esac
+}
+
 # ------------------------------------------------------------------ diagnose
 
 # cmd_diagnose MODULE works|broken [DIR]: Pomona's verdict on this page is wrong. Writes
@@ -638,7 +686,8 @@ case "${1:-status}" in
 	audio) shift; cmd_audio "$@";;
 	diagnose) shift; cmd_diagnose "$@";;
 	sleep) shift; cmd_sleep "$@";;
+	fan) shift; cmd_fan "$@";;
 	version|--version|-V) echo "Pomona $POMONA_VERSION";;
-	help|-h|--help) sed -n '2,13p' "$_self" | sed 's/^# \{0,1\}//';;
+	help|-h|--help) sed -n '2,14p' "$_self" | sed 's/^# \{0,1\}//';;
 	*) echo "pomona: unknown command $1 (try: pomona help)" >&2; exit 2;;
 esac

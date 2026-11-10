@@ -344,6 +344,11 @@ PYEOF
 # shellcheck source=sleep.sh
 [ -r "$POMONA_LIBEXEC/sleep.sh" ] && . "$POMONA_LIBEXEC/sleep.sh"
 
+# ------------------------------------------------------------------ fan module
+
+# shellcheck source=fan.sh
+[ -r "$POMONA_LIBEXEC/fan.sh" ] && . "$POMONA_LIBEXEC/fan.sh"
+
 # ------------------------------------------------------------------ history of the fixes
 
 # shellcheck source=history.sh

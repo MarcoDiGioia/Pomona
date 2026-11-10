@@ -9,6 +9,7 @@
 #   pomona-admin audio-fix [--download]  download and build the Mac sound driver (DKMS)
 #   pomona-admin audio-undo            remove the Mac sound driver
 #   pomona-admin sleep-disable | sleep-enable   turn suspend off or on again
+#   pomona-admin fan-fix | fan-undo    start or stop the fan control service
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 set -uo pipefail
@@ -101,6 +102,12 @@ EOF
 	sleep-enable)
 		exec "$LIBEXEC/../../bin/pomona" sleep enable
 		;;
+	fan-fix)
+		exec "$LIBEXEC/../../bin/pomona" fan fix
+		;;
+	fan-undo)
+		exec "$LIBEXEC/../../bin/pomona" fan undo
+		;;
 	audio-undo)
 		exec "$LIBEXEC/../../bin/pomona" audio undo
 		;;
@@ -111,7 +118,7 @@ EOF
 		systemctl disable --now $UNITS
 		;;
 	*)
-		sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
+		sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'
 		exit 2
 		;;
 esac

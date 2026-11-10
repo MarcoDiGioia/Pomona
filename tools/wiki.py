@@ -25,6 +25,7 @@ PAGES = {
     "docs/wifi.md": "Wi-Fi",
     "docs/audio.md": "Audio",
     "docs/sleep.md": "Sleep",
+    "docs/fan.md": "Fans",
     "docs/how-it-works.md": "How-it-works",
     "docs/troubleshooting.md": "Troubleshooting",
     "docs/compatibility.md": "Compatibility",

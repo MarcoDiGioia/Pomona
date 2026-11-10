@@ -104,6 +104,8 @@ From the terminal:
 | `pomona share` | opens your certificate as a pre-filled GitHub report, to add your Mac to the table |
 | `pomona sleep status` | shows whether suspend is on and how many earlier boots ended while the Mac was asleep |
 | `sudo pomona sleep disable` | turns suspend off on a Mac that does not wake up from it (`enable` turns it back on) |
+| `pomona fan status` | shows the fans, their speed and the CPU temperature |
+| `sudo pomona fan fix` | starts the service that sets the fan speed from the CPU temperature (`undo` gives the fans back to the firmware) |
 | `pomona diagnose MODULE works\|broken` | Pomona got it wrong? Sends what it checked as a pre-filled GitHub report |
 | `sudo pomona start` | turns everything on again (for example after unplugging something) |
 
@@ -128,6 +130,7 @@ The app is available in English, Italian, German, French, Spanish, Portuguese, D
 - [Wi-Fi](docs/wifi.md): what the fix changes, the MAC address, undo.
 - [Audio](docs/audio.md): the Mac sound driver, why it is built from the exact kernel source, kernel updates, undo.
 - [Sleep](docs/sleep.md): detecting a Mac that does not wake up, and turning suspend off.
+- [Fans](docs/fan.md): reading the fans and temperatures, and raising the fans earlier than the firmware does.
 - [Troubleshooting](docs/troubleshooting.md)
 - [Compatibility](docs/compatibility.md)
 - [Compatibility certificates](docs/certificates.md)

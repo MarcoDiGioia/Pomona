@@ -10,13 +10,15 @@ if command -v dpkg-query >/dev/null && dpkg-query -W -f='${Status}' pomona 2>/de
 	echo "Pomona is installed as a package: remove it with  sudo apt remove pomona" >&2
 	exit 3
 fi
+# the fan control gives the fans back to the firmware when it stops
+systemctl disable --now pomona-fand.service 2>/dev/null || true
 systemctl disable --now pomona-touchbard.service 2>/dev/null || true
 # stopping runs `pomona stop`, which a later power-off needs while the T1 is running
 systemctl disable --now pomona.service 2>/dev/null || true
-rm -f /etc/systemd/system/pomona.service /etc/systemd/system/pomona-touchbard.service /usr/lib/systemd/system-sleep/pomona
+rm -f /etc/systemd/system/pomona.service /etc/systemd/system/pomona-touchbard.service /etc/systemd/system/pomona-fand.service /usr/lib/systemd/system-sleep/pomona
 rm -f "$PREFIX/bin/pomona" "$PREFIX/bin/pomona-gui"
 rm -f "$PREFIX/lib/pomona/pomona-t1-boot" "$PREFIX/lib/pomona/pomona-touchbard" \
-      "$PREFIX/lib/pomona/pomona-admin" "$PREFIX/lib/pomona/pomona.sh" "$PREFIX/lib/pomona/wifi.sh" "$PREFIX/lib/pomona/audio.sh" "$PREFIX/lib/pomona/sleep.sh" "$PREFIX/lib/pomona/history.sh"
+      "$PREFIX/lib/pomona/pomona-admin" "$PREFIX/lib/pomona/pomona.sh" "$PREFIX/lib/pomona/wifi.sh" "$PREFIX/lib/pomona/audio.sh" "$PREFIX/lib/pomona/sleep.sh" "$PREFIX/lib/pomona/fan.sh" "$PREFIX/lib/pomona/history.sh"
 rm -rf "$PREFIX/lib/pomona/__pycache__"
 rmdir "$PREFIX/lib/pomona" 2>/dev/null || true
 rm -f "$PREFIX"/share/locale/*/LC_MESSAGES/pomona.mo "$PREFIX/share/pomona/pomona-mascot-256.png"

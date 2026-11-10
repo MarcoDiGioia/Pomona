@@ -57,7 +57,7 @@ It reads Fn from the `Apple SPI Keyboard` input device, and the application in t
 
 ## The app and root
 
-The app runs as the user. It reads `pomona status --json` and `/etc/pomona/config.json`, and does the few root actions through `pkexec /usr/lib/pomona/pomona-admin`: `start`, `set-config`, `enable`, `disable`, `wifi-fix`, `wifi-undo`, `audio-fix`, `audio-undo`, `sleep-disable` and `sleep-enable`. Each accepts only the options it needs. `set-config` re-serialises the file through the daemon's own validator, so only known keys with sane values reach `/etc`.
+The app runs as the user. It reads `pomona status --json` and `/etc/pomona/config.json`, and does the few root actions through `pkexec /usr/lib/pomona/pomona-admin`: `start`, `set-config`, `enable`, `disable`, `wifi-fix`, `wifi-undo`, `audio-fix`, `audio-undo`, `sleep-disable`, `sleep-enable`, `fan-fix` and `fan-undo`. Each accepts only the options it needs. `set-config` re-serialises the file through the daemon's own validator, so only known keys with sane values reach `/etc`.
 
 ## The Wi-Fi module
 
@@ -70,6 +70,10 @@ Described in [audio.md](audio.md): it builds the community sound driver for the 
 ## The sleep module
 
 Described in [sleep.md](sleep.md): it detects boots that ended asleep and masks the systemd sleep units on request.
+
+## The fan module
+
+Described in [fan.md](fan.md): it reads the fans and the CPU temperature, and a small service sets the fan speed on request.
 
 ## What Pomona remembers
 

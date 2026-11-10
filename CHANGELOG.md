@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- **New fan module.** `pomona fan status` shows the fans (speed, firmware range, who sets it) and the CPU temperature, wherever the kernel puts them (`/sys/bus/acpi/devices/APP0001:00` on the 7.0 kernel, `applesmc.768` on older ones). `sudo pomona fan fix` starts `pomona-fand.service`, which raises the fans on a straight line from the firmware minimum at 60 C to the maximum at 85 C, never below the firmware minimum, and hands them back to the firmware when it stops; `sudo pomona fan undo` stops it. Not yet in the app.
+
+- Fix: `apt upgrade` no longer ends with a broken kernel package when it installs a t2linux kernel (`linux-t2`). The audio DKMS package refused to prepare a kernel it could not find the source of, DKMS reported the failure and dpkg left `linux-image-*` half configured. The package now skips t2linux kernels. Run `sudo pomona audio fix` again on a kernel you can boot to update an existing installation.
+
 ## 0.11.1 - 2026-11-04
 
 No change to the app or the package contents beyond the version number; this release brings the repository and the documents in line with the new rule below.
