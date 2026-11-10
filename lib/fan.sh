@@ -146,3 +146,13 @@ fa_undo() {
 	fa_release
 	et1_log "fan control off: the firmware sets the speed again"
 }
+
+# fa_sensors DIR -> one line per temperature sensor: LABEL DEGREES (the CPU ones, TC*, first)
+fa_sensors() {
+	local f l v
+	for f in "$1"/temp[0-9]*_input; do
+		[ -e "$f" ] || continue
+		l=$(cat "${f%_input}_label" 2>/dev/null); v=$(fa_read "$f") || continue
+		echo "${l:-${f##*/}} $((v / 1000))"
+	done | sort
+}

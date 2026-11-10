@@ -18,6 +18,7 @@ On the 7.0 kernel the hwmon device has no `name` and no `fan*` files, so program
 ```bash
 pomona fan status          # the fans, the CPU temperature, who sets the speed
 pomona fan status --json
+pomona fan status --sensors # also every temperature sensor with its label
 ```
 
 ## Raising the fans earlier

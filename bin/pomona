@@ -596,12 +596,16 @@ cmd_fan() {
 					echo "fan $n           $in rpm  (firmware range $mn-$mx)  $([ "$man" = 1 ] && echo "set by Pomona" || echo "set by the firmware")"
 				done <<< "$rows"
 				echo "pomona-fand     $(svc pomona-fand.service)"
+				if [ "${2:-}" = --sensors ]; then
+					echo "sensors (label, C):"
+					fa_sensors "$dir" | awk '{printf "  %-6s %s\n", $1, $2}'
+				fi
 			fi;;
 		fix) fa_fix;;
 		undo) fa_undo;;
 		run) fa_run;;
 		release) fa_release;;
-		*) et1_err "usage: pomona fan status [--json] | sudo pomona fan fix | sudo pomona fan undo"; return 2;;
+		*) et1_err "usage: pomona fan status [--json|--sensors] | sudo pomona fan fix | sudo pomona fan undo"; return 2;;
 	esac
 }
 
