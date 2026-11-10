@@ -68,6 +68,7 @@ eq "and releases the fans when it ends" "$(cat "$D/fan1_manual")$(cat "$D/fan2_m
 fa_step "$D"; fa_release
 eq "release hands the fans back" "$(fa_state)" "firmware"
 eq "status shows the fans" "$(pomona fan status | grep -c '^fan ')" "2"
+eq "status shows the temperature once, in degrees" "$(pomona fan status | sed -n 's/^cpu temperature *//p')" "70 C"
 eq "status --json is valid" "$(pomona fan status --json | python3 -I -c 'import json,sys; d=json.load(sys.stdin); print(d["found"], len(d["fans"]), d["cpu_temp_c"], d["fans"][0]["max"])')" "True 2 70 5927"
 rm -rf "$POMONA_SYS"; unset POMONA_FAN_DIR
 eq "status --json without fans" "$(pomona fan status --json | python3 -I -c 'import json,sys; d=json.load(sys.stdin); print(d["found"], d["state"], d["cpu_temp_c"])')" "False absent None"

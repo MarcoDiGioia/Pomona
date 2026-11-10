@@ -590,7 +590,7 @@ cmd_fan() {
 			else
 				if [ -z "$dir" ]; then echo "fans            none found (no fanN_input under $POMONA_SYS)"; return 0; fi
 				echo "sensors         $dir"
-				echo "cpu temperature ${t:+$((t / 1000)) C}${t:-unknown}"
+				echo "cpu temperature $([ -n "$t" ] && echo "$((t / 1000)) C" || echo unknown)"
 				while read -r n in mn mx man; do
 					[ -n "$n" ] || continue
 					echo "fan $n           $in rpm  (firmware range $mn-$mx)  $([ "$man" = 1 ] && echo "set by Pomona" || echo "set by the firmware")"
