@@ -4,7 +4,7 @@
 #   sudo bash tools/fan-bench.sh [SECONDS_PER_PHASE]      (default 90)
 #
 # Phase A: the firmware sets the fans. Phase B: `pomona fan run` does. Each phase waits for the CPU
-# to cool below 70 C (3 minutes at most), then runs one busy loop per core and samples every 2 s.
+# to cool below 70 C (3 minutes at most), then runs one busy loop per core, or FAN_BENCH_LOAD of them and samples every 2 s.
 # It stops a phase if a CPU sensor reaches 97 C (FAN_BENCH_STOP), and always gives the fans back to the firmware.
 # Writes fan-bench-DATE.csv in the folder you run it from (or in FAN_BENCH_OUT) and prints a summary. Needs root only to write the fan files.
 # SPDX-License-Identifier: GPL-3.0-or-later
@@ -17,7 +17,7 @@ D=${POMONA_FAN_DIR:-$SYS/bus/acpi/devices/APP0001:00}
 [ -r "$D/fan1_input" ] || { echo "no fans found" >&2; exit 1; }
 [ "$(id -u)" = 0 ] || [ -n "${POMONA_FAN_DIR:-}" ] || { echo "run it with sudo" >&2; exit 4; }
 OUT=${FAN_BENCH_OUT:-$PWD}/fan-bench-$(date +%Y%m%d-%H%M%S).csv
-CORES=$(nproc)
+CORES=${FAN_BENCH_LOAD:-$(nproc)}
 PIDS=""
 release() { for f in "$D"/fan*_manual; do echo 0 > "$f" 2>/dev/null; done; }
 stop_all() { [ -n "$PIDS" ] && kill $PIDS 2>/dev/null; PIDS=""; [ -n "${FAND:-}" ] && kill -TERM "$FAND" 2>/dev/null; wait 2>/dev/null; FAND=""; release; }
