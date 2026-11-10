@@ -16,7 +16,7 @@
 #
 #   POMONA_SYS            the sysfs root           (default /sys)
 #   POMONA_FAN_DIR        use this fan directory   (default: look for it)
-#   POMONA_FAN_CURVE      "TEMP:PERCENT ..." in ascending order (default "60:0 70:25 80:55 88:85 94:100")
+#   POMONA_FAN_CURVE      "TEMP:PERCENT ..." in ascending order (default "55:0 62:30 70:45 80:75 88:100")
 #   POMONA_FAN_BUSY       CPU load in percent that raises the floor (default 60), and the floor
 #                         in percent of the range (POMONA_FAN_FLOOR, default 50)
 #   POMONA_PROC           the proc root (default /proc)
@@ -24,7 +24,7 @@
 # shellcheck shell=bash
 
 : "${POMONA_SYS:=/sys}"
-: "${POMONA_FAN_CURVE:=60:0 70:25 80:55 88:85 94:100}"
+: "${POMONA_FAN_CURVE:=55:0 62:30 70:45 80:75 88:100}"
 : "${POMONA_FAN_BUSY:=60}"
 : "${POMONA_FAN_FLOOR:=50}"
 : "${POMONA_PROC:=/proc}"
@@ -126,9 +126,9 @@ fa_step() {
 		min=$(fa_read "$dir/fan${n}_min") || continue
 		max=$(fa_read "$dir/fan${n}_max") || continue
 		want=$(fa_target "$min" "$max" "$t" "$load")
-		# going down by steps of at most 300 rpm per reading, so the speed does not jump
+		# going down by steps of at most 150 rpm per reading, so the speed does not jump
 		cur=$(fa_read "$dir/fan${n}_output") || cur=$want
-		if [ "$want" -lt "$cur" ] && [ $((cur - want)) -gt 300 ]; then want=$((cur - 300)); fi
+		if [ "$want" -lt "$cur" ] && [ $((cur - want)) -gt 150 ]; then want=$((cur - 150)); fi
 		[ "$want" -ge "$min" ] || want=$min
 		[ "$want" -le "$max" ] || want=$max
 		fa_set_manual "$dir" "$n" 1
