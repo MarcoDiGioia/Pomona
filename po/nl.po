@@ -626,3 +626,36 @@ msgstr "Controleren…"
 
 msgid "Close"
 msgstr "Sluiten"
+
+msgid "Does the fix fit this Mac?"
+msgstr "Past de fix bij deze Mac?"
+
+msgid "Reads this Mac and says whether the fix is the right one for it. Nothing is changed."
+msgstr "Leest deze Mac uit en zegt of de fix de juiste is. Er wordt niets gewijzigd."
+
+msgid "Check result"
+msgstr "Resultaat van de controle"
+
+msgid "Not for this Mac"
+msgstr "Niet voor deze Mac"
+
+msgid "Not needed"
+msgstr "Niet nodig"
+
+msgid "May help"
+msgstr "Kan helpen"
+
+msgid "Works"
+msgstr "Werkt"
+
+msgid "Not working"
+msgstr "Werkt niet"
+
+msgid "Cannot tell"
+msgstr "Kan het niet zeggen"
+
+msgid "Fix applied"
+msgstr "Fix toegepast"
+
+msgid "Fix not applied"
+msgstr "Fix niet toegepast"

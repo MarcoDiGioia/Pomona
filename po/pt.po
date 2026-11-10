@@ -626,3 +626,36 @@ msgstr "Verificar…"
 
 msgid "Close"
 msgstr "Fechar"
+
+msgid "Does the fix fit this Mac?"
+msgstr "A correção serve para este Mac?"
+
+msgid "Reads this Mac and says whether the fix is the right one for it. Nothing is changed."
+msgstr "Lê este Mac e diz se a correção é a certa. Não altera nada."
+
+msgid "Check result"
+msgstr "Resultado da verificação"
+
+msgid "Not for this Mac"
+msgstr "Não é para este Mac"
+
+msgid "Not needed"
+msgstr "Não é preciso"
+
+msgid "May help"
+msgstr "Pode ajudar"
+
+msgid "Works"
+msgstr "Funciona"
+
+msgid "Not working"
+msgstr "Não funciona"
+
+msgid "Cannot tell"
+msgstr "Não se consegue saber"
+
+msgid "Fix applied"
+msgstr "Correção aplicada"
+
+msgid "Fix not applied"
+msgstr "Correção não aplicada"

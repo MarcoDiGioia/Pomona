@@ -581,6 +581,7 @@ class Window(Adw.ApplicationWindow):
         self.add_sleep_group(page, installed)
 
         wrong = Adw.PreferencesGroup()
+        wrong.add(self.verify_row(["verify"]))
         wrong.add(self.diagnose_row("t1"))
         self.add_group(page, wrong)
 
@@ -746,6 +747,7 @@ class Window(Adw.ApplicationWindow):
         cert.connect("clicked", lambda *_a: self.certify(["wifi", "certify"]))
         cert_row.add_suffix(cert)
         tools.add(cert_row)
+        tools.add(self.verify_row(["wifi", "verify"]))
         tools.add(self.diagnose_row("wifi"))
         self.add_group(page, tools)
         self.set_hardware(page, hardware)
@@ -855,6 +857,7 @@ class Window(Adw.ApplicationWindow):
         cert.connect("clicked", lambda *_a: self.certify(["audio", "certify"]))
         cert_row.add_suffix(cert)
         tools.add(cert_row)
+        tools.add(self.verify_row(["audio", "verify"]))
         tools.add(self.diagnose_row("audio"))
         self.add_group(page, tools)
         self.set_hardware(page, hardware)
@@ -1178,9 +1181,39 @@ class Window(Adw.ApplicationWindow):
                       _("Turn off"), (lambda: self.admin(["sleep-disable"], "sleep-disable")) if installed else None)
         else:
             self.step(group, _("Sleep"), True, _("No failed wake-up found"))
+        group.add(self.verify_row(["sleep", "verify"]))
         self.add_group(page, group)
 
     # -------------------------------------------------------------- diagnostics
+
+    def verify_row(self, command):
+        """A row that runs `pomona MODULE verify --json` (read-only) and shows whether the fix fits this Mac."""
+        row = Adw.ActionRow(title=_("Does the fix fit this Mac?"),
+                            subtitle=_("Reads this Mac and says whether the fix is the right one for it. Nothing is changed."))
+        b = Gtk.Button(label=_("Check…"), valign=Gtk.Align.CENTER)
+        b.connect("clicked", lambda *_a: self.verify(command))
+        row.add_suffix(b)
+        return row
+
+    def verify(self, command):
+        labels = {"not-applicable": _("Not for this Mac"), "not-needed": _("Not needed"), "may-help": _("May help"),
+                  "effective": _("Works"), "not-effective": _("Not working"), "restart": _("Restart needed"),
+                  "inconclusive": _("Cannot tell")}
+
+        def done(ok, out):
+            try:
+                v = json.loads(out)
+            except ValueError:
+                self.text_dialog(_("Check result"), _("Failed"), [(_("Close"), None, True)])
+                return
+            lines = [labels.get(v.get("verdict"), v.get("verdict") or ""), "", v.get("text") or ""]
+            if v.get("cause_text"):
+                lines.append(v["cause_text"])
+            if v.get("fix") in ("applied", "not-applied"):
+                lines.append(_("Fix applied") if v["fix"] == "applied" else _("Fix not applied"))
+            self.text_dialog(_("Check result"), "\n".join(lines), [(_("Close"), None, True)])
+
+        run_async(pomona_cmd() + list(command) + ["--json"], done)
 
     def diagnose_row(self, module):
         row = Adw.ActionRow(title=_("Is Pomona wrong?"),

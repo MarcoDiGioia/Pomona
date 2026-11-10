@@ -626,3 +626,36 @@ msgstr ""
 
 msgid "Close"
 msgstr ""
+
+msgid "Does the fix fit this Mac?"
+msgstr ""
+
+msgid "Reads this Mac and says whether the fix is the right one for it. Nothing is changed."
+msgstr ""
+
+msgid "Check result"
+msgstr ""
+
+msgid "Not for this Mac"
+msgstr ""
+
+msgid "Not needed"
+msgstr ""
+
+msgid "May help"
+msgstr ""
+
+msgid "Works"
+msgstr ""
+
+msgid "Not working"
+msgstr ""
+
+msgid "Cannot tell"
+msgstr ""
+
+msgid "Fix applied"
+msgstr ""
+
+msgid "Fix not applied"
+msgstr ""

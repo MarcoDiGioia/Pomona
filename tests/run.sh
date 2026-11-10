@@ -6,7 +6,7 @@ ROOT=$(cd -- "$HERE/.." && pwd -P)
 rc=0
 
 echo "== shell syntax"
-bash -n "$ROOT/tests/test_history.sh" "$ROOT/bin/pomona" "$ROOT/lib/pomona.sh" "$ROOT/lib/wifi.sh" "$ROOT/lib/audio.sh" "$ROOT/lib/sleep.sh" "$ROOT/lib/fan.sh" "$ROOT/lib/history.sh" "$ROOT/data/audio/dkms/pomona-cs8409-prepare" "$ROOT/install.sh" "$ROOT/uninstall.sh" "$ROOT/libexec/pomona-admin" || rc=1
+bash -n "$ROOT/tests/test_history.sh" "$ROOT/bin/pomona" "$ROOT/lib/pomona.sh" "$ROOT/lib/wifi.sh" "$ROOT/lib/audio.sh" "$ROOT/lib/sleep.sh" "$ROOT/lib/fan.sh" "$ROOT/lib/verify.sh" "$ROOT/lib/history.sh" "$ROOT/data/audio/dkms/pomona-cs8409-prepare" "$ROOT/install.sh" "$ROOT/uninstall.sh" "$ROOT/libexec/pomona-admin" || rc=1
 
 echo "== lib/pomona.sh and bin/pomona"
 bash "$HERE/test_lib.sh" || rc=1
@@ -20,6 +20,10 @@ bash "$HERE/test_audio.sh" || rc=1
 echo "== lib/sleep.sh and pomona sleep"
 bash "$HERE/test_sleep.sh" || rc=1
 
+echo "== the app covers every command"
+bash "$HERE/test_parity.sh" || rc=1
+echo "== lib/verify.sh and pomona verify"
+bash "$HERE/test_verify.sh" || rc=1
 echo "== lib/fan.sh and pomona fan"
 bash "$HERE/test_fan.sh" || rc=1
 

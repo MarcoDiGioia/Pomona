@@ -4,12 +4,13 @@
 #
 #   pomona start      boot the T1 and bind its devices (what the service runs at boot)
 #   pomona stop       release the T1 before power-off (what the service runs at shutdown)
+#   pomona verify     is the T1 fix right for this Mac? (read-only, --json for the GUI)
 #   pomona status     one screen with the state of every piece (--json for the GUI)
 #   pomona certify    run the checks and write a compatibility certificate
 #   pomona share      open your latest certificate as a pre-filled GitHub report
-#   pomona wifi       Broadcom Wi-Fi: status | fix | undo | certify  (pomona wifi help)
-#   pomona audio      Cirrus Logic sound: status | fix | undo | certify  (pomona audio help)
-#   pomona sleep      suspend: status | disable | enable  (for Macs that do not wake up)
+#   pomona wifi       Broadcom Wi-Fi: status | verify | fix | undo | certify  (pomona wifi help)
+#   pomona audio      Cirrus Logic sound: status | verify | fix | undo | certify  (pomona audio help)
+#   pomona sleep      suspend: status | verify | disable | enable  (for Macs that do not wake up)
 #   pomona fan        fans: status | fix | undo  (pomona fan help)
 #   pomona diagnose   Pomona got it wrong? MODULE (t1|wifi|audio) works|broken: a report to share
 #   pomona baseline   note how the Mac is before Pomona changes anything (the installer does it)
@@ -376,6 +377,7 @@ cmd_wifi() {
 		fix) shift; hist_run wifi fix wf_fix "$@";;
 		undo) shift; hist_run wifi undo wf_undo "$@";;
 		certify) shift; cmd_wifi_certify "$@";;
+		verify) shift; cmd_verify wifi "$@";;
 		help|-h|--help) wifi_help;;
 		*) et1_err "unknown wifi command $1 (try: pomona wifi help)"; return 2;;
 	esac
@@ -535,6 +537,7 @@ cmd_audio() {
 		fix) shift; hist_run audio fix au_fix "$@";;
 		undo) shift; hist_run audio undo au_undo "$@";;
 		certify) shift; cmd_audio_certify "$@";;
+		verify) shift; cmd_verify audio "$@";;
 		help|-h|--help) audio_help;;
 		*) et1_err "unknown audio command $1 (try: pomona audio help)"; return 2;;
 	esac
@@ -554,7 +557,8 @@ cmd_sleep() {
 			fi;;
 		disable) sl_disable;;
 		enable) sl_enable;;
-		*) et1_err "usage: pomona sleep status | sudo pomona sleep disable | sudo pomona sleep enable"; return 2;;
+		verify) shift; cmd_verify sleep "$@";;
+		*) et1_err "usage: pomona sleep status | pomona sleep verify | sudo pomona sleep disable | sudo pomona sleep enable"; return 2;;
 	esac
 }
 
@@ -692,6 +696,7 @@ case "${1:-status}" in
 	stop) et1_stop;;
 	status) shift; cmd_status "$@";;
 	certify) shift; cmd_certify "$@";;
+	verify) shift; cmd_verify t1 "$@";;
 	share) shift; cmd_share "$@";;
 	wifi) shift; cmd_wifi "$@";;
 	audio) shift; cmd_audio "$@";;

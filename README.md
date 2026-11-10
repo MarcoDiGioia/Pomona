@@ -104,6 +104,7 @@ From the terminal:
 | `pomona share` | opens your certificate as a pre-filled GitHub report, to add your Mac to the table |
 | `pomona sleep status` | shows whether suspend is on and how many earlier boots ended while the Mac was asleep |
 | `sudo pomona sleep disable` | turns suspend off on a Mac that does not wake up from it (`enable` turns it back on) |
+| `pomona verify`, `pomona wifi verify`, `pomona audio verify`, `pomona sleep verify` | read-only: is the fix the right one for your Mac, and does it work? |
 | `pomona fan status` | shows the fans, their speed and the CPU temperature |
 | `sudo pomona fan verify` | checks, with a two-minute load test, whether the fan fix helps your Mac |
 | `sudo pomona fan fix` | starts the service that sets the fan speed from the CPU temperature (`undo` gives the fans back to the firmware) |
