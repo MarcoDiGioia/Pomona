@@ -87,6 +87,13 @@ wf_operstate() { wf_attr operstate; }
 wf_mac() { wf_attr address; }
 wf_connected() { [ "$(wf_operstate)" = up ]; }
 
+# wf_ip -> the IPv4 address of the interface, empty without one
+wf_ip() {
+	local i
+	i=$(wf_iface); [ -n "$i" ] || return 0
+	ip -4 -o addr show dev "$i" 2>/dev/null | awk '{print $4; exit}'
+}
+
 # ------------------------------------------------------------------ any Wi-Fi card
 
 # wf_any_iface -> name of the first wireless network interface, whatever the card

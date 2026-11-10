@@ -56,8 +56,8 @@ vf_wifi() {
 		vf_set unknown applied restart "restart the computer, then check again" "$why"; return
 	fi
 	if [ "$applied" = applied ]; then
-		if wf_iface_present && wf_connected; then
-			vf_set fixed applied effective "the card is connected: the fix works on this Mac"
+		if wf_iface_present && wf_connected && [ -n "$(wf_ip)" ]; then
+			vf_set fixed applied effective "the card is connected and has an address: the fix works on this Mac"
 		elif wf_iface_present; then
 			vf_set unknown applied inconclusive "the fix is in place and the card is there, but it is not connected: connect to a network and check again"
 		else
@@ -67,7 +67,7 @@ vf_wifi() {
 	fi
 	if [ -n "$why" ]; then
 		vf_set present not-applied may-help "the fix is likely to help this Mac" "$why"
-	elif wf_iface_present && wf_connected; then
+	elif wf_iface_present && wf_connected && [ -n "$(wf_ip)" ]; then
 		vf_set absent not-applied not-needed "the Wi-Fi works without the fix: leave it off"
 	else
 		vf_set unknown not-applied inconclusive "no sign of the problem the fix cures, but the card is not connected"
@@ -87,12 +87,19 @@ vf_audio() {
 	state=$(au_state)
 	au_package_added && applied=applied
 	case "$state" in
-		ok) vf_set fixed applied effective "the Mac sound driver is in use: the fix works on this Mac";;
+		ok)
+			if [ "$(au_playback)" -ge 1 ] 2>/dev/null; then
+				vf_set fixed applied effective "the Mac sound driver is in use and the sound system lists an output: the fix works on this Mac"
+			else
+				vf_set unknown applied not-effective "the Mac driver is in use but the sound system lists no output: the cause is elsewhere (muted, no sound server)"
+			fi;;
 		restart) vf_set unknown applied restart "restart the computer to load the driver, then check again";;
 		failed) vf_set unknown applied not-effective "the driver is installed but could not be built for this kernel: run the fix again with a connection";;
 		foreign) vf_set unknown "$applied" inconclusive "another copy of the driver is installed: see docs/audio.md";;
 		*)
-			if au_active; then
+			if au_active && [ "$(au_playback)" -lt 1 ] 2>/dev/null; then
+				vf_set unknown "$applied" not-effective "the Mac driver is in use but the sound system lists no output: the cause is elsewhere (muted, no sound server)"
+			elif au_active; then
 				vf_set absent not-applied not-needed "the Mac sound driver is already in use: leave it alone"
 			else
 				vf_set present not-applied may-help "the fix is likely to help this Mac" "the kernel's own driver for this chip is loaded and does not switch on the Mac's amplifiers"
@@ -109,8 +116,10 @@ vf_sleep() {
 		vf_set unknown applied effective "suspend is off, so the Mac cannot hang on wake-up (earlier failed wake-ups: $failed)"
 	elif [ "$failed" -gt 0 ] 2>/dev/null; then
 		vf_set present not-applied may-help "the fix is likely to help this Mac" "$failed earlier boot(s) ended while the Mac was asleep"
+	elif [ "$(sl_good_resumes)" -gt 0 ] 2>/dev/null; then
+		vf_set absent not-applied not-needed "the Mac woke up from sleep on $(sl_good_resumes) earlier boot(s) and never hung: leave suspend on"
 	else
-		vf_set absent not-applied not-needed "no failed wake-up was recorded: suspend may work here, leave it on"
+		vf_set unknown not-applied inconclusive "the journal has no earlier sleep: nothing shows whether this Mac wakes up. Use suspend once, switch off if it hangs, and check again"
 	fi
 }
 
@@ -144,7 +153,8 @@ cmd_verify() {
 	local module=${1:-} title
 	case "$module" in
 		wifi) title="Wi-Fi check"; vf_wifi;;
-		audio) title="Audio check"; vf_audio;;
+		audio) title="Audio check"; vf_audio
+			[ "${2:-}" = --tone ] && au_tone;;
 		sleep) title="Sleep check"; vf_sleep;;
 		t1) title="T1 check"; vf_t1;;
 		*) et1_err "usage: pomona wifi|audio|sleep|t1 verify [--json]"; return 2;;
