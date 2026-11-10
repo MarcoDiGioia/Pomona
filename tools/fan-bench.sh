@@ -5,7 +5,7 @@
 #
 # Phase A: the firmware sets the fans. Phase B: `pomona fan run` does. Each phase waits for the CPU
 # to cool below 70 C (3 minutes at most), then runs one busy loop per core, or FAN_BENCH_LOAD of them and samples every 2 s.
-# It stops a phase if a CPU sensor reaches 97 C (FAN_BENCH_STOP), and always gives the fans back to the firmware.
+# It stops a phase after 3 readings in a row at 97 C (FAN_BENCH_STOP), or at once at 100 C (FAN_BENCH_HARD), and always gives the fans back to the firmware.
 # Writes fan-bench-DATE.csv in the folder you run it from (or in FAN_BENCH_OUT) and prints a summary. Needs root only to write the fan files.
 # SPDX-License-Identifier: GPL-3.0-or-later
 set -u
@@ -41,7 +41,7 @@ rpm() { cat "$D/fan$1_input" 2>/dev/null || echo 0; }
 echo "phase,seconds,cpu_c,fan1_rpm,fan2_rpm,fan1_manual,fan2_manual" > "$OUT" || { echo "cannot write $OUT" >&2; exit 1; }
 [ -n "${SUDO_USER:-}" ] && chown "$SUDO_USER" "$OUT" 2>/dev/null
 phase() { # phase NAME
-	local name=$1 t0 t s
+	local name=$1 t0 t s hot=0
 	release
 	echo "[$name] waiting for the CPU to cool below 70 C"
 	for _ in $(seq 1 90); do [ "$(cpu_t)" -lt 70 ] && break; sleep 2; done
@@ -52,7 +52,10 @@ phase() { # phase NAME
 	while [ $((SECONDS - t0)) -lt "$SECS" ]; do
 		t=$(cpu_t); s=$((SECONDS - t0))
 		echo "$name,$s,$t,$(rpm 1),$(rpm 2),$(cat "$D/fan1_manual" 2>/dev/null),$(cat "$D/fan2_manual" 2>/dev/null)" >> "$OUT"
-		[ "$t" -ge "${FAN_BENCH_STOP:-97}" ] && { echo "[$name] $t C after $s s: stopped"; break; }
+		# the first second of a full load jumps the sensor to ~98 C: stop on 3 readings in a row (6 s)
+		# at FAN_BENCH_STOP, or at once at FAN_BENCH_HARD (default 100 C)
+		if [ "$t" -ge "${FAN_BENCH_STOP:-97}" ]; then hot=$((hot + 1)); else hot=0; fi
+		if [ "$hot" -ge 3 ] || [ "$t" -ge "${FAN_BENCH_HARD:-100}" ]; then echo "[$name] $t C after $s s: stopped"; break; fi
 		sleep 2
 	done
 	stop_all

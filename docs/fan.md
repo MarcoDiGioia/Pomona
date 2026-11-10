@@ -33,7 +33,7 @@ The limits can be changed for a test with `POMONA_FAN_LOW` and `POMONA_FAN_HIGH`
 
 ## Comparing the two
 
-`sudo bash tools/fan-bench.sh` runs the same load twice, with the firmware and with `pomona fan run` (90 seconds each by default, one busy loop per core, or `FAN_BENCH_LOAD` of them: `sudo FAN_BENCH_LOAD=2 bash tools/fan-bench.sh`), and prints the average and maximum CPU temperature and fan speed of each. A phase stops by itself at 97 °C.
+`sudo bash tools/fan-bench.sh` runs the same load twice, with the firmware and with `pomona fan run` (90 seconds each by default, one busy loop per core, or `FAN_BENCH_LOAD` of them: `sudo FAN_BENCH_LOAD=2 bash tools/fan-bench.sh`), and prints the average and maximum CPU temperature and fan speed of each. A phase stops by itself after three readings in a row at 97 °C (`FAN_BENCH_STOP`), or at once at 100 °C (`FAN_BENCH_HARD`): the first second of a full load takes the sensor to about 98 °C on its own.
 
 ## What it does not do
 
