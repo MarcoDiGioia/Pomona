@@ -7,21 +7,27 @@
 # /sys/bus/acpi/devices/APP0001:00 on the 7.0 kernel of Ubuntu 26.04, where the hwmon device has no
 # "name" either, so tools that look for the name "applesmc" (lm-sensors, mbpfan) find nothing.
 #
-# `pomona fan fix` starts pomona-fand.service, which runs `pomona fan run`: every few seconds it
-# reads the hottest CPU sensor and sets the speed of every fan on a straight line from the
-# firmware's own minimum (at FAN_LOW degrees) to its maximum (at FAN_HIGH degrees). It never goes
-# below the firmware minimum, and when it stops, for any reason, it gives the fans back to the
-# firmware (fanN_manual = 0). `undo` stops it.
+# `pomona fan fix` starts pomona-fand.service, which runs `pomona fan run`: every two seconds it
+# reads the hottest CPU or GPU die sensor and sets every fan to a share of its own firmware range
+# (minimum..maximum) given by a curve of points TEMPERATURE:PERCENT, with a floor while the CPU is
+# busy (the die heats a second before the heat sink does, so the fans should already be turning).
+# It never goes below the firmware minimum, comes down slowly, and when it stops, for any reason,
+# it gives the fans back to the firmware (fanN_manual = 0). `undo` stops it.
 #
 #   POMONA_SYS            the sysfs root           (default /sys)
 #   POMONA_FAN_DIR        use this fan directory   (default: look for it)
-#   POMONA_FAN_LOW/HIGH   degrees Celsius, defaults 60 and 85
+#   POMONA_FAN_CURVE      "TEMP:PERCENT ..." in ascending order (default "60:0 70:25 80:55 88:85 94:100")
+#   POMONA_FAN_BUSY       CPU load in percent that raises the floor (default 60), and the floor
+#                         in percent of the range (POMONA_FAN_FLOOR, default 50)
+#   POMONA_PROC           the proc root (default /proc)
 #   POMONA_FAN_INTERVAL   seconds between readings (default 2)
 # shellcheck shell=bash
 
 : "${POMONA_SYS:=/sys}"
-: "${POMONA_FAN_LOW:=60}"
-: "${POMONA_FAN_HIGH:=85}"
+: "${POMONA_FAN_CURVE:=60:0 70:25 80:55 88:85 94:100}"
+: "${POMONA_FAN_BUSY:=60}"
+: "${POMONA_FAN_FLOOR:=50}"
+: "${POMONA_PROC:=/proc}"
 : "${POMONA_FAN_INTERVAL:=2}"
 FA_SERVICE=pomona-fand.service
 
@@ -45,16 +51,17 @@ fa_fans() {
 
 fa_read() { local v; v=$(cat "$1" 2>/dev/null) && [[ "$v" =~ ^[0-9]+$ ]] && echo "$v"; }
 
-# fa_cpu_temp DIR -> hottest CPU temperature in millidegrees: the applesmc sensors labelled TC*,
-# or else the Intel package sensor of the thermal zones; nothing when there is none
+# fa_cpu_temp DIR -> hottest CPU or GPU die temperature in millidegrees: the applesmc sensors
+# labelled TC* (CPU) and TG0D/TG0F (GPU die), or else the Intel package sensor of the thermal
+# zones; nothing when there is none
 fa_cpu_temp() {
 	local dir=$1 f l v best="" z
 	for f in "$dir"/temp[0-9]*_input; do
 		[ -e "$f" ] || continue
 		l=$(cat "${f%_input}_label" 2>/dev/null)
-		case "$l" in TC*) ;; *) continue;; esac
+		case "$l" in TC*|TG0D|TG0F) ;; *) continue;; esac
 		v=$(fa_read "$f") || continue
-		[ -z "$best" ] || [ "$v" -gt "$best" ] && best=$v
+		{ [ -z "$best" ] || [ "$v" -gt "$best" ]; } && best=$v
 	done
 	if [ -z "$best" ]; then
 		for z in "$POMONA_SYS"/class/thermal/thermal_zone*; do
@@ -64,12 +71,38 @@ fa_cpu_temp() {
 	[ -n "$best" ] && echo "$best"
 }
 
-# fa_target MIN MAX TEMP_MILLIDEGREES -> the speed for that temperature, in rpm
+# fa_pct TEMP_MILLIDEGREES -> 0..100: the share of the fan's range for that temperature, on the
+# curve of points (straight lines between them, flat before the first and after the last)
+fa_pct() {
+	local t=$1 pt pt_t pt_p prev_t="" prev_p=""
+	for pt in $POMONA_FAN_CURVE; do
+		pt_t=$((${pt%%:*} * 1000)); pt_p=${pt##*:}
+		if [ "$t" -le "$pt_t" ]; then
+			if [ -z "$prev_t" ]; then echo "$pt_p"; else echo $((prev_p + (pt_p - prev_p) * (t - prev_t) / (pt_t - prev_t))); fi
+			return
+		fi
+		prev_t=$pt_t; prev_p=$pt_p
+	done
+	echo "${prev_p:-100}"
+}
+
+# fa_load: CPU load in percent since the last call (0 on the first call)
+FA_LAST_TOTAL="" FA_LAST_IDLE=""
+fa_load() {
+	local cpu u n s i w x y z _ total idle dt di
+	read -r cpu u n s i w x y z _ < "${POMONA_PROC:-/proc}/stat" 2>/dev/null || { echo 0; return; }
+	total=$((u + n + s + i + w + x + y + z)); idle=$((i + w))
+	if [ -z "$FA_LAST_TOTAL" ] || [ "$total" -le "$FA_LAST_TOTAL" ]; then echo 0
+	else dt=$((total - FA_LAST_TOTAL)); di=$((idle - FA_LAST_IDLE)); echo $(( (dt - di) * 100 / dt )); fi
+	FA_LAST_TOTAL=$total; FA_LAST_IDLE=$idle
+}
+
+# fa_target MIN MAX TEMP_MILLIDEGREES [LOAD_PERCENT] -> the speed in rpm
 fa_target() {
-	local min=$1 max=$2 t=$3 lo=$((POMONA_FAN_LOW * 1000)) hi=$((POMONA_FAN_HIGH * 1000))
-	if [ "$t" -le "$lo" ]; then echo "$min"
-	elif [ "$t" -ge "$hi" ]; then echo "$max"
-	else echo $((min + (max - min) * (t - lo) / (hi - lo))); fi
+	local min=$1 max=$2 t=$3 load=${4:-0} pct
+	pct=$(fa_pct "$t")
+	[ "$load" -ge "$POMONA_FAN_BUSY" ] && [ "$pct" -lt "$POMONA_FAN_FLOOR" ] && pct=$POMONA_FAN_FLOOR
+	echo $((min + (max - min) * pct / 100))
 }
 
 # fa_set_manual DIR N 0|1
@@ -85,13 +118,14 @@ fa_release() {
 # fa_step DIR: one reading, one adjustment. Returns 1 when it cannot read the temperature (the fans
 # are then left to the firmware).
 fa_step() {
-	local dir=$1 t n min max cur want
+	local dir=$1 t n min max cur want load
 	t=$(fa_cpu_temp "$dir") || t=""
+	load=$(fa_load)
 	if [ -z "$t" ]; then fa_release "$dir"; return 1; fi
 	for n in $(fa_fans "$dir"); do
 		min=$(fa_read "$dir/fan${n}_min") || continue
 		max=$(fa_read "$dir/fan${n}_max") || continue
-		want=$(fa_target "$min" "$max" "$t")
+		want=$(fa_target "$min" "$max" "$t" "$load")
 		# going down by steps of at most 300 rpm per reading, so the speed does not jump
 		cur=$(fa_read "$dir/fan${n}_output") || cur=$want
 		if [ "$want" -lt "$cur" ] && [ $((cur - want)) -gt 300 ]; then want=$((cur - 300)); fi
@@ -107,7 +141,7 @@ fa_run() {
 	[ "$(id -u)" = 0 ] || [ -n "${POMONA_FAN_DIR:-}" ] || { et1_err "run it with sudo"; return 4; }
 	FA_RUN_DIR=$(fa_dir) || { et1_err "no fan found: nothing to control"; return 1; }
 	trap 'fa_release "$FA_RUN_DIR"; exit 0' TERM INT HUP
-	et1_log "controlling the fans in $FA_RUN_DIR: minimum at ${POMONA_FAN_LOW} C, maximum at ${POMONA_FAN_HIGH} C"
+	et1_log "controlling the fans in $FA_RUN_DIR: curve $POMONA_FAN_CURVE (temperature:percent of the range)"
 	while :; do
 		fa_step "$FA_RUN_DIR" || et1_err "no CPU temperature: the fans are left to the firmware"
 		[ -n "${POMONA_FAN_ONCE:-}" ] && break
@@ -136,7 +170,7 @@ fa_fix() {
 	fa_dir >/dev/null || { et1_err "no fan found on this Mac: nothing to do"; return 1; }
 	systemctl cat "$FA_SERVICE" >/dev/null 2>&1 || { et1_err "$FA_SERVICE is not installed"; return 1; }
 	systemctl enable --now "$FA_SERVICE" || { et1_err "could not start $FA_SERVICE"; return 1; }
-	et1_log "fan control on: the fans follow the CPU temperature (minimum at ${POMONA_FAN_LOW} C, maximum at ${POMONA_FAN_HIGH} C)"
+	et1_log "fan control on: the fans follow the CPU temperature (curve $POMONA_FAN_CURVE)"
 	et1_log "undo with: sudo pomona fan undo"
 }
 

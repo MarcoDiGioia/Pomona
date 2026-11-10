@@ -28,9 +28,19 @@ sudo pomona fan fix        # starts pomona-fand.service
 sudo pomona fan undo       # stops it: the firmware sets the speed again
 ```
 
-Every two seconds the service reads the hottest CPU sensor and sets each fan on a straight line: the firmware's own minimum up to 60 °C, the maximum from 85 °C, in between proportionally. It does not go below the firmware minimum, it comes down by at most 300 rpm per reading so the speed does not jump, and when it cannot read the temperature, or stops for any reason (`ExecStopPost`), it writes `fanN_manual = 0`, which gives the fans back to the firmware.
+Every two seconds the service reads the hottest CPU or GPU die sensor (`TC…` and `TG0D`/`TG0F`) and sets each fan to a share of its own firmware range, on a curve of points that Pomona joins with straight lines:
 
-The limits can be changed for a test with `POMONA_FAN_LOW` and `POMONA_FAN_HIGH` (degrees Celsius) in the environment of the service.
+| Temperature | Share of the range (rpm of fan 1 on a MacBookPro14,3) |
+| --- | --- |
+| up to 60 °C | 0 % (2,160, the firmware minimum) |
+| 70 °C | 25 % |
+| 80 °C | 55 % (about 4,300) |
+| 88 °C | 85 % |
+| 94 °C and above | 100 % (5,927) |
+
+While the CPU is busy (60 % or more since the last reading) the fans are kept at 50 % or more, because the die heats a second before the heat sink does and the fans should already be turning. It never goes below the firmware minimum, it comes down by at most 300 rpm per reading so the speed does not jump, and when it cannot read the temperature, or stops for any reason (`ExecStopPost`), it writes `fanN_manual = 0`, which gives the fans back to the firmware.
+
+For a test the curve can be changed with `POMONA_FAN_CURVE="60:0 70:25 80:55 88:85 94:100"` (temperature in °C, percent), and the busy limit and the floor with `POMONA_FAN_BUSY` and `POMONA_FAN_FLOOR`, in the environment of the service.
 
 ## Comparing the two
 
