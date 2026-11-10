@@ -7,7 +7,7 @@
 # /sys/bus/acpi/devices/APP0001:00 on the 7.0 kernel of Ubuntu 26.04, where the hwmon device has no
 # "name" either, so tools that look for the name "applesmc" (lm-sensors, mbpfan) find nothing.
 #
-# `pomona fan fix` starts pomona-fand.service, which runs `pomona fan run`: every two seconds it
+# `pomona fan fix` starts pomona-fand.service, which runs `pomona fan run`: every second it
 # reads the hottest CPU or GPU die sensor and sets every fan to a share of its own firmware range
 # (minimum..maximum) given by a curve of points TEMPERATURE:PERCENT, with a floor while the CPU is
 # busy (the die heats a second before the heat sink does, so the fans should already be turning).
@@ -16,19 +16,23 @@
 #
 #   POMONA_SYS            the sysfs root           (default /sys)
 #   POMONA_FAN_DIR        use this fan directory   (default: look for it)
-#   POMONA_FAN_CURVE      "TEMP:PERCENT ..." in ascending order (default "55:0 62:30 70:45 80:75 88:100")
-#   POMONA_FAN_BUSY       CPU load in percent that raises the floor (default 60), and the floor
+#   POMONA_FAN_CURVE      "TEMP:PERCENT ..." in ascending order (default "67:0 72:25 78:50 84:80 90:100")
+#   POMONA_FAN_BUSY       CPU load in percent that raises the floor (default 40), and the floor
 #                         in percent of the range (POMONA_FAN_FLOOR, default 50)
+#   POMONA_FAN_FLOOR_RPM  from POMONA_FAN_FLOOR_TEMP degrees up (until 2 degrees below it) no fan
+#   POMONA_FAN_FLOOR_TEMP goes under this speed (defaults 2600 rpm and 67 C)
 #   POMONA_PROC           the proc root (default /proc)
-#   POMONA_FAN_INTERVAL   seconds between readings (default 2)
+#   POMONA_FAN_INTERVAL   seconds between readings (default 1)
 # shellcheck shell=bash
 
 : "${POMONA_SYS:=/sys}"
-: "${POMONA_FAN_CURVE:=55:0 62:30 70:45 80:75 88:100}"
-: "${POMONA_FAN_BUSY:=60}"
+: "${POMONA_FAN_CURVE:=67:0 72:25 78:50 84:80 90:100}"
+: "${POMONA_FAN_BUSY:=40}"
 : "${POMONA_FAN_FLOOR:=50}"
+: "${POMONA_FAN_FLOOR_RPM:=2600}"
+: "${POMONA_FAN_FLOOR_TEMP:=67}"
 : "${POMONA_PROC:=/proc}"
-: "${POMONA_FAN_INTERVAL:=2}"
+: "${POMONA_FAN_INTERVAL:=1}"
 FA_SERVICE=pomona-fand.service
 
 # fa_dir -> the directory that holds fan1_input, or nothing
@@ -97,12 +101,24 @@ fa_load() {
 	FA_LAST_TOTAL=$total; FA_LAST_IDLE=$idle
 }
 
-# fa_target MIN MAX TEMP_MILLIDEGREES [LOAD_PERCENT] -> the speed in rpm
+# fa_floor_update TEMP_MILLIDEGREES: sets FA_FLOOR_ON while the rpm floor applies: from
+# POMONA_FAN_FLOOR_TEMP up, and until the temperature is 2 degrees below it (so it does not switch
+# on and off). Call it in the loop, not in a subshell: it keeps its state in the variable.
+FA_FLOOR_ON=""
+fa_floor_update() {
+	local on=$((POMONA_FAN_FLOOR_TEMP * 1000))
+	if [ "$1" -ge "$on" ]; then FA_FLOOR_ON=1; elif [ "$1" -lt $((on - 2000)) ]; then FA_FLOOR_ON=""; fi
+}
+
+# fa_target MIN MAX TEMP_MILLIDEGREES [LOAD_PERCENT] -> the speed in rpm (after fa_floor_update)
 fa_target() {
-	local min=$1 max=$2 t=$3 load=${4:-0} pct
+	local min=$1 max=$2 t=$3 load=${4:-0} pct rpm
 	pct=$(fa_pct "$t")
 	[ "$load" -ge "$POMONA_FAN_BUSY" ] && [ "$pct" -lt "$POMONA_FAN_FLOOR" ] && pct=$POMONA_FAN_FLOOR
-	echo $((min + (max - min) * pct / 100))
+	rpm=$((min + (max - min) * pct / 100))
+	if [ -n "$FA_FLOOR_ON" ] && [ "$rpm" -lt "$POMONA_FAN_FLOOR_RPM" ]; then rpm=$POMONA_FAN_FLOOR_RPM; fi
+	[ "$rpm" -le "$max" ] || rpm=$max
+	echo "$rpm"
 }
 
 # fa_set_manual DIR N 0|1
@@ -121,6 +137,7 @@ fa_step() {
 	local dir=$1 t n min max cur want load
 	t=$(fa_cpu_temp "$dir") || t=""
 	load=$(fa_load)
+	[ -n "$t" ] && fa_floor_update "$t"
 	if [ -z "$t" ]; then fa_release "$dir"; return 1; fi
 	for n in $(fa_fans "$dir"); do
 		min=$(fa_read "$dir/fan${n}_min") || continue

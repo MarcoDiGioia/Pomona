@@ -28,19 +28,21 @@ sudo pomona fan fix        # starts pomona-fand.service
 sudo pomona fan undo       # stops it: the firmware sets the speed again
 ```
 
-Every two seconds the service reads the hottest CPU or GPU die sensor (`TC…` and `TG0D`/`TG0F`) and sets each fan to a share of its own firmware range, on a curve of points that Pomona joins with straight lines:
+Every second the service reads the hottest CPU or GPU die sensor (`TC…` and `TG0D`/`TG0F`) and sets each fan to a share of its own firmware range, on a curve of points that Pomona joins with straight lines:
 
 | Temperature | Share of the range (rpm of fan 1 on a MacBookPro14,3) |
 | --- | --- |
-| up to 55 °C | 0 % (2,160, the firmware minimum) |
-| 62 °C | 30 % (about 3,300) |
-| 70 °C | 45 % (about 3,900) |
-| 80 °C | 75 % (about 5,000) |
-| 88 °C and above | 100 % (5,927) |
+| up to 67 °C | 0 % (2,160, the firmware minimum) |
+| 72 °C | 25 % (about 3,100) |
+| 78 °C | 50 % (about 4,000) |
+| 84 °C | 80 % (about 5,200) |
+| 90 °C and above | 100 % (5,927) |
 
-While the CPU is busy (60 % or more since the last reading) the fans are kept at 50 % or more, because the die heats a second before the heat sink does and the fans should already be turning. It never goes below the firmware minimum, it comes down by at most 150 rpm per reading so the speed does not jump, and when it cannot read the temperature, or stops for any reason (`ExecStopPost`), it writes `fanN_manual = 0`, which gives the fans back to the firmware.
+From 67 °C up no fan goes under 2,600 rpm (it stays on until the temperature is 2 °C lower, so it does not switch on and off).
 
-For a test the curve can be changed with `POMONA_FAN_CURVE="55:0 62:30 70:45 80:75 88:100"` (temperature in °C, percent), and the busy limit and the floor with `POMONA_FAN_BUSY` and `POMONA_FAN_FLOOR`, in the environment of the service.
+While the CPU is busy (40 % or more since the last reading) the fans are kept at 50 % or more, because the die heats a second before the heat sink does and the fans should already be turning. It never goes below the firmware minimum, it comes down by at most 150 rpm per reading so the speed does not jump, and when it cannot read the temperature, or stops for any reason (`ExecStopPost`), it writes `fanN_manual = 0`, which gives the fans back to the firmware.
+
+For a test the curve can be changed with `POMONA_FAN_CURVE="55:0 62:30 70:45 80:75 88:100"` (temperature in °C, percent), the speed floor with `POMONA_FAN_FLOOR_RPM` and `POMONA_FAN_FLOOR_TEMP`, and the busy limit and its floor with `POMONA_FAN_BUSY` and `POMONA_FAN_FLOOR`, in the environment of the service.
 
 ## Comparing the two
 
