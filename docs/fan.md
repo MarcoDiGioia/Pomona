@@ -31,6 +31,10 @@ Every two seconds the service reads the hottest CPU sensor and sets each fan on 
 
 The limits can be changed for a test with `POMONA_FAN_LOW` and `POMONA_FAN_HIGH` (degrees Celsius) in the environment of the service.
 
+## Comparing the two
+
+`sudo bash tools/fan-bench.sh` runs the same load twice, with the firmware and with `pomona fan run` (90 seconds each by default, one busy loop per core), and prints the average and maximum CPU temperature and fan speed of each. A phase stops by itself at 97 °C.
+
 ## What it does not do
 
 - It does not fix a Mac that is hot for other reasons: dust, dry thermal paste, a process using the CPU. Louder fans are the price of lower temperatures.
