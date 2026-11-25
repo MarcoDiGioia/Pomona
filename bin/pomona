@@ -12,6 +12,7 @@
 #   pomona audio      Cirrus Logic sound: status | verify | fix | undo | certify  (pomona audio help)
 #   pomona sleep      suspend: status | verify | disable | enable  (for Macs that do not wake up)
 #   pomona fan        fans: status | fix | undo  (pomona fan help)
+#   pomona bluetooth  Wi-Fi to 5 GHz so Bluetooth keeps 2.4 GHz: status | verify | fix | undo  (pomona bluetooth help)
 #   pomona diagnose   Pomona got it wrong? MODULE (t1|wifi|audio) works|broken: a report to share
 #   pomona baseline   note how the Mac is before Pomona changes anything (the installer does it)
 #   pomona version
@@ -620,6 +621,70 @@ cmd_fan() {
 	esac
 }
 
+# ------------------------------------------------------------------ bluetooth
+
+bluetooth_help() {
+	cat <<'EOF'
+pomona bluetooth status [--json]   the controller, the Bluetooth devices that lost the link, the Wi-Fi band
+pomona bluetooth verify [--json]   is the Wi-Fi on 2.4 GHz the cause, and does the fix help
+sudo pomona bluetooth fix          move the Wi-Fi to 5 GHz whenever its network has it (checked every minute)
+sudo pomona bluetooth undo         let the Wi-Fi choose its band by itself again
+EOF
+}
+
+bluetooth_status_json() {
+	local drops name first=1
+	bt_klog_once; bt_read_wifi; bt_find_5ghz
+	printf '{\n  "present": %s,\n  "chip": %s,\n  "firmware_patch": %s,\n  "serial_speed": %s,\n' \
+		"$(jbool bt_present)" "$(json_str "$(bt_chip)")" "$(json_str "$(bt_patch)")" "$(json_str "$(bt_serial)")"
+	printf '  "wifi_mhz": %s,\n  "five_ghz_dbm": %s,\n  "timer": %s,\n  "devices": [' \
+		"${BT_FREQ:-null}" "${BT_5G_DBM:-null}" "$(json_str "$(svc_enabled "$BT_TIMER")")"
+	while read -r drops name; do
+		[ "$first" = 1 ] || printf ','
+		first=0
+		printf '\n    {"name": %s, "drops": %s}' "$(json_str "$name")" "$drops"
+	done < <(bt_devices)
+	printf '\n  ]\n}\n'
+}
+
+bluetooth_status() {
+	[ "${1:-}" = --json ] && { bluetooth_status_json; return; }
+	if ! bt_present; then echo "No Bluetooth controller found on this machine."; return 0; fi
+	local drops name any="" chip
+	bt_klog_once; bt_read_wifi; bt_find_5ghz
+	chip=$(bt_chip)
+	echo "controller       ${chip:-present}"
+	case "$(bt_patch)" in
+		missing) echo "firmware patch   missing: the controller runs the firmware in its ROM";;
+		loaded) echo "firmware patch   loaded";;
+		*) echo "firmware patch   unknown";;
+	esac
+	[ "$(bt_serial)" = failed ] && echo "serial line      not raised to full speed at boot (the controller refused)"
+	while read -r drops name; do
+		any=1
+		echo "device           $name: lost the link $drops time(s) this boot"
+	done < <(bt_devices)
+	[ -n "$any" ] || echo "device           none connected this boot"
+	if [ -z "$BT_FREQ" ]; then echo "Wi-Fi            not connected"
+	elif bt_on_24; then echo "Wi-Fi            2.4 GHz, the band of Bluetooth ($BT_DBM dBm)$([ -n "$BT_5G_DBM" ] && echo "; its network on 5 GHz: $BT_5G_DBM dBm")"
+	else echo "Wi-Fi            5 GHz ($BT_DBM dBm)"; fi
+	echo "pomona-band      $(svc_enabled "$BT_TIMER")"
+	echo
+	echo "Is the Wi-Fi the cause, and does the fix help? pomona bluetooth verify"
+}
+
+cmd_bluetooth() {
+	case "${1:-status}" in
+		status) shift; bluetooth_status "$@";;
+		verify) shift; cmd_verify bluetooth "$@";;
+		fix) bt_fix;;
+		undo) bt_undo;;
+		step) bt_step;;
+		help|-h|--help) bluetooth_help;;
+		*) et1_err "unknown bluetooth command $1 (try: pomona bluetooth help)"; return 2;;
+	esac
+}
+
 # ------------------------------------------------------------------ diagnose
 
 # cmd_diagnose MODULE works|broken [DIR]: Pomona's verdict on this page is wrong. Writes
@@ -703,7 +768,8 @@ case "${1:-status}" in
 	diagnose) shift; cmd_diagnose "$@";;
 	sleep) shift; cmd_sleep "$@";;
 	fan) shift; cmd_fan "$@";;
+	bluetooth) shift; cmd_bluetooth "$@";;
 	version|--version|-V) echo "Pomona $POMONA_VERSION";;
-	help|-h|--help) sed -n '2,14p' "$_self" | sed 's/^# \{0,1\}//';;
+	help|-h|--help) sed -n '2,15p' "$_self" | sed 's/^# \{0,1\}//';;
 	*) echo "pomona: unknown command $1 (try: pomona help)" >&2; exit 2;;
 esac

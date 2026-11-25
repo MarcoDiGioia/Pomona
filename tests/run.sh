@@ -6,7 +6,7 @@ ROOT=$(cd -- "$HERE/.." && pwd -P)
 rc=0
 
 echo "== shell syntax"
-bash -n "$ROOT/tests/test_history.sh" "$ROOT/bin/pomona" "$ROOT/lib/pomona.sh" "$ROOT/lib/wifi.sh" "$ROOT/lib/audio.sh" "$ROOT/lib/sleep.sh" "$ROOT/lib/fan.sh" "$ROOT/lib/verify.sh" "$ROOT/lib/history.sh" "$ROOT/data/audio/dkms/pomona-cs8409-prepare" "$ROOT/install.sh" "$ROOT/uninstall.sh" "$ROOT/libexec/pomona-admin" || rc=1
+bash -n "$ROOT/tests/test_history.sh" "$ROOT/bin/pomona" "$ROOT/lib/pomona.sh" "$ROOT/lib/wifi.sh" "$ROOT/lib/audio.sh" "$ROOT/lib/sleep.sh" "$ROOT/lib/fan.sh" "$ROOT/lib/bluetooth.sh" "$ROOT/lib/verify.sh" "$ROOT/lib/history.sh" "$ROOT/data/audio/dkms/pomona-cs8409-prepare" "$ROOT/install.sh" "$ROOT/uninstall.sh" "$ROOT/libexec/pomona-admin" || rc=1
 
 echo "== lib/pomona.sh and bin/pomona"
 bash "$HERE/test_lib.sh" || rc=1
@@ -26,6 +26,8 @@ echo "== lib/verify.sh and pomona verify"
 bash "$HERE/test_verify.sh" || rc=1
 echo "== lib/fan.sh and pomona fan"
 bash "$HERE/test_fan.sh" || rc=1
+echo "== lib/bluetooth.sh and pomona bluetooth"
+bash "$HERE/test_bluetooth.sh" || rc=1
 
 echo "== lib/history.sh and the History of a certificate"
 bash "$HERE/test_history.sh" || rc=1

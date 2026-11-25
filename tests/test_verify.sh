@@ -53,6 +53,26 @@ et1_camera_present() { return 1; }; vf_t1; eq "fixed but the camera is missing" 
 eq "names what is missing" "$VF_CAUSE_TEXT" "the cause on this Mac may be another one"
 et1_model_class() { echo other; }; vf_t1; eq "not a T1" "$(v)" "absent n/a not-applicable"
 
+echo "-- Bluetooth"
+bt_read_wifi() { BT_FREQ=$MHZ; }; bt_find_5ghz() { BT_5G_DBM=$G5; }
+wifi() { MHZ=$1 G5=$2; } # wifi MHZ 5GHZ_DBM: what the stand-ins above read
+bt_present() { return 1; }; vf_bluetooth; eq "no controller" "$(v)" "absent n/a not-applicable"
+bt_present() { return 0; }; svc_enabled() { echo disabled; }; bt_drops() { echo 3; }
+wifi 2432 -70; vf_bluetooth; eq "drops on 2.4 GHz, 5 GHz at hand: may help" "$(v)" "present not-applied may-help"
+eq "says what it saw" "$VF_CAUSE_TEXT" "the Wi-Fi is on 2.4 GHz, the band of Bluetooth, and its network is also on 5 GHz; Bluetooth devices lost the link 3 time(s) this boot"
+bt_drops() { echo 0; }; vf_bluetooth; eq "on 2.4 GHz with 5 GHz at hand, no drop yet: may help" "$(v)" "present not-applied may-help"
+wifi 2432 -85; vf_bluetooth; eq "on 2.4 GHz, 5 GHz too weak, no drop: not needed" "$(v)" "absent not-applied not-needed"
+bt_drops() { echo 2; }; vf_bluetooth; eq "drops on 2.4 GHz without 5 GHz: the fix cannot help" "$(v)" "unknown not-applied inconclusive"
+wifi 2432 ""; vf_bluetooth; eq "a network only on 2.4 GHz: the same" "$(v)" "unknown not-applied inconclusive"
+wifi 5300 -66; vf_bluetooth; eq "drops while on 5 GHz: another cause" "$(v)" "unknown not-applied inconclusive"
+bt_drops() { echo 0; }; vf_bluetooth; eq "on 5 GHz, no drop: not needed" "$(v)" "absent not-applied not-needed"
+wifi "" ""; vf_bluetooth; eq "not connected, no drop: not needed" "$(v)" "absent not-applied not-needed"
+svc_enabled() { echo enabled; }
+vf_bluetooth; eq "fix on, not connected: cannot tell" "$(v)" "unknown applied inconclusive"
+wifi 5300 -66; vf_bluetooth; eq "fix on, on 5 GHz: works" "$(v)" "fixed applied effective"
+wifi 2432 -70; vf_bluetooth; eq "fix on, still on 2.4 GHz with 5 GHz at hand: wait for the timer" "$(v)" "unknown applied inconclusive"
+bt_drops() { echo 4; }; wifi 2432 -90; vf_bluetooth; eq "fix on, network not on 5 GHz here: cannot help" "$(v)" "unknown applied not-effective"
+
 echo "-- output"
 vf_set present not-applied may-help "it may help" "the cause is there"
 eq "text output" "$(vf_print "Audio check" audio | tail -n1)" "verdict  may-help: it may help"

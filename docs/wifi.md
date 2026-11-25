@@ -96,7 +96,7 @@ The certificate has no MAC address, network name or machine id. It joins the com
 
 ## What it does not do
 
-- It does not touch Bluetooth. On these Macs `dmesg` may show `BCM.hcd` missing for the Bluetooth part of the same chip; that is a separate problem.
+- It does not touch Bluetooth. On these Macs `dmesg` may show `BCM.hcd` missing for the Bluetooth controller; that is a separate matter. If Bluetooth mice or keyboards lose the link while the Wi-Fi is on 2.4 GHz, see [Bluetooth](bluetooth.md).
 - It does not remove the `clm_blob` and `txcap_blob` messages in the kernel log. They are warnings about optional files; the card works without them.
 - It does not support other cards or other Macs. Pomona offers the fix only for the four Touch Bar models it was built for; other Macs use other board files, and some use other chips.
 

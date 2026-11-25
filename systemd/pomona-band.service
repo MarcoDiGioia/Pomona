@@ -1,0 +1,11 @@
+[Unit]
+Description=pomona: move the Wi-Fi to 5 GHz when its network has it, so Bluetooth keeps 2.4 GHz
+After=NetworkManager.service wpa_supplicant.service
+
+[Service]
+Type=oneshot
+ExecStart=@PREFIX@/bin/pomona bluetooth step
+# it runs every minute: keep systemd's "Starting/Finished" lines out of the journal, but not the
+# lines of the step itself (a move, or a failed one), which are raised to notice
+LogLevelMax=notice
+SyslogLevel=notice

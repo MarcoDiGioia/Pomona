@@ -659,3 +659,78 @@ msgstr "Poprawka zastosowana"
 
 msgid "Fix not applied"
 msgstr "Poprawka niezastosowana"
+
+msgid "Bluetooth"
+msgstr "Bluetooth"
+
+msgid "Bluetooth status"
+msgstr "Stan Bluetooth"
+
+msgid "No Bluetooth controller found"
+msgstr "Nie znaleziono kontrolera Bluetooth"
+
+msgid "This Mac shows no Bluetooth to Linux: there is nothing for Pomona to do"
+msgstr "Ten Mac nie pokazuje Linuksowi żadnego Bluetooth: Pomona nie ma nic do zrobienia"
+
+msgid "Bluetooth device"
+msgstr "Urządzenie Bluetooth"
+
+msgid "Lost the link %d time(s) since the Mac started"
+msgstr "Połączenie utracone %d raz(y) od uruchomienia Maca"
+
+msgid "No lost link since the Mac started"
+msgstr "Brak utraconych połączeń od uruchomienia Maca"
+
+msgid "No Bluetooth device connected since the Mac started"
+msgstr "Od uruchomienia Maca nie połączono żadnego urządzenia Bluetooth"
+
+msgid "On 2.4 GHz, the band of Bluetooth; its network is also on 5 GHz (%d dBm)"
+msgstr "Na 2,4 GHz, paśmie Bluetooth; ta sieć działa też na 5 GHz (%d dBm)"
+
+msgid "On 2.4 GHz, the band of Bluetooth; its network is not on 5 GHz here"
+msgstr "Na 2,4 GHz, paśmie Bluetooth; tutaj ta sieć nie działa na 5 GHz"
+
+msgid "On 5 GHz: Bluetooth has 2.4 GHz to itself"
+msgstr "Na 5 GHz: Bluetooth ma pasmo 2,4 GHz dla siebie"
+
+msgid "Keep the Wi-Fi on 5 GHz"
+msgstr "Trzymaj Wi-Fi na 5 GHz"
+
+msgid "Bluetooth mice and keyboards can lose the link while the Wi-Fi uses 2.4 GHz. Pomona checks every minute and moves the Wi-Fi to 5 GHz whenever its network has it; where 5 GHz does not reach, the Wi-Fi stays on 2.4 GHz."
+msgstr "Myszy i klawiatury Bluetooth mogą tracić połączenie, gdy Wi-Fi używa pasma 2,4 GHz. Pomona sprawdza co minutę i przenosi Wi-Fi na 5 GHz, gdy tylko sieć je oferuje; tam, gdzie 5 GHz nie dociera, Wi-Fi zostaje na 2,4 GHz."
+
+msgid "Stop moving the Wi-Fi to 5 GHz"
+msgstr "Nie przenoś Wi-Fi na 5 GHz"
+
+msgid "Move the Wi-Fi to 5 GHz"
+msgstr "Przenoś Wi-Fi na 5 GHz"
+
+msgid "The Wi-Fi chooses its band by itself again"
+msgstr "Wi-Fi znów samo wybiera pasmo"
+
+msgid "Starts a timer that checks the Wi-Fi band every minute"
+msgstr "Uruchamia licznik, który co minutę sprawdza pasmo Wi-Fi"
+
+msgid "Controller"
+msgstr "Kontroler"
+
+msgid "Firmware patch"
+msgstr "Łatka firmware"
+
+msgid "Missing: the controller runs the firmware in its ROM"
+msgstr "Brak: kontroler działa na firmware ze swojej pamięci ROM"
+
+msgid "Loaded"
+msgstr "Załadowana"
+
+msgid "Unknown"
+msgstr "Nieznany"
+
+msgid "Serial line"
+msgstr "Linia szeregowa"
+
+msgid "Not raised to full speed at boot"
+msgstr "Przy starcie nie przełączona na pełną prędkość"
+
+msgid "Normal"
+msgstr "Normalna"

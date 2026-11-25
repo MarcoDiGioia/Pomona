@@ -14,6 +14,7 @@ Pomona makes the hardware of the 2016–2017 MacBook Pro with Touch Bar work on 
 | has a **Wi-Fi card (Broadcom BCM43602) that sees networks but rejects every connection** | The card needs a board file that Linux does not ship. One click installs it (downloaded when you run the fix, after you agree) with the settings the card needs. Every changed file is backed up first and the fix can be undone. |
 | has **silent speakers** (Cirrus Logic CS8409 sound chip) | The kernel's driver does not know the Mac's amplifiers. Pomona builds the community Mac driver with DKMS, from the exact source of your kernel, and rebuilds it at every kernel update. |
 | **hangs when the Mac goes to sleep** and never wakes up | Pomona reads the system journal to find earlier boots that ended asleep and can turn suspend off, and back on. |
+| has **Bluetooth mice and keyboards that keep losing the link** | Bluetooth shares the 2.4 GHz band with the Wi-Fi. Pomona counts the lost links and can move the Wi-Fi to 5 GHz whenever its network has it, checking every minute, without locking it there. |
 
 Each module is optional and only offers what your Mac needs.
 
@@ -108,6 +109,9 @@ From the terminal:
 | `pomona fan status` | shows the fans, their speed and the CPU temperature |
 | `sudo pomona fan verify` | checks, with a two-minute load test, whether the fan fix helps your Mac |
 | `sudo pomona fan fix` | starts the service that sets the fan speed from the CPU temperature (`undo` gives the fans back to the firmware) |
+| `pomona bluetooth status` | shows the Bluetooth devices that lost the link this boot and the band of the Wi-Fi |
+| `pomona bluetooth verify` | read-only: is the Wi-Fi on 2.4 GHz the cause, and does the fix help? |
+| `sudo pomona bluetooth fix` | moves the Wi-Fi to 5 GHz whenever its network has it, checked every minute (`undo` stops it) |
 | `pomona diagnose MODULE works\|broken` | Pomona got it wrong? Sends what it checked as a pre-filled GitHub report |
 | `sudo pomona start` | turns everything on again (for example after unplugging something) |
 
@@ -133,6 +137,7 @@ The app is available in English, Italian, German, French, Spanish, Portuguese, D
 - [Audio](docs/audio.md): the Mac sound driver, why it is built from the exact kernel source, kernel updates, undo.
 - [Sleep](docs/sleep.md): detecting a Mac that does not wake up, and turning suspend off.
 - [Fans](docs/fan.md): reading the fans and temperatures, and raising the fans earlier than the firmware does.
+- [Bluetooth](docs/bluetooth.md): why Bluetooth devices lose the link while the Wi-Fi is on 2.4 GHz, and moving the Wi-Fi to 5 GHz.
 - [Troubleshooting](docs/troubleshooting.md)
 - [Compatibility](docs/compatibility.md)
 - [Compatibility certificates](docs/certificates.md)

@@ -82,6 +82,7 @@ install -m 644 "$SRC/lib/wifi.sh" "$PREFIX/lib/pomona/wifi.sh"
 install -m 644 "$SRC/lib/audio.sh" "$PREFIX/lib/pomona/audio.sh"
 install -m 644 "$SRC/lib/sleep.sh" "$PREFIX/lib/pomona/sleep.sh"
 install -m 644 "$SRC/lib/fan.sh" "$PREFIX/lib/pomona/fan.sh"
+install -m 644 "$SRC/lib/bluetooth.sh" "$PREFIX/lib/pomona/bluetooth.sh"
 install -m 644 "$SRC/lib/verify.sh" "$PREFIX/lib/pomona/verify.sh"
 install -m 644 "$SRC/lib/history.sh" "$PREFIX/lib/pomona/history.sh"
 install -D -m 755 "$SRC/data/audio/dkms/pomona-cs8409-prepare" "$PREFIX/share/pomona/audio/dkms/pomona-cs8409-prepare"
@@ -93,6 +94,8 @@ tmpl() { sed "s#@PREFIX@#$PREFIX#g" "$1" > "$2"; chmod 644 "$2"; }
 tmpl "$SRC/systemd/pomona.service" /etc/systemd/system/pomona.service
 tmpl "$SRC/systemd/pomona-touchbard.service" /etc/systemd/system/pomona-touchbard.service
 tmpl "$SRC/systemd/pomona-fand.service" /etc/systemd/system/pomona-fand.service
+tmpl "$SRC/systemd/pomona-band.service" /etc/systemd/system/pomona-band.service
+tmpl "$SRC/systemd/pomona-band.timer" /etc/systemd/system/pomona-band.timer
 install -m 644 "$SRC/data/60-pomona.rules" /etc/udev/rules.d/60-pomona.rules
 udevadm control --reload 2>/dev/null || true
 install -d /usr/lib/systemd/system-sleep
@@ -137,4 +140,5 @@ echo
 echo "Done. Open \"Pomona\" from the applications menu, or check it with: pomona certify"
 echo "Wi-Fi card (Broadcom BCM43602) rejecting every connection? pomona wifi status, then sudo pomona wifi fix"
 echo "Speakers silent? pomona audio status, then sudo pomona audio fix"
+echo "Bluetooth mouse or keyboard losing the link? pomona bluetooth verify, then sudo pomona bluetooth fix"
 echo "For per-application Touch Bar keys: log out and back in, then enable the extension from the app."

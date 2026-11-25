@@ -26,6 +26,7 @@ PAGES = {
     "docs/audio.md": "Audio",
     "docs/sleep.md": "Sleep",
     "docs/fan.md": "Fans",
+    "docs/bluetooth.md": "Bluetooth",
     "docs/how-it-works.md": "How-it-works",
     "docs/troubleshooting.md": "Troubleshooting",
     "docs/compatibility.md": "Compatibility",
@@ -45,6 +46,7 @@ SIDEBAR = """**[Pomona](Home)**
 - [Wi-Fi](Wi-Fi)
 - [Audio](Audio)
 - [Sleep](Sleep)
+- [Bluetooth](Bluetooth)
 - [How it works](How-it-works)
 - [Troubleshooting](Troubleshooting)
 - [Compatibility](Compatibility)

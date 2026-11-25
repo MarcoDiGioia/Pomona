@@ -348,6 +348,11 @@ PYEOF
 
 # shellcheck source=fan.sh
 [ -r "$POMONA_LIBEXEC/fan.sh" ] && . "$POMONA_LIBEXEC/fan.sh"
+
+# ------------------------------------------------------------------ Bluetooth module
+
+# shellcheck source=bluetooth.sh
+[ -r "$POMONA_LIBEXEC/bluetooth.sh" ] && . "$POMONA_LIBEXEC/bluetooth.sh"
 # shellcheck source=verify.sh
 [ -r "$POMONA_LIBEXEC/verify.sh" ] && . "$POMONA_LIBEXEC/verify.sh"
 

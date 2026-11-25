@@ -344,6 +344,9 @@ class Window(Adw.ApplicationWindow):
         self.fan = {}
         self.fan_page = Adw.PreferencesPage()
         self.add_page(self.fan_page, "fan", _("Fans"), "weather-windy-symbolic")
+        self.bt = {}
+        self.bt_page = Adw.PreferencesPage()
+        self.add_page(self.bt_page, "bluetooth", _("Bluetooth"), "bluetooth-symbolic")
         self.report_page = Adw.PreferencesPage()
         self.add_page(self.report_page, "report", _("Report"), "emblem-documents-symbolic")
         self.touchbar_page = Adw.PreferencesPage()
@@ -430,6 +433,7 @@ class Window(Adw.ApplicationWindow):
         self.build_wifi_page()
         self.build_audio_page()
         self.build_fan_page()
+        self.build_bluetooth_page()
 
     def refresh(self):
         def done(ok, out):
@@ -469,6 +473,15 @@ class Window(Adw.ApplicationWindow):
             self.build_fan_page()
 
         run_async(pomona_cmd() + ["fan", "status", "--json"], fan_done)
+
+        def bt_done(ok, out):
+            try:
+                self.bt = json.loads(out) if ok else {}
+            except ValueError:
+                self.bt = {}
+            self.build_bluetooth_page()
+
+        run_async(pomona_cmd() + ["bluetooth", "status", "--json"], bt_done)
 
         def sleep_done(ok, out):
             try:
@@ -952,6 +965,62 @@ class Window(Adw.ApplicationWindow):
 
     def fan_undo(self):
         self.admin(["fan-undo"], "fan-undo")
+
+    # -------------------------------------------------------------- bluetooth
+
+    def build_bluetooth_page(self):
+        b = self.bt
+        page = self.bt_page
+        self.clear(page)
+        status = Adw.PreferencesGroup(title=_("Bluetooth status"))
+        self.add_group(page, status)
+        if not b.get("present"):
+            status.add(Adw.ActionRow(title=_("No Bluetooth controller found"),
+                                     subtitle=_("This Mac shows no Bluetooth to Linux: there is nothing for Pomona to do")))
+            return
+        devices = b.get("devices") or []
+        for dev in devices:
+            drops = int(dev.get("drops") or 0)
+            self.step(status, dev.get("name") or _("Bluetooth device"), not drops,
+                      _("Lost the link %d time(s) since the Mac started") % drops if drops
+                      else _("No lost link since the Mac started"))
+        if not devices:
+            status.add(Adw.ActionRow(title=_("No Bluetooth device connected since the Mac started")))
+        mhz, five = b.get("wifi_mhz"), b.get("five_ghz_dbm")
+        if mhz is None:
+            status.add(Adw.ActionRow(title=_("Wi-Fi"), subtitle=_("Not connected")))
+        elif mhz < 4000:
+            self.step(status, _("Wi-Fi"), False,
+                      _("On 2.4 GHz, the band of Bluetooth; its network is also on 5 GHz (%d dBm)") % five
+                      if five is not None else _("On 2.4 GHz, the band of Bluetooth; its network is not on 5 GHz here"))
+        else:
+            self.step(status, _("Wi-Fi"), True, _("On 5 GHz: Bluetooth has 2.4 GHz to itself"))
+
+        on = b.get("timer") == "enabled"
+        card = Adw.PreferencesGroup(
+            title=_("Keep the Wi-Fi on 5 GHz"),
+            description=_("Bluetooth mice and keyboards can lose the link while the Wi-Fi uses 2.4 GHz. Pomona checks "
+                          "every minute and moves the Wi-Fi to 5 GHz whenever its network has it; where 5 GHz does "
+                          "not reach, the Wi-Fi stays on 2.4 GHz."))
+        self.add_group(page, card)
+        row = Adw.ActionRow(
+            title=_("Stop moving the Wi-Fi to 5 GHz") if on else _("Move the Wi-Fi to 5 GHz"),
+            subtitle=_("The Wi-Fi chooses its band by itself again") if on
+            else _("Starts a timer that checks the Wi-Fi band every minute"))
+        button = Gtk.Button(label=_("Turn off") if on else _("Turn on"), valign=Gtk.Align.CENTER, sensitive=not self.busy)
+        if not on:
+            button.add_css_class("suggested-action")
+        button.connect("clicked", lambda *_a: self.admin(["bluetooth-undo"], "bluetooth-undo") if on
+                       else self.admin(["bluetooth-fix"], "bluetooth-fix"))
+        row.add_suffix(button)
+        card.add(row)
+        card.add(self.verify_row(["bluetooth", "verify"]))
+        self.set_hardware(page, [
+            (_("Controller"), b.get("chip")),
+            (_("Firmware patch"), {"missing": _("Missing: the controller runs the firmware in its ROM"),
+                                   "loaded": _("Loaded")}.get(b.get("firmware_patch"), _("Unknown"))),
+            (_("Serial line"), _("Not raised to full speed at boot") if b.get("serial_speed") == "failed" else _("Normal")),
+        ])
 
     # -------------------------------------------------------------- touch bar
 

@@ -659,3 +659,78 @@ msgstr "Fix toegepast"
 
 msgid "Fix not applied"
 msgstr "Fix niet toegepast"
+
+msgid "Bluetooth"
+msgstr "Bluetooth"
+
+msgid "Bluetooth status"
+msgstr "Bluetoothstatus"
+
+msgid "No Bluetooth controller found"
+msgstr "Geen Bluetooth-controller gevonden"
+
+msgid "This Mac shows no Bluetooth to Linux: there is nothing for Pomona to do"
+msgstr "Deze Mac toont Linux geen Bluetooth: Pomona heeft niets te doen"
+
+msgid "Bluetooth device"
+msgstr "Bluetooth-apparaat"
+
+msgid "Lost the link %d time(s) since the Mac started"
+msgstr "Heeft de verbinding %d keer verloren sinds de Mac is gestart"
+
+msgid "No lost link since the Mac started"
+msgstr "Geen verbinding verloren sinds de Mac is gestart"
+
+msgid "No Bluetooth device connected since the Mac started"
+msgstr "Geen Bluetooth-apparaat verbonden sinds de Mac is gestart"
+
+msgid "On 2.4 GHz, the band of Bluetooth; its network is also on 5 GHz (%d dBm)"
+msgstr "Op 2,4 GHz, de band van Bluetooth; het netwerk is ook op 5 GHz (%d dBm)"
+
+msgid "On 2.4 GHz, the band of Bluetooth; its network is not on 5 GHz here"
+msgstr "Op 2,4 GHz, de band van Bluetooth; het netwerk is hier niet op 5 GHz"
+
+msgid "On 5 GHz: Bluetooth has 2.4 GHz to itself"
+msgstr "Op 5 GHz: Bluetooth heeft 2,4 GHz voor zichzelf"
+
+msgid "Keep the Wi-Fi on 5 GHz"
+msgstr "Wifi op 5 GHz houden"
+
+msgid "Bluetooth mice and keyboards can lose the link while the Wi-Fi uses 2.4 GHz. Pomona checks every minute and moves the Wi-Fi to 5 GHz whenever its network has it; where 5 GHz does not reach, the Wi-Fi stays on 2.4 GHz."
+msgstr "Bluetooth-muizen en -toetsenborden kunnen de verbinding verliezen terwijl de wifi 2,4 GHz gebruikt. Pomona controleert elke minuut en zet de wifi op 5 GHz zodra het netwerk dat biedt; waar 5 GHz niet komt, blijft de wifi op 2,4 GHz."
+
+msgid "Stop moving the Wi-Fi to 5 GHz"
+msgstr "Wifi niet meer naar 5 GHz verplaatsen"
+
+msgid "Move the Wi-Fi to 5 GHz"
+msgstr "Wifi naar 5 GHz verplaatsen"
+
+msgid "The Wi-Fi chooses its band by itself again"
+msgstr "De wifi kiest de band weer zelf"
+
+msgid "Starts a timer that checks the Wi-Fi band every minute"
+msgstr "Start een timer die elke minuut de wifiband controleert"
+
+msgid "Controller"
+msgstr "Controller"
+
+msgid "Firmware patch"
+msgstr "Firmwarepatch"
+
+msgid "Missing: the controller runs the firmware in its ROM"
+msgstr "Ontbreekt: de controller draait de firmware uit zijn ROM"
+
+msgid "Loaded"
+msgstr "Geladen"
+
+msgid "Unknown"
+msgstr "Onbekend"
+
+msgid "Serial line"
+msgstr "Seriële lijn"
+
+msgid "Not raised to full speed at boot"
+msgstr "Bij het opstarten niet op volle snelheid gezet"
+
+msgid "Normal"
+msgstr "Normaal"

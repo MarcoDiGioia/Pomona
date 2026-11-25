@@ -32,6 +32,7 @@ install -m 644 "$ROOT/lib/wifi.sh"             "$PKG/usr/lib/pomona/wifi.sh"
 install -m 644 "$ROOT/lib/audio.sh"            "$PKG/usr/lib/pomona/audio.sh"
 install -m 644 "$ROOT/lib/sleep.sh"            "$PKG/usr/lib/pomona/sleep.sh"
 install -m 644 "$ROOT/lib/fan.sh"              "$PKG/usr/lib/pomona/fan.sh"
+install -m 644 "$ROOT/lib/bluetooth.sh"        "$PKG/usr/lib/pomona/bluetooth.sh"
 install -m 644 "$ROOT/lib/verify.sh"           "$PKG/usr/lib/pomona/verify.sh"
 install -m 644 "$ROOT/lib/history.sh"          "$PKG/usr/lib/pomona/history.sh"
 install -D -m 755 "$ROOT/data/audio/dkms/pomona-cs8409-prepare" "$PKG/usr/share/pomona/audio/dkms/pomona-cs8409-prepare"
@@ -41,6 +42,8 @@ install -m 755 "$ROOT/gui/pomona-gui"          "$PKG/usr/bin/pomona-gui"
 tmpl "$ROOT/systemd/pomona.service"            "$PKG/usr/lib/systemd/system/pomona.service"
 tmpl "$ROOT/systemd/pomona-touchbard.service"  "$PKG/usr/lib/systemd/system/pomona-touchbard.service"
 tmpl "$ROOT/systemd/pomona-fand.service"       "$PKG/usr/lib/systemd/system/pomona-fand.service"
+tmpl "$ROOT/systemd/pomona-band.service"       "$PKG/usr/lib/systemd/system/pomona-band.service"
+tmpl "$ROOT/systemd/pomona-band.timer"         "$PKG/usr/lib/systemd/system/pomona-band.timer"
 d usr/lib/systemd/system-sleep
 d usr/lib/udev/rules.d
 install -m 644 "$ROOT/data/60-pomona.rules"   "$PKG/usr/lib/udev/rules.d/60-pomona.rules"
@@ -147,6 +150,7 @@ cat > "$PKG/DEBIAN/prerm" <<'EOF'
 #!/bin/sh
 set -e
 if [ -d /run/systemd/system ] && { [ "$1" = remove ] || [ "$1" = deconfigure ]; }; then
+	systemctl disable --now pomona-band.timer || true
 	systemctl disable --now pomona-touchbard.service || true
 	systemctl disable --now pomona.service || true
 fi

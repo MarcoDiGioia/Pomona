@@ -1,4 +1,4 @@
-# lib/verify.sh - "is this fix the right one for this Mac?" for the Wi-Fi, audio, sleep and T1 modules.
+# lib/verify.sh - "is this fix the right one for this Mac?" for the Wi-Fi, audio, sleep, T1 and Bluetooth modules.
 # Sourced by lib/pomona.sh. `pomona MODULE verify [--json]` only reads: it never changes the
 # machine, needs no root, and does not suspend or load anything. The same symptom can have different
 # causes on different Macs, so each check says (1) whether the cause the fix cures is present,
@@ -148,6 +148,42 @@ vf_t1() {
 	fi
 }
 
+# ------------------------------------------------------------------ Bluetooth (Wi-Fi on 2.4 GHz)
+
+# The cause the fix cures is the Wi-Fi on 2.4 GHz, the band of Bluetooth, while its network is also
+# on 5 GHz; the symptom is Bluetooth input devices losing the link (bt_drops).
+vf_bluetooth() {
+	local drops why
+	if ! bt_present; then
+		vf_set absent n/a not-applicable "this Mac has no Bluetooth controller: the Bluetooth fix is not for it"; return
+	fi
+	drops=$(bt_drops)
+	why=""; [ "$drops" -gt 0 ] && why="Bluetooth devices lost the link $drops time(s) this boot"
+	bt_read_wifi; bt_find_5ghz
+	if [ "$(svc_enabled "$BT_TIMER")" = enabled ]; then
+		if [ -z "$BT_FREQ" ]; then
+			vf_set unknown applied inconclusive "the Wi-Fi is not connected: connect to a network and check again"
+		elif ! bt_on_24; then
+			vf_set fixed applied effective "the Wi-Fi is on 5 GHz: Bluetooth has the 2.4 GHz band to itself"
+		elif bt_5ghz_ok; then
+			vf_set unknown applied inconclusive "the Wi-Fi is still on 2.4 GHz: Pomona moves it to 5 GHz within a few minutes, check again then"
+		else
+			vf_set unknown applied not-effective "the Wi-Fi is on 2.4 GHz and its network is not on 5 GHz here: the fix cannot move it" "$why"
+		fi
+		return
+	fi
+	if bt_on_24 && bt_5ghz_ok; then
+		vf_set present not-applied may-help "the fix is likely to help this Mac" \
+			"the Wi-Fi is on 2.4 GHz, the band of Bluetooth, and its network is also on 5 GHz${why:+; $why}"
+	elif bt_on_24 && [ -n "$why" ]; then
+		vf_set unknown not-applied inconclusive "the Wi-Fi is on 2.4 GHz but its network is not on 5 GHz here, so the fix cannot move it: a 5 GHz network or being closer to the router may help" "$why"
+	elif [ -n "$why" ]; then
+		vf_set unknown not-applied inconclusive "the Wi-Fi is not on 2.4 GHz now: if Bluetooth devices keep losing the link from now on, the cause is another one" "$why"
+	else
+		vf_set absent not-applied not-needed "no Bluetooth device lost the link this boot: leave it off"
+	fi
+}
+
 # cmd_verify MODULE [--json]
 cmd_verify() {
 	local module=${1:-} title
@@ -157,7 +193,8 @@ cmd_verify() {
 			[ "${2:-}" = --tone ] && au_tone;;
 		sleep) title="Sleep check"; vf_sleep;;
 		t1) title="T1 check"; vf_t1;;
-		*) et1_err "usage: pomona wifi|audio|sleep|t1 verify [--json]"; return 2;;
+		bluetooth) title="Bluetooth check"; vf_bluetooth;;
+		*) et1_err "usage: pomona wifi|audio|sleep|t1|bluetooth verify [--json]"; return 2;;
 	esac
 	vf_print "$title" "$module" "${2:-}"
 }
