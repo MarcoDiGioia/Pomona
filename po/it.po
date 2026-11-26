@@ -693,24 +693,6 @@ msgstr "Sui 2,4 GHz, la banda del Bluetooth; qui la sua rete non è sui 5 GHz"
 msgid "On 5 GHz: Bluetooth has 2.4 GHz to itself"
 msgstr "Sui 5 GHz: il Bluetooth ha i 2,4 GHz tutti per sé"
 
-msgid "Keep the Wi-Fi on 5 GHz"
-msgstr "Tieni il Wi-Fi sui 5 GHz"
-
-msgid "Bluetooth mice and keyboards can lose the link while the Wi-Fi uses 2.4 GHz. Pomona checks every minute and moves the Wi-Fi to 5 GHz whenever its network has it; where 5 GHz does not reach, the Wi-Fi stays on 2.4 GHz."
-msgstr "I mouse e le tastiere Bluetooth possono perdere il collegamento mentre il Wi-Fi usa i 2,4 GHz. Pomona controlla ogni minuto e sposta il Wi-Fi sui 5 GHz ogni volta che la sua rete li offre; dove i 5 GHz non arrivano, il Wi-Fi resta sui 2,4 GHz."
-
-msgid "Stop moving the Wi-Fi to 5 GHz"
-msgstr "Smetti di spostare il Wi-Fi sui 5 GHz"
-
-msgid "Move the Wi-Fi to 5 GHz"
-msgstr "Sposta il Wi-Fi sui 5 GHz"
-
-msgid "The Wi-Fi chooses its band by itself again"
-msgstr "Il Wi-Fi torna a scegliere la banda da solo"
-
-msgid "Starts a timer that checks the Wi-Fi band every minute"
-msgstr "Avvia un timer che controlla la banda del Wi-Fi ogni minuto"
-
 msgid "Controller"
 msgstr "Controller"
 
@@ -734,3 +716,24 @@ msgstr "Non portata alla piena velocità all’avvio"
 
 msgid "Normal"
 msgstr "Normale"
+
+msgid "Let the Wi-Fi go back to 5 GHz"
+msgstr "Fai tornare il Wi-Fi sui 5 GHz"
+
+msgid "Bluetooth mice and keyboards can lose the link while the Wi-Fi uses 2.4 GHz. Once on 2.4 GHz, the firmware of the Wi-Fi card stays there even when the network is also on 5 GHz. With this fix the system chooses the band and goes back to 5 GHz whenever the network has it; where 5 GHz does not reach, the Wi-Fi stays on 2.4 GHz."
+msgstr "I mouse e le tastiere Bluetooth possono perdere il collegamento mentre il Wi-Fi usa i 2,4 GHz. Una volta sui 2,4 GHz, il firmware della scheda Wi-Fi ci resta anche quando la rete è anche sui 5 GHz. Con questa correzione è il sistema a scegliere la banda e torna sui 5 GHz ogni volta che la rete li offre; dove i 5 GHz non arrivano, il Wi-Fi resta sui 2,4 GHz."
+
+msgid "Only for the Broadcom Wi-Fi card of these Macs"
+msgstr "Solo per la scheda Wi-Fi Broadcom di questi Mac"
+
+msgid "The system already chooses the band: roamoff=1 is set outside Pomona"
+msgstr "Il sistema sceglie già la banda: roamoff=1 è impostato fuori da Pomona"
+
+msgid "Reloads the Wi-Fi driver: the Wi-Fi drops for a few seconds"
+msgstr "Ricarica il driver del Wi-Fi: il Wi-Fi cade per qualche secondo"
+
+msgid "Give the choice back to the Wi-Fi card"
+msgstr "Restituisci la scelta alla scheda Wi-Fi"
+
+msgid "Let the system choose the Wi-Fi band"
+msgstr "Lascia scegliere al sistema la banda del Wi-Fi"

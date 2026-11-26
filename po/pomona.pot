@@ -693,24 +693,6 @@ msgstr ""
 msgid "On 5 GHz: Bluetooth has 2.4 GHz to itself"
 msgstr ""
 
-msgid "Keep the Wi-Fi on 5 GHz"
-msgstr ""
-
-msgid "Bluetooth mice and keyboards can lose the link while the Wi-Fi uses 2.4 GHz. Pomona checks every minute and moves the Wi-Fi to 5 GHz whenever its network has it; where 5 GHz does not reach, the Wi-Fi stays on 2.4 GHz."
-msgstr ""
-
-msgid "Stop moving the Wi-Fi to 5 GHz"
-msgstr ""
-
-msgid "Move the Wi-Fi to 5 GHz"
-msgstr ""
-
-msgid "The Wi-Fi chooses its band by itself again"
-msgstr ""
-
-msgid "Starts a timer that checks the Wi-Fi band every minute"
-msgstr ""
-
 msgid "Controller"
 msgstr ""
 
@@ -733,4 +715,25 @@ msgid "Not raised to full speed at boot"
 msgstr ""
 
 msgid "Normal"
+msgstr ""
+
+msgid "Let the Wi-Fi go back to 5 GHz"
+msgstr ""
+
+msgid "Bluetooth mice and keyboards can lose the link while the Wi-Fi uses 2.4 GHz. Once on 2.4 GHz, the firmware of the Wi-Fi card stays there even when the network is also on 5 GHz. With this fix the system chooses the band and goes back to 5 GHz whenever the network has it; where 5 GHz does not reach, the Wi-Fi stays on 2.4 GHz."
+msgstr ""
+
+msgid "Only for the Broadcom Wi-Fi card of these Macs"
+msgstr ""
+
+msgid "The system already chooses the band: roamoff=1 is set outside Pomona"
+msgstr ""
+
+msgid "Reloads the Wi-Fi driver: the Wi-Fi drops for a few seconds"
+msgstr ""
+
+msgid "Give the choice back to the Wi-Fi card"
+msgstr ""
+
+msgid "Let the system choose the Wi-Fi band"
 msgstr ""

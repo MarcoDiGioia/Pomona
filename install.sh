@@ -94,8 +94,6 @@ tmpl() { sed "s#@PREFIX@#$PREFIX#g" "$1" > "$2"; chmod 644 "$2"; }
 tmpl "$SRC/systemd/pomona.service" /etc/systemd/system/pomona.service
 tmpl "$SRC/systemd/pomona-touchbard.service" /etc/systemd/system/pomona-touchbard.service
 tmpl "$SRC/systemd/pomona-fand.service" /etc/systemd/system/pomona-fand.service
-tmpl "$SRC/systemd/pomona-band.service" /etc/systemd/system/pomona-band.service
-tmpl "$SRC/systemd/pomona-band.timer" /etc/systemd/system/pomona-band.timer
 install -m 644 "$SRC/data/60-pomona.rules" /etc/udev/rules.d/60-pomona.rules
 udevadm control --reload 2>/dev/null || true
 install -d /usr/lib/systemd/system-sleep

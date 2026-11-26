@@ -11,7 +11,7 @@
 #   pomona-admin sleep-disable | sleep-enable   turn suspend off or on again
 #   pomona-admin fan-fix | fan-undo    start or stop the fan control service
 #   pomona-admin fan-verify            compare the firmware's fan control with Pomona's (load test)
-#   pomona-admin bluetooth-fix | bluetooth-undo   move the Wi-Fi to 5 GHz whenever it can, or stop doing it
+#   pomona-admin bluetooth-fix | bluetooth-undo   let the system choose the Wi-Fi band, so it goes back to 5 GHz, or undo it
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 set -uo pipefail

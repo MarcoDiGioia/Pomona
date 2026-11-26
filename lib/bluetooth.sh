@@ -1,33 +1,26 @@
-# lib/bluetooth.sh - Bluetooth module of Pomona: move the Wi-Fi to 5 GHz whenever the network has it,
-# so that Bluetooth mice and keyboards keep the 2.4 GHz band to themselves. Sourced by lib/pomona.sh.
+# lib/bluetooth.sh - Bluetooth module of Pomona: let the Wi-Fi go back to 5 GHz by itself, so that
+# Bluetooth mice and keyboards keep the 2.4 GHz band to themselves. Sourced by lib/pomona.sh.
 #
 # Bluetooth and 2.4 GHz Wi-Fi share one band and, on these Macs, the antennas: with the Wi-Fi on
 # 2.4 GHz a Bluetooth mouse kept losing the link, with it on 5 GHz it did not (the measurements are in
-# docs/bluetooth.md). NetworkManager can lock a connection to one band but cannot prefer one, and once
-# the Mac falls back to 2.4 GHz it stays there.
+# docs/bluetooth.md). The firmware of the Broadcom Wi-Fi card does the roaming by default and, once on
+# 2.4 GHz, it stays there even when the same network is stronger on 5 GHz: wpa_supplicant only gives it
+# a hint. With the brcmfmac option roamoff=1 wpa_supplicant chooses and roams by itself, and it prefers
+# 5 GHz: moved to 2.4 GHz by hand, the Mac went back to 5 GHz on its own within 34 seconds.
 #
-# `pomona bluetooth fix` enables pomona-band.timer, which runs `pomona bluetooth step` every minute: if
-# the Wi-Fi is on 2.4 GHz and the same network is heard on 5 GHz at POMONA_BT_MIN_DBM or better, it asks
-# wpa_supplicant to roam there (same network: the address stays, the gap is a fraction of a second).
-# Nothing is locked, so where 5 GHz does not reach the Mac uses 2.4 GHz as before; after a move the
-# step waits POMONA_BT_HOLD seconds before the next one, so it does not bounce between the bands.
-# `undo` disables the timer.
+# `pomona bluetooth fix` writes that option to modprobe.d and reloads the driver (the Wi-Fi drops for a
+# few seconds); `undo` removes it and reloads the driver again.
 #
-#   POMONA_BT_MIN_DBM    weakest 5 GHz signal worth moving to                  (default -78)
-#   POMONA_BT_HOLD       seconds between two moves                             (default 300)
+#   POMONA_ETC           configuration root                                      (default /etc)
 #   POMONA_BT_DROP_SECS  a device connected again within this many seconds of its previous connection
 #                        lost the link: one that went to sleep stays away longer  (default 120)
 #   POMONA_BT_LOG        a file used instead of this boot's kernel log (tests)
-#   POMONA_RUN_DIR       where the time of the last move is kept               (default /run/pomona)
 # shellcheck shell=bash
 
 : "${POMONA_SYS:=/sys}"
-: "${POMONA_BT_MIN_DBM:=-78}"
-: "${POMONA_BT_HOLD:=300}"
+: "${POMONA_ETC:=/etc}"
 : "${POMONA_BT_DROP_SECS:=120}"
-: "${POMONA_RUN_DIR:=/run/pomona}"
-BT_TIMER=pomona-band.timer
-BT_SERVICE=pomona-band.service
+BT_MODPROBE_FILE=91-pomona-bluetooth.conf
 
 bt_present() {
 	local h
@@ -104,64 +97,112 @@ bt_read_wifi() {
 # bt_on_24: the Wi-Fi is connected on the 2.4 GHz band (after bt_read_wifi)
 bt_on_24() { [ -n "$BT_FREQ" ] && [ "$BT_FREQ" -lt 4000 ]; }
 
-# bt_find_5ghz: sets BT_5G_BSSID and BT_5G_DBM to the strongest access point of the same network (BT_SSID)
-# above 2.4 GHz in the last scan results of the Wi-Fi card; both empty when there is none
+# bt_find_5ghz: sets BT_5G_DBM to the signal of the strongest access point of the same network (BT_SSID)
+# above 2.4 GHz in the last scan results of the Wi-Fi card; empty when there is none
 bt_find_5ghz() {
-	BT_5G_BSSID=""; BT_5G_DBM=""
+	BT_5G_DBM=""
 	[ -n "$BT_SSID" ] || return 0
-	read -r BT_5G_BSSID BT_5G_DBM < <(iw dev "$BT_IF" scan dump 2>/dev/null | LC_ALL=C awk -v want="$BT_SSID" '
-		function keep() { if (b != "" && s == want && f > 4000 && (bb == "" || d > bd)) { bb = b; bd = d } }
-		/^BSS / { keep(); b = substr($2, 1, 17); f = 0; d = -999; s = "" }
+	BT_5G_DBM=$(iw dev "$BT_IF" scan dump 2>/dev/null | LC_ALL=C awk -v want="$BT_SSID" '
+		function keep() { if (s == want && f > 4000 && (best == "" || d > best)) best = d }
+		/^BSS / { keep(); f = 0; d = -999; s = "" }
 		/^\tfreq: / { f = $2 + 0 }
 		/^\tsignal: / { d = $2 + 0 }
 		/^\tSSID: / { s = substr($0, 8) }
-		END { keep(); if (bb != "") print bb, int(bd) }') || true
+		END { keep(); if (best != "") print int(best) }')
 }
 
-# bt_5ghz_ok: the network is heard on 5 GHz strongly enough to move there (after bt_find_5ghz)
-bt_5ghz_ok() { [ -n "$BT_5G_DBM" ] && [ "$BT_5G_DBM" -ge "$POMONA_BT_MIN_DBM" ]; }
+# bt_5ghz_ok: the network is heard on 5 GHz strongly enough to count on it (after bt_find_5ghz); below
+# about -78 dBm a 5 GHz link is slow and drops easily
+bt_5ghz_ok() { [ -n "$BT_5G_DBM" ] && [ "$BT_5G_DBM" -ge -78 ]; }
 
-# bt_step: one check of pomona-band.timer. Moves the Wi-Fi to 5 GHz when it is on 2.4 GHz and the same
-# network is heard on 5 GHz strongly enough, unless it moved less than POMONA_BT_HOLD seconds ago.
-# Silent when there is nothing to do: it runs every minute.
-bt_step() {
-	local stamp="$POMONA_RUN_DIR/band-moved" now last
-	bt_read_wifi
-	bt_on_24 || return 0
-	bt_find_5ghz
-	bt_5ghz_ok || return 0
-	now=$(date +%s)
-	last=$(cat "$stamp" 2>/dev/null)
-	[ $((now - ${last:-0})) -lt "$POMONA_BT_HOLD" ] && return 0
-	install -d -m 755 "$POMONA_RUN_DIR" && echo "$now" > "$stamp"
-	if wpa_cli -i "$BT_IF" roam "$BT_5G_BSSID" 2>&1 | grep -q '^OK'; then
-		et1_log "the Wi-Fi was on 2.4 GHz ($BT_DBM dBm) and its network is on 5 GHz too ($BT_5G_DBM dBm): moved there, so Bluetooth has 2.4 GHz to itself"
-	else
-		et1_err "could not move the Wi-Fi to 5 GHz (wpa_cli roam failed): trying again in $POMONA_BT_HOLD s"
-		return 1
+bt_brcmfmac() { [ "$(wf_any_attr driver)" = brcmfmac ]; }
+
+# bt_fw_roaming: the firmware of the Wi-Fi card does the roaming (brcmfmac without roamoff=1 tells the
+# kernel so, and `iw phy` shows "Device supports roaming"). The driver's roamoff parameter itself can
+# only be read by root.
+bt_fw_roaming() {
+	local phy
+	phy=$(wf_any_attr phy)
+	[ -n "$phy" ] && iw phy "$phy" info 2>/dev/null | grep -q 'Device supports roaming'
+}
+
+bt_option_file() { printf '%s/modprobe.d/%s\n' "$POMONA_ETC" "$BT_MODPROBE_FILE"; }
+
+# bt_applied: the fix is on, i.e. Pomona's file sets the option (the driver may not run with it yet)
+bt_applied() { grep -qs '^options brcmfmac roamoff=1' "$(bt_option_file)"; }
+
+# bt_state -> off | on | restart | system | not-brcmfmac: the fix compared with how the driver runs now.
+# restart: the option was added or removed but the driver still runs as before; system: roamoff=1 is
+# set by another file in modprobe.d, not by Pomona.
+bt_state() {
+	local f
+	if bt_applied; then
+		if bt_brcmfmac && ! bt_fw_roaming; then echo on; else echo restart; fi
+		return 0
 	fi
+	bt_brcmfmac || { echo not-brcmfmac; return 0; }
+	f=$(wf_modprobe_files)
+	# shellcheck disable=SC2086
+	if [ -n "$f" ] && cat $f | grep -q '^[[:space:]]*options[[:space:]]\{1,\}brcmfmac[[:space:]].*roamoff=1'; then echo system
+	elif bt_fw_roaming; then echo off
+	else echo restart; fi
 }
 
 bt_can_write() { [ "$(id -u)" = 0 ]; }
 
+# bt_reload_driver: load brcmfmac again, with the modules that use it, so that the option takes effect
+# now, and wait for the Wi-Fi to come back if it was connected. Not while a change of the Wi-Fi fix waits
+# for a restart: the reload would apply that change in the middle of the session.
+bt_reload_driver() {
+	local holders was i
+	if wf_restart_pending; then
+		et1_log "the Wi-Fi driver is not reloaded now: a change of the Wi-Fi fix waits for the restart too"
+		return 0
+	fi
+	bt_read_wifi; was=$BT_FREQ
+	holders=$(ls "$POMONA_SYS/module/brcmfmac/holders" 2>/dev/null)
+	et1_log "reloading the Wi-Fi driver: the Wi-Fi drops for a few seconds"
+	# shellcheck disable=SC2086
+	if ! { modprobe -r $holders brcmfmac && modprobe brcmfmac; }; then
+		et1_err "could not reload the Wi-Fi driver: restart the computer to apply the change"
+		return 1
+	fi
+	[ -n "$was" ] || return 0
+	for ((i = 0; i < 120; i++)); do bt_read_wifi; [ -n "$BT_FREQ" ] && break; sleep 0.25; done
+	if [ -z "$BT_FREQ" ]; then et1_log "the Wi-Fi has not reconnected yet"
+	elif bt_on_24; then et1_log "the Wi-Fi is back, on 2.4 GHz"
+	else et1_log "the Wi-Fi is back, on 5 GHz"; fi
+}
+
 bt_fix() {
 	bt_can_write || { et1_err "run it with sudo"; return 4; }
 	bt_present || { et1_err "no Bluetooth controller on this Mac: nothing to do"; return 1; }
-	systemctl cat "$BT_TIMER" >/dev/null 2>&1 || { et1_err "$BT_TIMER is not installed"; return 1; }
-	systemctl enable --now "$BT_TIMER" || { et1_err "could not start $BT_TIMER"; return 1; }
-	# the boot delay of the timer is long past, so enabling it runs a first check at once: wait for that
-	# one (a second check of our own could roam twice) so that the band below is the one after it
-	systemctl start "$BT_SERVICE" 2>/dev/null
-	bt_read_wifi
-	if bt_on_24; then et1_log "the Wi-Fi is on 2.4 GHz: it moves to 5 GHz when its network is heard there at $POMONA_BT_MIN_DBM dBm or better"
-	elif [ -n "$BT_FREQ" ]; then et1_log "the Wi-Fi is on 5 GHz"; fi
-	et1_log "from now on the Wi-Fi moves to 5 GHz whenever its network has it (checked every minute)"
+	case "$(bt_state)" in
+		not-brcmfmac) et1_err "the Wi-Fi card is not driven by brcmfmac: the fix is for the Broadcom card of these Macs"; return 1;;
+		system) et1_err "roamoff=1 is already set for brcmfmac outside Pomona: the system chooses the Wi-Fi band, nothing to do"; return 1;;
+	esac
+	if ! bt_applied; then
+		wf_write "$(bt_option_file)" <(printf '%s\n' \
+			"# pomona bluetooth fix: wpa_supplicant, not the card's firmware, chooses the band, so the" \
+			"# Wi-Fi goes back to 5 GHz and leaves 2.4 GHz to Bluetooth (undo: sudo pomona bluetooth undo)" \
+			"options brcmfmac roamoff=1") || { et1_err "could not write $(bt_option_file)"; return 1; }
+		wf_refresh_initramfs
+	fi
+	if [ "$(bt_state)" = restart ]; then bt_reload_driver || return 1; fi
+	if [ "$(bt_state)" = on ]; then et1_log "the system now chooses the Wi-Fi band and goes back to 5 GHz whenever the network has it"
+	else et1_log "restart the computer to finish"; fi
 	et1_log "undo with: sudo pomona bluetooth undo"
 }
 
 bt_undo() {
 	bt_can_write || { et1_err "run it with sudo"; return 4; }
-	systemctl disable --now "$BT_TIMER" 2>/dev/null
-	rm -f "$POMONA_RUN_DIR/band-moved"
-	et1_log "the Wi-Fi chooses its band by itself again"
+	bt_applied || { et1_log "the fix is not on: nothing to undo"; return 0; }
+	rm -f "$(bt_option_file)"
+	wf_refresh_initramfs
+	if [ "$(bt_state)" = restart ]; then bt_reload_driver || return 1; fi
+	case "$(bt_state)" in
+		restart) et1_log "restart the computer to finish";;
+		system) et1_log "roamoff=1 is still set for brcmfmac outside Pomona: the system keeps choosing the band";;
+		*) et1_log "the firmware of the Wi-Fi card chooses the band again";;
+	esac
 }

@@ -116,6 +116,7 @@ wf_any_attr() {
 		pci) [ -r "$d/device/vendor" ] && printf '%s:%s\n' "$(sed 's/^0x//' "$d/device/vendor")" "$(sed 's/^0x//' "$d/device/device" 2>/dev/null)";;
 		operstate) tr -d '\n' < "$d/operstate" 2>/dev/null;;
 		mac) tr -d '\n' < "$d/address" 2>/dev/null;;
+		phy) tr -d '\n' < "$d/phy80211/name" 2>/dev/null;;
 	esac
 	return 0
 }

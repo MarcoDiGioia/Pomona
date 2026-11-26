@@ -996,18 +996,27 @@ class Window(Adw.ApplicationWindow):
         else:
             self.step(status, _("Wi-Fi"), True, _("On 5 GHz: Bluetooth has 2.4 GHz to itself"))
 
-        on = b.get("timer") == "enabled"
+        on, state = b.get("applied"), b.get("state")
         card = Adw.PreferencesGroup(
-            title=_("Keep the Wi-Fi on 5 GHz"),
-            description=_("Bluetooth mice and keyboards can lose the link while the Wi-Fi uses 2.4 GHz. Pomona checks "
-                          "every minute and moves the Wi-Fi to 5 GHz whenever its network has it; where 5 GHz does "
-                          "not reach, the Wi-Fi stays on 2.4 GHz."))
+            title=_("Let the Wi-Fi go back to 5 GHz"),
+            description=_("Bluetooth mice and keyboards can lose the link while the Wi-Fi uses 2.4 GHz. Once on "
+                          "2.4 GHz, the firmware of the Wi-Fi card stays there even when the network is also on 5 GHz. "
+                          "With this fix the system chooses the band and goes back to 5 GHz whenever the network has "
+                          "it; where 5 GHz does not reach, the Wi-Fi stays on 2.4 GHz."))
         self.add_group(page, card)
+        if state == "not-brcmfmac":
+            subtitle = _("Only for the Broadcom Wi-Fi card of these Macs")
+        elif state == "system":
+            subtitle = _("The system already chooses the band: roamoff=1 is set outside Pomona")
+        elif state == "restart":
+            subtitle = _("Restart the computer to finish")
+        else:
+            subtitle = _("Reloads the Wi-Fi driver: the Wi-Fi drops for a few seconds")
         row = Adw.ActionRow(
-            title=_("Stop moving the Wi-Fi to 5 GHz") if on else _("Move the Wi-Fi to 5 GHz"),
-            subtitle=_("The Wi-Fi chooses its band by itself again") if on
-            else _("Starts a timer that checks the Wi-Fi band every minute"))
-        button = Gtk.Button(label=_("Turn off") if on else _("Turn on"), valign=Gtk.Align.CENTER, sensitive=not self.busy)
+            title=_("Give the choice back to the Wi-Fi card") if on else _("Let the system choose the Wi-Fi band"),
+            subtitle=subtitle)
+        button = Gtk.Button(label=_("Turn off") if on else _("Turn on"), valign=Gtk.Align.CENTER,
+                            sensitive=not self.busy and state in ("off", "on", "restart"))
         if not on:
             button.add_css_class("suggested-action")
         button.connect("clicked", lambda *_a: self.admin(["bluetooth-undo"], "bluetooth-undo") if on

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Everything the command line can do must be possible from the app: every action of every module
 # has to be called from gui/pomona-gui (directly or through pomona-admin). Exceptions are
-# the tools meant for the terminal (run, release, step, baseline, start, stop, help, version).
+# the tools meant for the terminal (run, release, baseline, start, stop, help, version).
 set -u
 HERE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 ROOT=$(cd -- "$HERE/.." && pwd -P)
